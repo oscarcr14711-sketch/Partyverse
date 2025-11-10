@@ -1,3 +1,4 @@
+
 # Logs
 logs
 *.log
@@ -137,3 +138,69 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+=======
+
+# Learn more: https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Expo / React Native
+.expo/
+.expo-shared/
+web-build/
+dist/
+*.expo*
+expo-env.d.ts
+
+# Android / iOS build outputs and generated files
+/android/
+/ios/
+build/
+*.keystore
+debug.keystore
+*.orig.*
+
+# Signing & credentials
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.cer
+*.pem
+*.jks
+
+# Metro
+.metro-health-check*
+
+# Debug / logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Local env files
+.env
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Misc
+app-example
+>>>>>>> e9f6fae (first save)

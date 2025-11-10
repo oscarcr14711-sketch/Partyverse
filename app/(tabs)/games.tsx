@@ -1,8 +1,8 @@
-import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, FlatList, SafeAreaView, Animated, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Animated, FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 const gameModes = [
   {

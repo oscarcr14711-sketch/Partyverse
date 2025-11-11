@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Animated, Image, UIManager, Platform } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -57,25 +57,14 @@ const Confetti = ({ delay }: { delay: number }) => {
 
 
 export default function HotBombGameScreen() {
-  // Detect if Lottie native view is available (Expo Go on iOS may not include it)
-  const isLottieAvailable = (() => {
-    try {
-      // @ts-ignore
-      const cfg = UIManager.getViewManagerConfig && UIManager.getViewManagerConfig('LottieAnimationView');
-      return !!cfg;
-    } catch {
-      return false;
-    }
-  })();
   const router = useRouter();
   const [gameStarted, setGameStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
   const [totalTime] = useState(15);
   const [hasExploded, setHasExploded] = useState(false);
-  
+
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const explosionOpacity = React.useRef(new Animated.Value(0)).current;
-  const wickBurnAnim = React.useRef(new Animated.Value(0)).current;
   // New animation refs for breathing and shaking
   const breathAnim = React.useRef(new Animated.Value(0)).current; // 0..1 -> scale 0.98..1.02
   const shakeAnim = React.useRef(new Animated.Value(0)).current; // -1..1 -> translateX
@@ -98,12 +87,6 @@ export default function HotBombGameScreen() {
           return newTime;
         });
       }, 1000);
-      // Wick burn progress value (kept for future visual effects if needed)
-      Animated.timing(wickBurnAnim, {
-        toValue: timeLeft === 0 ? 100 : ((totalTime - timeLeft) / totalTime) * 100,
-        duration: 500,
-        useNativeDriver: false,
-      }).start();
     } else if (timeLeft === 0 && gameStarted) {
       // Bomb explodes!
       triggerExplosion();
@@ -115,12 +98,13 @@ export default function HotBombGameScreen() {
   const triggerExplosion = () => {
     setGameStarted(false);
     setHasExploded(true);
-    
+    resetLottie(1);
+
     // Multiple intense haptic pulses
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 100);
     setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
-    
+
     // Explosion animation
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 2, duration: 200, useNativeDriver: true }),
@@ -139,7 +123,7 @@ export default function HotBombGameScreen() {
     setHasExploded(false);
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
-    wickBurnAnim.setValue(0);
+    resetLottie(0);
     // Start fuse sound if URL provided
     if (FUSE_SOUND_URL) {
       (async () => {
@@ -164,7 +148,7 @@ export default function HotBombGameScreen() {
     setHasExploded(false);
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
-    wickBurnAnim.setValue(0);
+    resetLottie(0);
     // Stop/unload fuse sound
     (async () => {
       try {
@@ -173,7 +157,7 @@ export default function HotBombGameScreen() {
           await fuseSoundRef.current.unloadAsync();
           fuseSoundRef.current = null;
         }
-      } catch {}
+      } catch { }
     })();
   };
 
@@ -223,7 +207,7 @@ export default function HotBombGameScreen() {
           if (explosionSoundRef.current) {
             await explosionSoundRef.current.unloadAsync();
           }
-        } catch {}
+        } catch { }
       })();
     };
   }, []);
@@ -267,10 +251,14 @@ export default function HotBombGameScreen() {
   const breathScale = breathAnim.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1.02] });
   const shakeX = shakeAnim.interpolate({ inputRange: [-1, 1], outputRange: [-6, 6] });
   const bgPulseOpacity = bgPulse.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] });
-  const burnedRatio = (totalTime - timeLeft) / totalTime;
-
-  // Lottie progress mapped from existing wickBurnAnim (0..100 -> 0..1)
-  const lottieProgress = wickBurnAnim.interpolate({ inputRange: [0, 100], outputRange: [0, 1] });
+  const lottieRef = React.useRef<LottieView>(null);
+  const resetLottie = React.useCallback((value: number) => {
+    (lottieRef.current as any)?.setProgress?.(value);
+  }, []);
+  React.useEffect(() => {
+    const progress = Math.min(1, Math.max(0, (totalTime - timeLeft) / totalTime));
+    (lottieRef.current as any)?.setProgress?.(progress);
+  }, [timeLeft, totalTime]);
 
   return (
     <LinearGradient
@@ -289,7 +277,7 @@ export default function HotBombGameScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={28} color="white" />
           </TouchableOpacity>
-            <Text style={styles.title}>🔥 Hot Bomb</Text>
+          <Text style={styles.title}>🔥 Hot Bomb</Text>
           <View style={{ width: 28 }} />
         </View>
 
@@ -328,22 +316,15 @@ export default function HotBombGameScreen() {
             <>
               <View style={styles.bombContainer}>
                 <Animated.View style={[styles.bombWrapper, { transform: [{ translateX: shakeX }, { scale: breathScale }] }]}>
-                  {isLottieAvailable ? (
-                    <LottieView
-                      source={require('../assets/animations/bomb.json')}
-                      style={{ width: 260, height: 260 }}
-                      progress={(totalTime - timeLeft) / totalTime}
-                      autoPlay={false}
-                      loop={false}
-                    />
-                  ) : (
-                    <Image
-                      source={require('../assets/images/bomb1.png')}
-                      style={{ width: 260, height: 260, resizeMode: 'contain' }}
-                    />
-                  )}
+                  <LottieView
+                    ref={lottieRef}
+                    source={require('../assets/animations/Bomb Animation.json')}
+                    style={{ width: 260, height: 260 }}
+                    autoPlay={false}
+                    loop={false}
+                  />
                 </Animated.View>
-                
+
                 {/* Cracks overlay when time is low */}
                 {timeLeft <= 3 && (
                   <Animated.View style={[styles.cracksLayer, { opacity: crackOpacity }]} pointerEvents="none">

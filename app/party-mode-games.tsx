@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { CategoryCard } from '@/components/CategoryCard';
-import { useRouter } from 'expo-router'; // Import useRouter
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 const categories = [
   { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', path: '/action-adrenaline-games' },
@@ -21,11 +22,18 @@ const specials = {
 };
 
 export default function PartyModeGamesScreen() {
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   return (
     <View style={styles.background}>
       <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={26} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Party Mode</Text>
+          <View style={{ width: 26 }} />
+        </View>
         <ScrollView>
           <Text style={styles.title}>What kind of fun are you in the mood for?</Text>
           <View style={styles.grid}>
@@ -33,7 +41,7 @@ export default function PartyModeGamesScreen() {
               <CategoryCard 
                 key={category.title} 
                 {...category} 
-                onPress={() => category.path && router.push(category.path)} // Navigate on press
+                onPress={() => category.path && router.push(category.path)}
               />
             ))}
           </View>
@@ -54,6 +62,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  backButton: {
+    padding: 6,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: '700',
   },
   title: {
     fontSize: 28,

@@ -9,7 +9,7 @@ const gameModes = [
     id: '1',
     title: '🎉 Party Mode',
     subtitle: 'Offline games for 2+ people',
-    route: '/categories',
+    route: '/party-mode-games',
     gradient: ['#FFD700', '#FFA500'],
     darkGradient: ['#B8860B', '#CD853F'],
   },
@@ -82,30 +82,12 @@ const GameModeItem = ({ title, subtitle, gradient, darkGradient, onPress, disabl
 
 export default function MainScreen() {
   const router = useRouter();
-  const overlayOpacity = React.useRef(new Animated.Value(0)).current;
-
-  // Ensure overlay is hidden when this screen mounts (so returning here doesn't leave it visible)
-  React.useEffect(() => {
-    overlayOpacity.setValue(0);
-  }, []);
-
-  const animateTransition = (next?: () => void) => {
-    // Fade the screen to black, then call next (navigation)
-    Animated.timing(overlayOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start(() => {
-      if (typeof next === 'function') next();
-    });
-  };
 
   const renderGameMode = ({ item }: { item: any }) => {
     const navigate = () => { if (item.route) router.push(item.route); };
-    // Only run the cross-fade overlay for Party Mode (id '1')
     const onPress = () => {
       if (!item.disabled) {
-        if (item.id === '1') {
-          animateTransition(navigate);
-        } else {
-          navigate();
-        }
+        navigate();
       }
     };
 
@@ -121,9 +103,6 @@ export default function MainScreen() {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
       />
-
-      {/* transition overlay: fades in when navigating */}
-      <Animated.View pointerEvents="none" style={[styles.transitionOverlay, { opacity: overlayOpacity }]} />
     </SafeAreaView>
   );
 }
@@ -174,14 +153,5 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     fontSize: 16,
     marginTop: 5,
-  },
-  transitionOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: '#000',
-    zIndex: 999,
   },
 });

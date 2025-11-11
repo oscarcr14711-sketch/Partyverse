@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
 const categories = [
     {
@@ -73,12 +72,7 @@ const PartyMode = () => {
 
     return (
         <View style={styles.container}>
-             <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={30} color="white" />
-                </TouchableOpacity>
-                <Text style={styles.header}>What kind of fun are you in the mood for?</Text>
-            </View>
+            <Text style={styles.header}>What kind of fun are you in the mood for?</Text>
             <FlatList
                 data={categories}
                 renderItem={renderCategory}
@@ -96,18 +90,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#00AEEF',
         paddingTop: 50,
         paddingHorizontal: 10,
-    },
-    headerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 20,
-        position: 'relative',
-    },
-    backButton: {
-        position: 'absolute',
-        left: 10,
-        top: 10
     },
     header: {
         fontSize: 28,

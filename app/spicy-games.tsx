@@ -5,7 +5,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const games = [
+type SpicyGame = {
+  title: string;
+  description: string;
+  emoji: string;
+  path: string;
+  gradient: [string, string];
+  darkGradient: [string, string];
+};
+
+const games: SpicyGame[] = [
   { title: 'Drink Domino', description: 'Players drink in a chain reaction following the order of the cards (A, 2, 3… K).', emoji: '🔥🍻', path: '/drink-domino', gradient: ['#FF4500', '#DC143C'], darkGradient: ['#500000', '#A01010'] },
   { title: 'Color Clash', description: 'Guess whether the next card will be red ♥️ or black ♠️.\nIf players fail to guess the color they drink, if they get it right they choose who drinks.', emoji: '♥️♠️', path: '/color-clash', gradient: ['#4169E1', '#1E90FF'], darkGradient: ['#00003B', '#1C2E5D'] },
   { title: 'Ride The Bus', description: 'Complete 4 card predictions in a row: Color → Higher or Lower → Inside or Outside → Suit. If you fail at any step → start over and drink.', emoji: '🚌🃏', path: '/ride-the-bus', gradient: ['#2E8B57', '#3CB371'], darkGradient: ['#002000', '#005000'] },
@@ -13,7 +22,14 @@ const games = [
   { title: 'Hot Cup Spin', description: 'Place shots, dares, prizes, or safe cards hidden under face–down cups. Spin the arrow. Reveal the cup it points to and do whatever it says.', emoji: '🥤🔄', path: '/hot-cup-spin', gradient: ['#CD5C5C', '#F08080'], darkGradient: ['#400000', '#902020'] }
 ];
 
-const GameItem = ({ title, description, emoji, gradient, darkGradient, onPress }) => (
+const GameItem = ({ title, description, emoji, gradient, darkGradient, onPress }: {
+  title: string;
+  description: string;
+  emoji: string;
+  gradient: [string, string];
+  darkGradient: [string, string];
+  onPress: () => void;
+}) => (
     <TouchableOpacity onPress={onPress}>
         <LinearGradient
             colors={gradient}
@@ -21,8 +37,8 @@ const GameItem = ({ title, description, emoji, gradient, darkGradient, onPress }
             end={{ x: 0.5, y: 1 }}
             style={[styles.gameButtonOuter, { shadowColor: gradient[0] }]}
         >
-            <LinearGradient
-                colors={darkGradient.slice().reverse()} // Dark-to-light for the button face
+      <LinearGradient
+        colors={[darkGradient[1], darkGradient[0]]} // Dark-to-light for the button face
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={styles.gameButtonInner}
@@ -63,7 +79,7 @@ export default function SpicyGamesScreen() {
         <ScrollView>
           <View style={styles.grid}>
             {games.map((game) => (
-              <GameItem key={game.title} {...game} onPress={() => router.push(game.path)} />
+              <GameItem key={game.title} {...game} onPress={() => router.push(game.path as any)} />
             ))}
           </View>
         </ScrollView>

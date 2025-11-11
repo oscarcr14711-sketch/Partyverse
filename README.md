@@ -55,3 +55,22 @@ Join our community of developers creating universal apps.
 ## Providing feedback
 
 Due to the complexity of natural language processing, the translations provided might not be appropriate for all contexts or audiences. If you encounter inappropriate translations, reach out to [Firebase support](/support). Your feedback helps to continue to improve the models, and also allows us to disable inappropriate translations.
+
+## Hot Bomb setup (Lottie + sound)
+
+- Bomb animation: Replace `assets/animations/bomb.json` with your preferred Lottie JSON (bomb with a burning fuse). The app maps the game timer to the animation progress (0 → 1).
+- Optional sounds: To enable fuse/explosion audio, set `FUSE_SOUND_URL` and `EXPLOSION_SOUND_URL` in `app/hot-bomb-game.tsx` to valid remote URLs. Alternatively, add local files and switch to `require()` if you prefer bundling them.
+
+Steps to use local files:
+
+1) Add files under `assets/sounds/`, e.g. `fuse.mp3` and `explosion.mp3`.
+2) Replace the URL-based `Audio.Sound.createAsync({ uri: ... })` calls with:
+
+```ts
+// Example local usage
+const { sound } = await Audio.Sound.createAsync(require('../assets/sounds/fuse.mp3'), { shouldPlay: true, isLooping: true, volume: 0.6 });
+```
+
+Notes
+- Lottie is integrated with progress, so the fuse burn aligns with the countdown.
+- Audio is optional and guarded; if URLs are not set, the app runs without sound.

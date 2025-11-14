@@ -40,10 +40,20 @@ const gameModes = [
   },
 ];
 
-const GameModeItem = ({ title, subtitle, gradient, darkGradient, onPress, disabled }) => {
+type GradientColors = readonly [string, string, ...string[]];
+interface GameModeItemProps {
+  title: string;
+  subtitle: string;
+  gradient: GradientColors;
+  darkGradient: GradientColors;
+  onPress: () => void;
+  disabled?: boolean;
+}
+
+const GameModeItem: React.FC<GameModeItemProps> = ({ title, subtitle, gradient, darkGradient, onPress, disabled }) => {
   const scale = React.useRef(new Animated.Value(1)).current;
 
-  const runPressAnimation = (next) => {
+  const runPressAnimation = (next?: () => void) => {
     // Press animation: quick scale down, then scale up and fade effect
     Animated.sequence([
       Animated.timing(scale, { toValue: 0.96, duration: 90, useNativeDriver: true }),
@@ -63,7 +73,7 @@ const GameModeItem = ({ title, subtitle, gradient, darkGradient, onPress, disabl
           style={[styles.gameButtonOuter, { shadowColor: gradient[0] }]}
         >
           <LinearGradient
-            colors={darkGradient.slice().reverse()} // Dark-to-light for the button face
+            colors={([...darkGradient].reverse() as unknown) as GradientColors} // Dark-to-light for the button face
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
             style={styles.gameButtonInner}
@@ -80,11 +90,16 @@ const GameModeItem = ({ title, subtitle, gradient, darkGradient, onPress, disabl
   );
 };
 
+interface GameModeData extends Omit<GameModeItemProps, 'onPress'> {
+  id: string;
+  route: string | null;
+}
+
 export default function MainScreen() {
   const router = useRouter();
 
-  const renderGameMode = ({ item }: { item: any }) => {
-    const navigate = () => { if (item.route) router.push(item.route); };
+  const renderGameMode = ({ item }: { item: GameModeData }) => {
+    const navigate = () => { if (item.route) router.push(item.route as any); };
     const onPress = () => {
       if (!item.disabled) {
         navigate();
@@ -97,8 +112,8 @@ export default function MainScreen() {
   return (
     <SafeAreaView style={styles.background}>
         <Text style={styles.title}>Let the Games Begin</Text>
-      <FlatList
-        data={gameModes}
+      <FlatList<GameModeData>
+        data={gameModes as unknown as GameModeData[]}
         renderItem={renderGameMode}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}

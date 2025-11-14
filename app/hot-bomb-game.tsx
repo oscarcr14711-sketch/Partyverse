@@ -1,60 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Animated, Image, UIManager, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
-import LottieView from 'lottie-react-native';
 import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import LottieView from 'lottie-react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // Optional: remote audio URLs (set to valid URLs or keep null to disable)
 const FUSE_SOUND_URL: string | null = null; // e.g., 'https://example.com/fuse-sizzle.mp3'
 const EXPLOSION_SOUND_URL: string | null = null; // e.g., 'https://example.com/explosion.mp3'
-
-// Confetti particle component
-const Confetti = ({ delay }: { delay: number }) => {
-  const animY = React.useRef(new Animated.Value(-20)).current;
-  const animX = React.useRef(new Animated.Value(Math.random() * 400 - 200)).current;
-  const animRotate = React.useRef(new Animated.Value(0)).current;
-  const colors = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF006E', '#FFA500', '#00FF00', '#FF1493'];
-  const color = colors[Math.floor(Math.random() * colors.length)];
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.parallel([
-        Animated.timing(animY, {
-          toValue: 800,
-          duration: 4000 + Math.random() * 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animRotate, {
-          toValue: 360,
-          duration: 2000 + Math.random() * 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
-  const rotate = animRotate.interpolate({
-    inputRange: [0, 360],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  return (
-    <Animated.View
-      style={[
-        styles.confetti,
-        {
-          backgroundColor: color,
-          left: Math.random() * 400,
-          transform: [{ translateY: animY }, { translateX: animX }, { rotate }],
-        },
-      ]}
-    />
-  );
-};
-
 
 export default function HotBombGameScreen() {
   // Detect if Lottie native view is available (Expo Go on iOS may not include it)
@@ -72,6 +27,8 @@ export default function HotBombGameScreen() {
   const [timeLeft, setTimeLeft] = useState(15);
   const [totalTime] = useState(15);
   const [hasExploded, setHasExploded] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
+  const [numPlayers, setNumPlayers] = useState(3); // Number of players (can be adjusted)
   
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const explosionOpacity = React.useRef(new Animated.Value(0)).current;
@@ -79,8 +36,7 @@ export default function HotBombGameScreen() {
   // New animation refs for breathing and shaking
   const breathAnim = React.useRef(new Animated.Value(0)).current; // 0..1 -> scale 0.98..1.02
   const shakeAnim = React.useRef(new Animated.Value(0)).current; // -1..1 -> translateX
-  const crackOpacity = React.useRef(new Animated.Value(0)).current; // 0..1 flicker near end
-  const bgPulse = React.useRef(new Animated.Value(0)).current; // background danger pulse
+  const lottieRef = React.useRef<LottieView>(null);
   // Audio refs
   const fuseSoundRef = React.useRef<Audio.Sound | null>(null);
   const explosionSoundRef = React.useRef<Audio.Sound | null>(null);
@@ -137,9 +93,11 @@ export default function HotBombGameScreen() {
     setGameStarted(true);
     setTimeLeft(totalTime);
     setHasExploded(false);
+    setAnimationKey(prev => prev + 1);
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
     wickBurnAnim.setValue(0);
+    
     // Start fuse sound if URL provided
     if (FUSE_SOUND_URL) {
       (async () => {
@@ -165,6 +123,7 @@ export default function HotBombGameScreen() {
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
     wickBurnAnim.setValue(0);
+    
     // Stop/unload fuse sound
     (async () => {
       try {
@@ -228,33 +187,6 @@ export default function HotBombGameScreen() {
     };
   }, []);
 
-  // Cracks flicker and background pulse in final seconds
-  useEffect(() => {
-    if (gameStarted && !hasExploded && timeLeft <= 3 && timeLeft > 0) {
-      const crackLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(crackOpacity, { toValue: 1, duration: 180, useNativeDriver: true }),
-          Animated.timing(crackOpacity, { toValue: 0.4, duration: 180, useNativeDriver: true }),
-        ])
-      );
-      const bgLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(bgPulse, { toValue: 1, duration: 220, useNativeDriver: true }),
-          Animated.timing(bgPulse, { toValue: 0, duration: 220, useNativeDriver: true }),
-        ])
-      );
-      crackLoop.start();
-      bgLoop.start();
-      return () => {
-        crackLoop.stop();
-        bgLoop.stop();
-      };
-    } else {
-      crackOpacity.setValue(0);
-      bgPulse.setValue(0);
-    }
-  }, [timeLeft, gameStarted, hasExploded]);
-
   // Determine color gradient based on time remaining
   const getGradientColors = (): [string, string] => {
     const percentage = timeLeft / totalTime;
@@ -266,93 +198,127 @@ export default function HotBombGameScreen() {
   const timerPercentage = (timeLeft / totalTime) * 100;
   const breathScale = breathAnim.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1.02] });
   const shakeX = shakeAnim.interpolate({ inputRange: [-1, 1], outputRange: [-6, 6] });
-  const bgPulseOpacity = bgPulse.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] });
   const burnedRatio = (totalTime - timeLeft) / totalTime;
 
-  // Lottie progress mapped from existing wickBurnAnim (0..100 -> 0..1)
-  const lottieProgress = wickBurnAnim.interpolate({ inputRange: [0, 100], outputRange: [0, 1] });
-
   return (
-    <LinearGradient
-      colors={['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF006E']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      {/* Animated Confetti */}
-      {Array.from({ length: 20 }).map((_, i) => (
-        <Confetti key={i} delay={i} />
-      ))}
-
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={28} color="white" />
-          </TouchableOpacity>
-            <Text style={styles.title}>🔥 Hot Bomb</Text>
-          <View style={{ width: 28 }} />
-        </View>
-
-        <View style={styles.content}>
-          {!gameStarted ? (
-            <>
-              <View style={styles.timerContainer}>
-                <LinearGradient
-                  colors={getGradientColors()}
-                  start={{ x: 0.5, y: 0 }}
-                  end={{ x: 0.5, y: 1 }}
-                  style={[styles.timerGradientOuter, { shadowColor: getGradientColors()[0] }]}
-                >
-                  <LinearGradient
-                    colors={getGradientColors()}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.timerGradientInner}
-                  >
-                    <Text style={styles.timerText}>{timeLeft}</Text>
-                    <Text style={styles.timerLabel}>seconds</Text>
-                  </LinearGradient>
-                </LinearGradient>
-                <View style={styles.progressBarContainer}>
-                  <LinearGradient
-                    colors={getGradientColors()}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={[styles.progressBar, { width: `${timerPercentage}%` }]}
-                  />
-                </View>
+    <View style={{ flex: 1, backgroundColor: '#FFB300' }}> 
+      {/* Background gradient - orange/red flames */}
+      <LinearGradient
+        colors={['#D84315', '#FF6F00', '#FFB300']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      {!gameStarted ? (
+        // PRE-GAME SETUP SCREEN
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+          <View style={styles.setupContainer}>
+            {/* Title */}
+            <Text style={styles.setupTitle}>HOT BOMB</Text>
+            
+            {/* Bomb graphic with timer */}
+            <View style={styles.setupBombContainer}>
+              <Image
+                source={require('../assets/images/bomb1.png')}
+                style={styles.setupBombImage}
+                resizeMode="contain"
+              />
+              <View style={styles.setupTimerBadge}>
+                <Text style={styles.setupTimerText}>{totalTime}</Text>
               </View>
-              <Text style={styles.instructionText}>🎮 Tap Start to begin</Text>
-            </>
-          ) : (
-            <>
+            </View>
+            
+            {/* Player avatars */}
+            <View style={styles.playerAvatarsContainer}>
+              {Array.from({ length: Math.min(numPlayers, 6) }, (_, i) => {
+                const avatarImages = [
+                  require('../assets/images/avatars/avatar1.png'),
+                  require('../assets/images/avatars/avatar2.png'),
+                  require('../assets/images/avatars/avatar3.png'),
+                  require('../assets/images/avatars/avatar4.png'),
+                  require('../assets/images/avatars/avatar5.png'),
+                  require('../assets/images/avatars/avatar6.png'),
+                ];
+                return (
+                  <View key={i} style={styles.playerAvatar}>
+                    <Image 
+                      source={avatarImages[i]} 
+                      style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
+                      resizeMode="contain"
+                    />
+                  </View>
+                );
+              })}
+            </View>
+            
+            {/* Player counter */}
+            <View style={styles.playerCounterContainer}>
+              <TouchableOpacity 
+                style={styles.playerCounterButton}
+                onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
+              >
+                <Text style={styles.playerCounterButtonText}>−</Text>
+              </TouchableOpacity>
+              <Text style={styles.playerCounterText}>{numPlayers} Players</Text>
+              <TouchableOpacity 
+                style={styles.playerCounterButton}
+                onPress={() => setNumPlayers(Math.min(8, numPlayers + 1))}
+              >
+                <Text style={styles.playerCounterButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Start button */}
+            <TouchableOpacity style={styles.setupStartButton} onPress={handleStartGame}>
+              <Text style={styles.setupStartButtonText}>Start</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Info button - positioned in bottom-right corner */}
+          <View style={styles.infoButtonWrapper}>
+            <TouchableOpacity style={styles.infoButton}>
+              <Text style={styles.infoButtonText}>i</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      ) : (
+        // GAME SCREEN
+        <>
+          <ImageBackground
+            source={require('../assets/images/citydestroyed.jpeg')}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+          <SafeAreaView style={{ flex: 1 }}>
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={28} color="white" />
+              </TouchableOpacity>
+              <Text style={styles.title}>🔥 Hot Bomb</Text>
+              <View style={{ width: 28 }} />
+            </View>
+            <View style={styles.content}>
               <View style={styles.bombContainer}>
-                <Animated.View style={[styles.bombWrapper, { transform: [{ translateX: shakeX }, { scale: breathScale }] }]}>
+                <Animated.View style={[styles.bombWrapper, { transform: [{ translateX: shakeX }, { scale: breathScale }] }]}> 
                   {isLottieAvailable ? (
                     <LottieView
-                      source={require('../assets/animations/bomb.json')}
-                      style={{ width: 260, height: 260 }}
-                      progress={(totalTime - timeLeft) / totalTime}
-                      autoPlay={false}
+                      key={`bomb-${animationKey}`}
+                      ref={lottieRef}
+                      source={require('../assets/animations/Bomb1.json')}
+                      style={{ width: 300, height: 300 }}
+                      autoPlay={gameStarted}
                       loop={false}
+                      speed={1}
+                      resizeMode="cover"
                     />
                   ) : (
                     <Image
                       source={require('../assets/images/bomb1.png')}
-                      style={{ width: 260, height: 260, resizeMode: 'contain' }}
+                      style={{ width: 300, height: 300, resizeMode: 'contain' }}
                     />
                   )}
                 </Animated.View>
-                
-                {/* Cracks overlay when time is low */}
-                {timeLeft <= 3 && (
-                  <Animated.View style={[styles.cracksLayer, { opacity: crackOpacity }]} pointerEvents="none">
-                    <View style={[styles.crack, { top: 95, left: 70, width: 60, transform: [{ rotate: '18deg' }] }]} />
-                    <View style={[styles.crack, { top: 115, left: 110, width: 40, transform: [{ rotate: '-12deg' }] }]} />
-                    <View style={[styles.crack, { top: 135, left: 80, width: 55, transform: [{ rotate: '6deg' }] }]} />
-                  </Animated.View>
-                )}
-
                 <Animated.View
                   style={[
                     styles.explosionEffect,
@@ -364,59 +330,27 @@ export default function HotBombGameScreen() {
                 >
                   <Text style={styles.explosionText}>💥 BOOM! 💥</Text>
                 </Animated.View>
-                <Text style={styles.bombTimer}>{timeLeft}s</Text>
               </View>
               <Text style={styles.instructionText}>⚠️ PASS THE PHONE!</Text>
-              <Text style={styles.warningText}>{timeLeft <= 5 ? '🔴 HURRY UP!' : `${timeLeft} seconds left`}</Text>
-            </>
-          )}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, gameStarted ? styles.buttonDisabled : styles.buttonStart]}
-              onPress={handleStartGame}
-              disabled={gameStarted}
-            >
-              <Text style={styles.buttonText}>{gameStarted ? '⏸️ Running...' : '▶️ Start Game'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={handleReset}>
-              <Text style={styles.buttonText}>🔄 Reset</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
-      {/* Background danger pulse overlay */}
-      {gameStarted && timeLeft <= 3 && (
-        <Animated.View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: '#FF0000',
-            opacity: bgPulseOpacity,
-          }}
-        />
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={[styles.button, styles.buttonDisabled]} disabled={true}>
+                  <Text style={styles.buttonText}>⏸️ Running...</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={handleReset}>
+                  <Text style={styles.buttonText}>🔄 Reset</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </SafeAreaView>
+        </>
       )}
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // ...existing styles above...
   container: {
-    flex: 1,
-  },
-  confetti: {
-    position: 'absolute',
-    width: 10,
-    height: 10,
-    backgroundColor: '#FFD700',
-    borderRadius: 2,
-    top: -20,
-  },
-  header: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 15,
@@ -433,14 +367,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingHorizontal: 20,
+  backgroundColor: 'transparent',
   },
   timerContainer: {
-    alignItems: 'center',
-    marginBottom: 50,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: 0,
+  backgroundColor: 'transparent',
   },
   timerGradientOuter: {
     borderRadius: 40,
@@ -495,15 +432,18 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    gap: 15,
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: '100%',
+  gap: 15,
+  marginTop: 0,
+  backgroundColor: 'transparent',
   },
   button: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
@@ -518,32 +458,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6B6B',
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#000',
   },
+  // container already defined above, remove duplicate
   bombContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 50,
-    position: 'relative',
-    height: 350,
+    marginBottom: 20,
   },
   bombWrapper: {
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  wickContainer: {
-    alignItems: 'center',
-    marginBottom: 10,
-    height: 60,
-  },
-  sparkContainer: {
+  fullScreenBackground: {
     position: 'absolute',
     top: 0,
-    width: 50,
-    height: 50,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+    marginBottom: 20,
   },
   spark: {
     position: 'absolute',
@@ -584,24 +528,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#D2691E',
     width: '100%',
   },
-  cracksLayer: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    top: 75,
-    left: '50%',
-    marginLeft: -100,
-    overflow: 'hidden',
-  },
-  crack: {
-    position: 'absolute',
-    height: 2,
-    backgroundColor: '#FFEEEE',
-    shadowColor: '#FF0000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 6,
-  },
   bombEmoji: {
     fontSize: 200,
     textShadowColor: 'rgba(255, 0, 0, 0.8)',
@@ -612,6 +538,12 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     resizeMode: 'contain',
+  },
+  cityBackground: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bombTimer: {
     position: 'absolute',
@@ -641,5 +573,127 @@ const styles = StyleSheet.create({
     color: '#FF0000',
     fontWeight: 'bold',
     marginTop: 10,
+  },
+  // Setup screen styles
+  setupContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+  },
+  setupTitle: {
+    fontSize: 64,
+    fontWeight: 'bold',
+    color: '#FFB300',
+    textAlign: 'center',
+    letterSpacing: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+  },
+  setupBombContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  setupBombImage: {
+    width: 280,
+    height: 280,
+  },
+  setupTimerBadge: {
+    position: 'absolute',
+    bottom: 40,
+    backgroundColor: '#FFE0B2',
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: '#D84315',
+  },
+  setupTimerText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#D84315',
+  },
+  playerAvatarsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 15,
+    marginVertical: 20,
+    flexWrap: 'wrap',
+  },
+  playerAvatar: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 90,
+    height: 90,
+  },
+  playerAvatarImage: {
+    width: 90,
+    height: 90,
+  },
+  playerAvatarImageAdjusted: {
+    transform: [{ scale: 1.15 }],
+  },
+  playerCounterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#263238',
+    borderRadius: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    gap: 20,
+  },
+  playerCounterButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFE0B2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playerCounterButtonText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#263238',
+  },
+  playerCounterText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFE0B2',
+    minWidth: 140,
+    textAlign: 'center',
+  },
+  setupStartButton: {
+    backgroundColor: '#263238',
+    borderRadius: 30,
+    paddingHorizontal: 100,
+    paddingVertical: 20,
+    marginTop: 20,
+  },
+  setupStartButtonText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFE0B2',
+  },
+  infoButtonWrapper: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    zIndex: 100,
+  },
+  infoButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#263238',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoButtonText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFE0B2',
   },
 });

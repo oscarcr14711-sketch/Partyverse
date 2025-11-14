@@ -1,10 +1,10 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Animated, Image, Dimensions } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useMemo, useRef, useState } from 'react';
+import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const deckBackImage = require('../assets/images/Deck.png');
 const cardFrontImage = require('../assets/images/Colorclash.png');

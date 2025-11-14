@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -66,17 +67,32 @@ const categories = [
 const Categories = () => {
     const router = useRouter();
 
-    const renderCategory = ({ item }) => (
-        <TouchableOpacity 
-            style={[styles.card, { backgroundColor: item.color, opacity: item.disabled ? 0.5 : 1 }]} 
-            onPress={() => !item.disabled && item.path && router.push(item.path)}
-            disabled={item.disabled}
-        >
-            <Text style={styles.cardIcon}>{item.icon}</Text>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-        </TouchableOpacity>
-    );
+    const renderCategory = ({ item }: { item: typeof categories[number] }) => {
+        const isDisabled = !!item.disabled || !item.path;
+        const handlePress = () => {
+            if (isDisabled) return;
+            Haptics.selectionAsync();
+            console.log('Navigating to', item.path);
+            try {
+              router.push(item.path as any);
+            } catch (e) {
+              console.warn('Primary push failed, retrying with setTimeout', e);
+              setTimeout(() => router.push(item.path as any), 0);
+            }
+        };
+        return (
+            <TouchableOpacity
+                style={[styles.card, { backgroundColor: item.color, opacity: isDisabled ? 0.5 : 1 }]}
+                disabled={isDisabled}
+                activeOpacity={0.85}
+                onPress={handlePress}
+            >
+                <Text style={styles.cardIcon}>{item.icon}</Text>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <View style={styles.container}>

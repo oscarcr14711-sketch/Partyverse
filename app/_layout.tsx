@@ -1,7 +1,7 @@
+import { Asset } from 'expo-asset';
 import { Stack } from 'expo-router';
 import React, { useEffect } from 'react';
 import { InteractionManager } from 'react-native';
-import { Asset } from 'expo-asset';
 
 // Centralized asset list for eager preloading (Hot Bomb + commonly used)
 const PRELOAD_ASSETS = [

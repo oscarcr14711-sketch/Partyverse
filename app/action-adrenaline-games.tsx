@@ -1,9 +1,9 @@
 
 import { Ionicons } from '@expo/vector-icons';
+import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Asset } from 'expo-asset';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

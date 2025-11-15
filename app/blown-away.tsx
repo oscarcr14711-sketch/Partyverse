@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MAX_BALLOON_SIZE = 500; // Size at which balloon pops
@@ -246,6 +246,13 @@ export default function BlownAwayScreen() {
       >
         <SafeAreaView style={{ flex: 1 }}>
           <View style={styles.setupContainer}>
+            {/* Title Image */}
+            <Image
+              source={require('../assets/images/Blownavatar.png')}
+              style={styles.setupTitleImage}
+              resizeMode="contain"
+            />
+            
             {/* Player avatars */}
             <View style={styles.playerAvatarsContainer}>
               {Array.from({ length: Math.min(numPlayers, 6) }, (_, i) => {
@@ -446,7 +453,7 @@ const styles = StyleSheet.create({
   playerCounterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#263238',
+    backgroundColor: '#E74C3C',
     borderRadius: 30,
     paddingHorizontal: 20,
     paddingVertical: 15,
@@ -457,13 +464,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
     borderBottomWidth: 4,
-    borderBottomColor: '#1a1f23',
+    borderBottomColor: '#C0392B',
   },
   playerCounterButton: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#FFE0B2',
+    backgroundColor: '#E74C3C',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -472,12 +479,12 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 8,
     borderBottomWidth: 3,
-    borderBottomColor: '#D4A574',
+    borderBottomColor: '#C0392B',
   },
   playerCounterButtonText: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#263238',
+    color: '#FFFFFF',
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
   playerCounterText: {
@@ -489,7 +496,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
   setupStartButton: {
-    backgroundColor: '#263238',
+    backgroundColor: '#E74C3C',
     borderRadius: 30,
     paddingHorizontal: 80,
     paddingVertical: 16,
@@ -500,12 +507,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
     borderBottomWidth: 4,
-    borderBottomColor: '#1a1f23',
+    borderBottomColor: '#C0392B',
   },
   setupStartButtonText: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFE0B2',
+    color: '#FFFFFF',
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
   infoButtonWrapper: {

@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Optional: remote audio URLs (set to valid URLs or keep null to disable)
@@ -62,7 +62,7 @@ export default function HotBombGameScreen() {
   const [gameOver, setGameOver] = useState(false);
   const [lottieProgress, setLottieProgress] = useState(0); // 0..1 progress for bomb Lottie
   // Lazy-loaded explosion animation JSON (reduces initial load time)
-  const [explosionAnim, setExplosionAnim] = useState<any>(null);
+  const [explosionAnim] = useState<any>(require('../assets/animations/Cartoon explosion.json'));
   // Memoize avatar elements AFTER numPlayers state is declared
   const avatarsMemo = useMemo(() => {
     const images = [
@@ -136,10 +136,6 @@ export default function HotBombGameScreen() {
   const triggerExplosion = () => {
     setHasExploded(true);
     setShowExplosion(true);
-    // Dynamically import explosion animation only when needed
-    import('../assets/animations/Cartoon explosion.json')
-      .then((mod) => setExplosionAnim(mod))
-      .catch(() => setExplosionAnim(null));
     
     // Multiple intense haptic pulses
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -427,7 +423,9 @@ export default function HotBombGameScreen() {
                     loop={false}
                     style={styles.cartoonExplosionLottie}
                   />
-                ) : null}
+                ) : (
+                  <Text style={styles.explosionFallback}>💥</Text>
+                )}
               </View>
             )}
           </SafeAreaView>

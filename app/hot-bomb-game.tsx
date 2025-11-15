@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useState } from 'react';
-import { Animated, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
+import { Animated, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, UIManager, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Optional: remote audio URLs (set to valid URLs or keep null to disable)
 const FUSE_SOUND_URL: string | null = null; // e.g., 'https://example.com/fuse-sizzle.mp3'
@@ -29,6 +29,7 @@ export default function HotBombGameScreen() {
   const [hasExploded, setHasExploded] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
   const [numPlayers, setNumPlayers] = useState(3); // Number of players (can be adjusted)
+  const [showExplosion, setShowExplosion] = useState(false);
   
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const explosionOpacity = React.useRef(new Animated.Value(0)).current;
@@ -71,6 +72,7 @@ export default function HotBombGameScreen() {
   const triggerExplosion = () => {
     setGameStarted(false);
     setHasExploded(true);
+    setShowExplosion(true);
     
     // Multiple intense haptic pulses
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -85,6 +87,7 @@ export default function HotBombGameScreen() {
     ]).start();
 
     setTimeout(() => {
+      setShowExplosion(false);
       handleReset();
     }, 2000);
   };
@@ -120,6 +123,7 @@ export default function HotBombGameScreen() {
     setGameStarted(false);
     setTimeLeft(totalTime);
     setHasExploded(false);
+    setShowExplosion(false);
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
     wickBurnAnim.setValue(0);
@@ -217,18 +221,6 @@ export default function HotBombGameScreen() {
             {/* Title */}
             <Text style={styles.setupTitle}>HOT BOMB</Text>
             
-            {/* Bomb graphic with timer */}
-            <View style={styles.setupBombContainer}>
-              <Image
-                source={require('../assets/images/bomb1.png')}
-                style={styles.setupBombImage}
-                resizeMode="contain"
-              />
-              <View style={styles.setupTimerBadge}>
-                <Text style={styles.setupTimerText}>{totalTime}</Text>
-              </View>
-            </View>
-            
             {/* Player avatars */}
             <View style={styles.playerAvatarsContainer}>
               {Array.from({ length: Math.min(numPlayers, 6) }, (_, i) => {
@@ -245,7 +237,7 @@ export default function HotBombGameScreen() {
                     <Image 
                       source={avatarImages[i]} 
                       style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
-                      resizeMode="contain"
+                      resizeMode={i === 5 ? 'cover' : 'contain'}
                     />
                   </View>
                 );
@@ -340,6 +332,21 @@ export default function HotBombGameScreen() {
                   <Text style={styles.buttonText}>🔄 Reset</Text>
                 </TouchableOpacity>
               </View>
+              {showExplosion && (
+                <View style={styles.explosionOverlay} pointerEvents="none">
+                  {isLottieAvailable ? (
+                    <LottieView
+                      source={require('../assets/animations/Bomb Animation.json')}
+                      style={styles.explosionLottie}
+                      autoPlay
+                      loop={false}
+                      speed={1}
+                    />
+                  ) : (
+                    <Text style={styles.explosionFallback}>💥</Text>
+                  )}
+                </View>
+              )}
             </View>
           </SafeAreaView>
         </>
@@ -560,6 +567,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  explosionOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2000,
+  },
+  explosionLottie: {
+    width: 500,
+    height: 500,
+  },
+  explosionFallback: {
+    fontSize: 120,
+    textShadowColor: '#FF0000',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 25,
+  },
   explosionText: {
     fontSize: 60,
     fontWeight: 'bold',
@@ -591,6 +618,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 4,
+    fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-condensed' }),
   },
   setupBombContainer: {
     position: 'relative',
@@ -628,13 +656,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 90,
     height: 90,
+    overflow: 'hidden',
   },
   playerAvatarImage: {
     width: 90,
     height: 90,
   },
   playerAvatarImageAdjusted: {
-    transform: [{ scale: 1.15 }],
+    transform: [{ scale: 1.22 }],
   },
   playerCounterContainer: {
     flexDirection: 'row',
@@ -657,6 +686,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: '#263238',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
   playerCounterText: {
     fontSize: 28,
@@ -664,36 +694,39 @@ const styles = StyleSheet.create({
     color: '#FFE0B2',
     minWidth: 140,
     textAlign: 'center',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
   setupStartButton: {
     backgroundColor: '#263238',
     borderRadius: 30,
-    paddingHorizontal: 100,
-    paddingVertical: 20,
+    paddingHorizontal: 80,
+    paddingVertical: 16,
     marginTop: 20,
   },
   setupStartButtonText: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#FFE0B2',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
   infoButtonWrapper: {
     position: 'absolute',
-    bottom: 30,
-    right: 30,
+    bottom: 20,
+    right: 20,
     zIndex: 100,
   },
   infoButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#263238',
     alignItems: 'center',
     justifyContent: 'center',
   },
   infoButtonText: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#FFE0B2',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
 });

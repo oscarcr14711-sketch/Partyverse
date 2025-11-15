@@ -352,7 +352,7 @@ export default function HotBombGameScreen() {
               <Text style={styles.playerCounterText}>{numPlayers} Players</Text>
               <TouchableOpacity 
                 style={styles.playerCounterButton}
-                onPress={() => setNumPlayers(Math.min(8, numPlayers + 1))}
+                onPress={() => setNumPlayers(Math.min(6, numPlayers + 1))}
               >
                 <Text style={styles.playerCounterButtonText}>+</Text>
               </TouchableOpacity>
@@ -542,22 +542,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#666',
   },
   buttonReset: {
-    // 3D styled reset button with dark tone matching background
-    backgroundColor: '#1B1F22',
+    // Match start/player counter 3D style
+    backgroundColor: '#263238',
+    borderRadius: 30,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.45,
-    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
     elevation: 10,
     borderBottomWidth: 4,
-    borderBottomColor: '#111416',
-    borderTopWidth: 1,
-    borderTopColor: '#2a2f33',
+    borderBottomColor: '#1a1f23',
   },
   buttonText: {
-    fontSize: 14,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#FFE0B2',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
   // container already defined above, remove duplicate
   bombContainer: {

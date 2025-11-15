@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MAX_BALLOON_SIZE = 500; // Size at which balloon pops
@@ -67,14 +67,10 @@ export default function BlownAwayScreen() {
               
               setBalloonSize((prev) => {
                 const newSize = Math.min(MAX_BALLOON_SIZE, prev + blowStrength * 2);
-                
-                // Check if balloon should pop
                 if (newSize >= MAX_BALLOON_SIZE) {
                   popBalloon();
                   return MAX_BALLOON_SIZE;
                 }
-                
-                // Shake more intensely as balloon gets bigger
                 if (newSize > MAX_BALLOON_SIZE * 0.7) {
                   Animated.sequence([
                     Animated.timing(shakeAnim, { toValue: -8, duration: 30, useNativeDriver: true }),
@@ -82,8 +78,6 @@ export default function BlownAwayScreen() {
                     Animated.timing(shakeAnim, { toValue: 0, duration: 30, useNativeDriver: true }),
                   ]).start();
                 }
-                
-                // If balloon is inflated (not popped), add to array
                 if (newSize > prev && newSize < MAX_BALLOON_SIZE) {
                   setBalloons((old) => [...old, { popped: false }]);
                 }
@@ -117,8 +111,6 @@ export default function BlownAwayScreen() {
   const popBalloon = () => {
     setHasPopped(true);
     stopListening();
-    
-    // Pop animation
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     Animated.parallel([
       Animated.timing(balloonScale, { toValue: 1.5, duration: 100, useNativeDriver: true }),
@@ -126,24 +118,21 @@ export default function BlownAwayScreen() {
     ]).start(() => {
       Animated.timing(balloonScale, { toValue: 0, duration: 200, useNativeDriver: true }).start();
     });
-
-    // Player loses - score is 0
     setPlayerScores((prev) => ({ ...prev, [currentPlayer]: 0 }));
-    
     setTimeout(() => {
       nextPlayer();
     }, 2000);
   };
 
   const handleStartTurn = () => {
-  setGameStarted(true);
-  setBalloonSize(MIN_BALLOON_SIZE);
-  setHasPopped(false);
-  setTimeLeft(15);
-  setBalloons([]);
-  balloonScale.setValue(1);
-  popOpacity.setValue(0);
-  startListening();
+    setGameStarted(true);
+    setBalloonSize(MIN_BALLOON_SIZE);
+    setHasPopped(false);
+    setTimeLeft(15);
+    setBalloons([]);
+    balloonScale.setValue(1);
+    popOpacity.setValue(0);
+    startListening();
   };
 
   const handleStopBlowing = () => {
@@ -235,9 +224,8 @@ export default function BlownAwayScreen() {
     return '#E74C3C'; // Red (danger)
   };
 
-  return (
-    showSetup ? (
-      // PRE-GAME SETUP SCREEN (similar to Hot Bomb), using Blownaway.png as the title image
+  if (showSetup) {
+    return (
       <LinearGradient
         colors={['#5DADE2', '#5DADE2']}
         start={{ x: 0, y: 0 }}
@@ -246,66 +234,64 @@ export default function BlownAwayScreen() {
       >
         <SafeAreaView style={{ flex: 1 }}>
           <View style={styles.setupContainer}>
-            {/* Title Image */}
-            <Image
-              source={require('../assets/images/Blownavatar.png')}
-              style={styles.setupTitleImage}
-              resizeMode="contain"
-            />
-            
-            {/* Player avatars */}
-            <View style={styles.playerAvatarsContainer}>
-              {Array.from({ length: Math.min(numPlayers, 6) }, (_, i) => {
-                const avatarImages = [
-                  require('../assets/images/avatars/avatar1.png'),
-                  require('../assets/images/avatars/avatar2.png'),
-                  require('../assets/images/avatars/avatar3.png'),
-                  require('../assets/images/avatars/avatar4.png'),
-                  require('../assets/images/avatars/avatar5.png'),
-                  require('../assets/images/avatars/avatar6.png'),
-                ];
-                return (
-                  <View key={i} style={styles.playerAvatar}>
-                    <Image
-                      source={avatarImages[i]}
-                      style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
-                      resizeMode={i === 5 ? 'cover' : 'contain'}
-                    />
-                  </View>
-                );
-              })}
+            <View style={styles.setupTopSection}>
+              <Image
+                source={require('../assets/images/Blownavatar.png')}
+                style={styles.setupTitleImage}
+                resizeMode="contain"
+              />
             </View>
-
-            {/* Player counter */}
-            <View style={styles.playerCounterContainer}>
+            <View style={styles.setupMiddleSection}>
+              <View style={styles.playerAvatarsContainer}>
+                {Array.from({ length: Math.min(numPlayers, 6) }, (_, i) => {
+                  const avatarImages = [
+                    require('../assets/images/avatars/avatar1.png'),
+                    require('../assets/images/avatars/avatar2.png'),
+                    require('../assets/images/avatars/avatar3.png'),
+                    require('../assets/images/avatars/avatar4.png'),
+                    require('../assets/images/avatars/avatar5.png'),
+                    require('../assets/images/avatars/avatar6.png'),
+                  ];
+                  return (
+                    <View key={i} style={styles.playerAvatar}>
+                      <Image
+                        source={avatarImages[i]}
+                        style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
+                        resizeMode={i === 5 ? 'cover' : 'contain'}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+            <View style={styles.setupBottomSection}>
+              <View style={styles.playerCounterContainer}>
+                <TouchableOpacity
+                  style={styles.playerCounterButton}
+                  onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
+                >
+                  <Text style={styles.playerCounterButtonText}>−</Text>
+                </TouchableOpacity>
+                <Text style={styles.playerCounterText}>{numPlayers} Players</Text>
+                <TouchableOpacity
+                  style={styles.playerCounterButton}
+                  onPress={() => setNumPlayers(Math.min(6, numPlayers + 1))}
+                >
+                  <Text style={styles.playerCounterButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
-                style={styles.playerCounterButton}
-                onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
+                style={styles.setupStartButton}
+                onPress={() => {
+                  setCurrentPlayer(1);
+                  setPlayerScores({});
+                  setShowSetup(false);
+                }}
               >
-                <Text style={styles.playerCounterButtonText}>−</Text>
-              </TouchableOpacity>
-              <Text style={styles.playerCounterText}>{numPlayers} Players</Text>
-              <TouchableOpacity
-                style={styles.playerCounterButton}
-                onPress={() => setNumPlayers(Math.min(8, numPlayers + 1))}
-              >
-                <Text style={styles.playerCounterButtonText}>+</Text>
+                <Text style={styles.setupStartButtonText}>Start</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Start */}
-            <TouchableOpacity
-              style={styles.setupStartButton}
-              onPress={() => {
-                setCurrentPlayer(1);
-                setPlayerScores({});
-                setShowSetup(false);
-              }}
-            >
-              <Text style={styles.setupStartButtonText}>Start</Text>
-            </TouchableOpacity>
           </View>
-          {/* Info button (placeholder) */}
           <View style={styles.infoButtonWrapper}>
             <TouchableOpacity style={styles.infoButton}>
               <Text style={styles.infoButtonText}>i</Text>
@@ -313,26 +299,26 @@ export default function BlownAwayScreen() {
           </View>
         </SafeAreaView>
       </LinearGradient>
-    ) : (
-    <LinearGradient
-      colors={['#667eea', '#764ba2', '#f093fb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
+    );
+  }
+
+  return (
+    <ImageBackground
+      source={require('../assets/images/Circus.jpg')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
     >
+      <View style={styles.backgroundOverlay} />
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={28} color="white" />
           </TouchableOpacity>
-          <Text style={styles.title}>🎈 Blown Away</Text>
+          <View style={{ flex: 1 }} />
           <View style={{ width: 28 }} />
         </View>
-
-        <View style={styles.content}>
-          <View style={{width: '100%', alignItems: 'center'}}>
-            <Text style={styles.playerText}>Player {currentPlayer}</Text>
-            <Text style={styles.timerText}>Time Left: {timeLeft}s</Text>
+        <View style={styles.gameContent}>
+          <View style={styles.balloonCenter}>
             <View style={styles.balloonsRow}>
               {balloons.map((b, idx) => (
                 <Text key={idx} style={{ fontSize: 40 }}>
@@ -340,42 +326,32 @@ export default function BlownAwayScreen() {
                 </Text>
               ))}
             </View>
-          </View>
-          {/* Balloon */}
-          <View style={styles.balloonContainer}>
-            <Animated.View
-              style={[styles.balloon, { transform: [{ scale: balloonScale }, { translateX: shakeAnim }] }]}
-            >
-              <Text style={[styles.balloonEmoji, { fontSize: balloonSize }]}>
-                {hasPopped ? '💥' : '🎈'}
-              </Text>
-            </Animated.View>
-            
-            {/* Balloon string */}
-            {!hasPopped && (
-              <View style={styles.balloonString} />
+            <View style={styles.balloonContainer}>
+              <Animated.View
+                style={[styles.balloon, { transform: [{ scale: balloonScale }, { translateX: shakeAnim }] }]}
+              >
+                <Text style={[styles.balloonEmoji, { fontSize: balloonSize }]}>
+                  {hasPopped ? '💥' : '🎈'}
+                </Text>
+              </Animated.View>
+              {!hasPopped && <View style={styles.balloonString} />}
+            </View>
+            {gameStarted && !hasPopped && (
+              <Text style={styles.instructionText}>🎤 Blow into the microphone!</Text>
+            )}
+            {Object.keys(playerScores).length > 0 && (
+              <View style={styles.scoresContainer}>
+                <Text style={styles.scoresTitle}>Scores:</Text>
+                {Object.entries(playerScores).map(([player, size]) => (
+                  <Text key={player} style={styles.scoreText}>
+                    Player {player}: {size === 0 ? '💥 POPPED!' : `${Math.round(size as number)}`}
+                    {winner && winner.player === parseInt(player) && winner.size > 0 && ' 🏆'}
+                  </Text>
+                ))}
+              </View>
             )}
           </View>
-
-          {gameStarted && !hasPopped && (
-            <Text style={styles.instructionText}>🎤 Blow into the microphone!</Text>
-          )}
-
-          {/* Scores */}
-          {Object.keys(playerScores).length > 0 && (
-            <View style={styles.scoresContainer}>
-              <Text style={styles.scoresTitle}>Scores:</Text>
-              {Object.entries(playerScores).map(([player, size]) => (
-                <Text key={player} style={styles.scoreText}>
-                  Player {player}: {size === 0 ? '💥 POPPED!' : `${Math.round(size as number)}`}
-                  {winner && winner.player === parseInt(player) && winner.size > 0 && ' 🏆'}
-                </Text>
-              ))}
-            </View>
-          )}
-
-          {/* Buttons */}
-          <View style={styles.buttonContainer}>
+          <View style={styles.gameButtonsWrapper}>
             {!gameStarted ? (
               <TouchableOpacity
                 style={[styles.button, styles.buttonStart]}
@@ -394,21 +370,28 @@ export default function BlownAwayScreen() {
                 <Text style={styles.buttonText}>🛑 Stop Blowing</Text>
               </TouchableOpacity>
             )}
-            
             <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={handleReset}>
               <Text style={styles.buttonText}>🔄 Reset Game</Text>
             </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
-    </LinearGradient>
-    )
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  backgroundOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   setupImage: {
     flex: 1,
@@ -419,33 +402,52 @@ const styles = StyleSheet.create({
   // PRE-GAME styles
   setupContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
     paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  setupTopSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 10,
+    flex: 4,
+    width: '100%',
+  },
+  setupMiddleSection: {
+    flex: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  setupBottomSection: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 20,
+    flex: 2,
+    width: '100%',
   },
   setupTitleImage: {
-    width: '85%',
-    maxWidth: 800,
-    aspectRatio: 8/3,
+    width: '100%',
+    height: '100%',
   },
   playerAvatarsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 15,
-    marginVertical: 20,
+    gap: 12,
     flexWrap: 'wrap',
   },
   playerAvatar: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 90,
-    height: 90,
+    width: 80,
+    height: 80,
     overflow: 'hidden',
   },
   playerAvatarImage: {
-    width: 90,
-    height: 90,
+    width: 80,
+    height: 80,
   },
   playerAvatarImageAdjusted: {
     transform: [{ scale: 1.22 }],
@@ -562,6 +564,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+  },
+  gameContent: {
+    flex: 1,
+    width: '100%',
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  balloonCenter: {
+    flexGrow: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gameButtonsWrapper: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 15,
   },
   timerText: {
     fontSize: 24,

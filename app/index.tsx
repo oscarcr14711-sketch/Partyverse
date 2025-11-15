@@ -54,7 +54,12 @@ export default function Index() {
   );
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#5DCEA9', '#B8D96E']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.center}> 
         <Image source={require('../assets/images/logo.png')} style={styles.logo} />
         <View style={styles.actions}> 
@@ -123,12 +128,12 @@ export default function Index() {
           </Animated.View>
         </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
   center: { alignItems: 'center', justifyContent: 'center' },
   logo: { width: 200, height: 200, resizeMode: 'contain' },
   actions: { width: '100%', alignItems: 'center', gap: 16, marginTop: 20 },

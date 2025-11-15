@@ -4,12 +4,41 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
-import React, { useEffect, useState } from 'react';
-import { Animated, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, UIManager, View, Platform } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Optional: remote audio URLs (set to valid URLs or keep null to disable)
 const FUSE_SOUND_URL: string | null = null; // e.g., 'https://example.com/fuse-sizzle.mp3'
 const EXPLOSION_SOUND_URL: string | null = null; // e.g., 'https://example.com/explosion.mp3'
+
+// Cracked-looking title by rendering each character with slight rotation/offset
+const CrackedTitle: React.FC<{ text: string }> = ({ text }) => {
+  const chars = text.split("");
+  const rotations = [-5, 3, -4, 6, -3, 4, -5, 3, -2, 5];
+  
+  return (
+    <View style={styles.crackedTitleRow}>
+      {chars.map((ch, idx) => (
+        <Text
+          key={idx}
+          style={{
+            fontSize: 64,
+            fontWeight: 'bold',
+            color: '#FFB300',
+            textShadowColor: 'rgba(0, 0, 0, 0.8)',
+            textShadowOffset: { width: 3, height: 3 },
+            textShadowRadius: 6,
+            fontFamily: Platform.select({ ios: 'Chalkduster', android: 'serif' }),
+            transform: [{ rotate: `${rotations[idx % rotations.length]}deg` }],
+            marginHorizontal: 2,
+          }}
+        >
+          {ch}
+        </Text>
+      ))}
+    </View>
+  );
+};
 
 export default function HotBombGameScreen() {
   // Detect if Lottie native view is available (Expo Go on iOS may not include it)
@@ -30,6 +59,31 @@ export default function HotBombGameScreen() {
   const [animationKey, setAnimationKey] = useState(0);
   const [numPlayers, setNumPlayers] = useState(3); // Number of players (can be adjusted)
   const [showExplosion, setShowExplosion] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [lottieProgress, setLottieProgress] = useState(0); // 0..1 progress for bomb Lottie
+  // Lazy-loaded explosion animation JSON (reduces initial load time)
+  const [explosionAnim, setExplosionAnim] = useState<any>(null);
+  // Memoize avatar elements AFTER numPlayers state is declared
+  const avatarsMemo = useMemo(() => {
+    const images = [
+      require('../assets/images/avatars/avatar1.png'),
+      require('../assets/images/avatars/avatar2.png'),
+      require('../assets/images/avatars/avatar3.png'),
+      require('../assets/images/avatars/avatar4.png'),
+      require('../assets/images/avatars/avatar5.png'),
+      require('../assets/images/avatars/avatar6.png'),
+    ];
+    const count = Math.min(numPlayers, 6);
+    return Array.from({ length: count }, (_, i) => (
+      <View key={i} style={styles.playerAvatar}>
+        <Image
+          source={images[i]}
+          style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
+          resizeMode={i === 5 ? 'cover' : 'contain'}
+        />
+      </View>
+    ));
+  }, [numPlayers]);
   
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const explosionOpacity = React.useRef(new Animated.Value(0)).current;
@@ -69,10 +123,23 @@ export default function HotBombGameScreen() {
     return () => clearInterval(interval);
   }, [gameStarted, timeLeft]);
 
+  // Sync Lottie bomb animation progress with timer
+  useEffect(() => {
+    if (isLottieAvailable && gameStarted) {
+      const target = Math.min(1, Math.max(0, (totalTime - timeLeft) / totalTime));
+      setLottieProgress(target);
+    } else if (!gameStarted) {
+      setLottieProgress(0);
+    }
+  }, [timeLeft, gameStarted, isLottieAvailable, totalTime]);
+
   const triggerExplosion = () => {
-    setGameStarted(false);
     setHasExploded(true);
     setShowExplosion(true);
+    // Dynamically import explosion animation only when needed
+    import('../assets/animations/Cartoon explosion.json')
+      .then((mod) => setExplosionAnim(mod))
+      .catch(() => setExplosionAnim(null));
     
     // Multiple intense haptic pulses
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -88,7 +155,8 @@ export default function HotBombGameScreen() {
 
     setTimeout(() => {
       setShowExplosion(false);
-      handleReset();
+      setGameStarted(false);
+      setGameOver(true);
     }, 2000);
   };
 
@@ -100,6 +168,7 @@ export default function HotBombGameScreen() {
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
     wickBurnAnim.setValue(0);
+    setLottieProgress(0);
     
     // Start fuse sound if URL provided
     if (FUSE_SOUND_URL) {
@@ -119,11 +188,37 @@ export default function HotBombGameScreen() {
     }
   };
 
+  const handleRestart = () => {
+    setGameOver(false);
+    setGameStarted(true);
+    setTimeLeft(totalTime);
+    setHasExploded(false);
+    setShowExplosion(false);
+    setAnimationKey(prev => prev + 1);
+    scaleAnim.setValue(1);
+    explosionOpacity.setValue(0);
+    wickBurnAnim.setValue(0);
+    setLottieProgress(0);
+  };
+
+  const handleReturnToSetup = () => {
+    setGameOver(false);
+    setGameStarted(false);
+    setTimeLeft(totalTime);
+    setHasExploded(false);
+    setShowExplosion(false);
+    scaleAnim.setValue(1);
+    explosionOpacity.setValue(0);
+    wickBurnAnim.setValue(0);
+    setLottieProgress(0);
+  };
+
   const handleReset = () => {
     setGameStarted(false);
     setTimeLeft(totalTime);
     setHasExploded(false);
     setShowExplosion(false);
+    setGameOver(false);
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
     wickBurnAnim.setValue(0);
@@ -214,34 +309,40 @@ export default function HotBombGameScreen() {
         style={StyleSheet.absoluteFill}
       />
       
-      {!gameStarted ? (
+      {gameOver ? (
+        // GAME OVER SCREEN
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+          <View style={styles.gameOverContainer}>
+            <Image 
+              source={require('../assets/images/Boom.png')}
+              style={styles.gameOverBoomImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.gameOverMessage}>Player with the bomb{"\n"}in hands is OUT!</Text>
+            <View style={styles.gameOverButtonContainer}>
+              <TouchableOpacity style={styles.gameOverButton} onPress={handleRestart}>
+                <Text style={styles.gameOverButtonText}>Restart</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.gameOverButton, styles.gameOverButtonSecondary]} onPress={handleReturnToSetup}>
+                <Text style={styles.gameOverButtonText}>Player Selection</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      ) : !gameStarted ? (
         // PRE-GAME SETUP SCREEN
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
           <View style={styles.setupContainer}>
             {/* Title */}
-            <Text style={styles.setupTitle}>HOT BOMB</Text>
+            <Image
+              source={require('../assets/images/Hotbombtitle.png')}
+              style={styles.setupTitleImage}
+              resizeMode="contain"
+            />
             
             {/* Player avatars */}
             <View style={styles.playerAvatarsContainer}>
-              {Array.from({ length: Math.min(numPlayers, 6) }, (_, i) => {
-                const avatarImages = [
-                  require('../assets/images/avatars/avatar1.png'),
-                  require('../assets/images/avatars/avatar2.png'),
-                  require('../assets/images/avatars/avatar3.png'),
-                  require('../assets/images/avatars/avatar4.png'),
-                  require('../assets/images/avatars/avatar5.png'),
-                  require('../assets/images/avatars/avatar6.png'),
-                ];
-                return (
-                  <View key={i} style={styles.playerAvatar}>
-                    <Image 
-                      source={avatarImages[i]} 
-                      style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
-                      resizeMode={i === 5 ? 'cover' : 'contain'}
-                    />
-                  </View>
-                );
-              })}
+              {avatarsMemo}
             </View>
             
             {/* Player counter */}
@@ -287,7 +388,6 @@ export default function HotBombGameScreen() {
               <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                 <Ionicons name="arrow-back" size={28} color="white" />
               </TouchableOpacity>
-              <Text style={styles.title}>🔥 Hot Bomb</Text>
               <View style={{ width: 28 }} />
             </View>
             <View style={styles.content}>
@@ -299,9 +399,8 @@ export default function HotBombGameScreen() {
                       ref={lottieRef}
                       source={require('../assets/animations/Bomb1.json')}
                       style={{ width: 300, height: 300 }}
-                      autoPlay={gameStarted}
+                      progress={lottieProgress}
                       loop={false}
-                      speed={1}
                       resizeMode="cover"
                     />
                   ) : (
@@ -311,43 +410,26 @@ export default function HotBombGameScreen() {
                     />
                   )}
                 </Animated.View>
-                <Animated.View
-                  style={[
-                    styles.explosionEffect,
-                    {
-                      opacity: explosionOpacity,
-                      transform: [{ scale: scaleAnim }],
-                    },
-                  ]}
-                >
-                  <Text style={styles.explosionText}>💥 BOOM! 💥</Text>
-                </Animated.View>
               </View>
-              <Text style={styles.instructionText}>⚠️ PASS THE PHONE!</Text>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={[styles.button, styles.buttonDisabled]} disabled={true}>
-                  <Text style={styles.buttonText}>⏸️ Running...</Text>
-                </TouchableOpacity>
                 <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={handleReset}>
                   <Text style={styles.buttonText}>🔄 Reset</Text>
                 </TouchableOpacity>
               </View>
-              {showExplosion && (
-                <View style={styles.explosionOverlay} pointerEvents="none">
-                  {isLottieAvailable ? (
-                    <LottieView
-                      source={require('../assets/animations/Bomb Animation.json')}
-                      style={styles.explosionLottie}
-                      autoPlay
-                      loop={false}
-                      speed={1}
-                    />
-                  ) : (
-                    <Text style={styles.explosionFallback}>💥</Text>
-                  )}
-                </View>
-              )}
             </View>
+            {showExplosion && (
+              <View style={styles.explosionOverlay} pointerEvents="none">
+                {isLottieAvailable && explosionAnim ? (
+                  <LottieView
+                    key={`explosion-${animationKey}`}
+                    source={explosionAnim}
+                    autoPlay
+                    loop={false}
+                    style={styles.cartoonExplosionLottie}
+                  />
+                ) : null}
+              </View>
+            )}
           </SafeAreaView>
         </>
       )}
@@ -462,7 +544,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#666',
   },
   buttonReset: {
-    backgroundColor: '#FF6B6B',
+    // 3D styled reset button with dark tone matching background
+    backgroundColor: '#1B1F22',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.45,
+    shadowRadius: 7,
+    elevation: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: '#111416',
+    borderTopWidth: 1,
+    borderTopColor: '#2a2f33',
   },
   buttonText: {
     fontSize: 14,
@@ -562,11 +654,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
-  explosionEffect: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   explosionOverlay: {
     position: 'absolute',
     top: 0,
@@ -581,19 +668,15 @@ const styles = StyleSheet.create({
     width: 500,
     height: 500,
   },
+  cartoonExplosionLottie: {
+    width: 600,
+    height: 600,
+  },
   explosionFallback: {
     fontSize: 120,
     textShadowColor: '#FF0000',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 25,
-  },
-  explosionText: {
-    fontSize: 60,
-    fontWeight: 'bold',
-    color: '#FF6600',
-    textShadowColor: '#FF0000',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 15,
   },
   warningText: {
     fontSize: 18,
@@ -614,11 +697,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFB300',
     textAlign: 'center',
-    letterSpacing: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 2, height: 2 },
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 6,
+    fontFamily: Platform.select({ ios: 'Chalkduster', android: 'serif' }),
+  },
+  setupTitleImage: {
+    width: 800,
+    height: 300,
+    marginBottom: 20,
+  },
+  setupTitleOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    fontSize: 64,
+    fontWeight: 'bold',
+    color: '#FFE082',
+    textShadowColor: 'rgba(0, 0, 0, 0.35)',
+    textShadowOffset: { width: -2, height: -2 },
     textShadowRadius: 4,
-    fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-condensed' }),
+    fontFamily: Platform.select({ ios: 'Chalkduster', android: 'serif' }),
+  },
+  crackedTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  crackedCharContainer: {
+    position: 'relative',
+    marginHorizontal: 2,
   },
   setupBombContainer: {
     position: 'relative',
@@ -673,6 +781,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     gap: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: '#1a1f23',
   },
   playerCounterButton: {
     width: 50,
@@ -681,6 +796,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFE0B2',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    borderBottomWidth: 3,
+    borderBottomColor: '#D4A574',
   },
   playerCounterButtonText: {
     fontSize: 32,
@@ -702,6 +824,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 80,
     paddingVertical: 16,
     marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: '#1a1f23',
   },
   setupStartButtonText: {
     fontSize: 28,
@@ -722,11 +851,83 @@ const styles = StyleSheet.create({
     backgroundColor: '#263238',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    borderBottomWidth: 3,
+    borderBottomColor: '#1a1f23',
   },
   infoButtonText: {
     fontSize: 26,
     fontWeight: 'bold',
     color: '#FFE0B2',
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  gameOverContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  gameOverTitle: {
+    fontSize: 72,
+    fontWeight: 'bold',
+    color: '#FF6600',
+    textAlign: 'center',
+    marginBottom: 30,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 8,
+  },
+  gameOverBoomImage: {
+    width: 500,
+    height: 300,
+    marginBottom: 30,
+  },
+  gameOverMessage: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFE0B2',
+    textAlign: 'center',
+    marginBottom: 50,
+    lineHeight: 42,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+  },
+  gameOverButtonContainer: {
+    width: '100%',
+    gap: 20,
+  },
+  gameOverButton: {
+    backgroundColor: '#263238',
+    borderRadius: 30,
+    paddingHorizontal: 40,
+    paddingVertical: 18,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: '#1a1f23',
+  },
+  gameOverButtonSecondary: {
+    backgroundColor: '#455A64',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 7,
+    elevation: 9,
+    borderBottomWidth: 4,
+    borderBottomColor: '#2f3d44',
+  },
+  gameOverButtonText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFE0B2',
   },
 });

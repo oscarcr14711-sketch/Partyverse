@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MAX_BALLOON_SIZE = 500; // Size at which balloon pops
@@ -13,6 +13,8 @@ const BLOW_THRESHOLD = -40; // Audio level threshold (more sensitive)
 
 export default function BlownAwayScreen() {
   const router = useRouter();
+  const [showSetup, setShowSetup] = useState(true); // Pre-game screen gate
+  const [numPlayers, setNumPlayers] = useState(3);
   const [gameStarted, setGameStarted] = useState(false);
   const [balloonSize, setBalloonSize] = useState(MIN_BALLOON_SIZE);
   const [hasPopped, setHasPopped] = useState(false);
@@ -234,6 +236,77 @@ export default function BlownAwayScreen() {
   };
 
   return (
+    showSetup ? (
+      // PRE-GAME SETUP SCREEN (similar to Hot Bomb), using Blownaway.png as the title image
+      <LinearGradient
+        colors={['#5DADE2', '#5DADE2']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={styles.setupContainer}>
+            {/* Player avatars */}
+            <View style={styles.playerAvatarsContainer}>
+              {Array.from({ length: Math.min(numPlayers, 6) }, (_, i) => {
+                const avatarImages = [
+                  require('../assets/images/avatars/avatar1.png'),
+                  require('../assets/images/avatars/avatar2.png'),
+                  require('../assets/images/avatars/avatar3.png'),
+                  require('../assets/images/avatars/avatar4.png'),
+                  require('../assets/images/avatars/avatar5.png'),
+                  require('../assets/images/avatars/avatar6.png'),
+                ];
+                return (
+                  <View key={i} style={styles.playerAvatar}>
+                    <Image
+                      source={avatarImages[i]}
+                      style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
+                      resizeMode={i === 5 ? 'cover' : 'contain'}
+                    />
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Player counter */}
+            <View style={styles.playerCounterContainer}>
+              <TouchableOpacity
+                style={styles.playerCounterButton}
+                onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
+              >
+                <Text style={styles.playerCounterButtonText}>−</Text>
+              </TouchableOpacity>
+              <Text style={styles.playerCounterText}>{numPlayers} Players</Text>
+              <TouchableOpacity
+                style={styles.playerCounterButton}
+                onPress={() => setNumPlayers(Math.min(8, numPlayers + 1))}
+              >
+                <Text style={styles.playerCounterButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Start */}
+            <TouchableOpacity
+              style={styles.setupStartButton}
+              onPress={() => {
+                setCurrentPlayer(1);
+                setPlayerScores({});
+                setShowSetup(false);
+              }}
+            >
+              <Text style={styles.setupStartButtonText}>Start</Text>
+            </TouchableOpacity>
+          </View>
+          {/* Info button (placeholder) */}
+          <View style={styles.infoButtonWrapper}>
+            <TouchableOpacity style={styles.infoButton}>
+              <Text style={styles.infoButtonText}>i</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    ) : (
     <LinearGradient
       colors={['#667eea', '#764ba2', '#f093fb']}
       start={{ x: 0, y: 0 }}
@@ -322,12 +395,145 @@ export default function BlownAwayScreen() {
         </View>
       </SafeAreaView>
     </LinearGradient>
+    )
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  setupImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#000',
+  },
+  // PRE-GAME styles
+  setupContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+  },
+  setupTitleImage: {
+    width: '85%',
+    maxWidth: 800,
+    aspectRatio: 8/3,
+  },
+  playerAvatarsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 15,
+    marginVertical: 20,
+    flexWrap: 'wrap',
+  },
+  playerAvatar: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 90,
+    height: 90,
+    overflow: 'hidden',
+  },
+  playerAvatarImage: {
+    width: 90,
+    height: 90,
+  },
+  playerAvatarImageAdjusted: {
+    transform: [{ scale: 1.22 }],
+  },
+  playerCounterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#263238',
+    borderRadius: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    gap: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: '#1a1f23',
+  },
+  playerCounterButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFE0B2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    borderBottomWidth: 3,
+    borderBottomColor: '#D4A574',
+  },
+  playerCounterButtonText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#263238',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  playerCounterText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFE0B2',
+    minWidth: 140,
+    textAlign: 'center',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  setupStartButton: {
+    backgroundColor: '#263238',
+    borderRadius: 30,
+    paddingHorizontal: 80,
+    paddingVertical: 16,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: '#1a1f23',
+  },
+  setupStartButtonText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFE0B2',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  infoButtonWrapper: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    zIndex: 100,
+  },
+  infoButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#263238',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+    borderBottomWidth: 3,
+    borderBottomColor: '#1a1f23',
+  },
+  infoButtonText: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#FFE0B2',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
   header: {
     flexDirection: 'row',

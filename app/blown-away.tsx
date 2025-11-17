@@ -3,6 +3,7 @@ import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,34 +15,46 @@ const BLOW_THRESHOLD = -40; // Audio level threshold (more sensitive)
 export default function BlownAwayScreen() {
   const router = useRouter();
   const [showSetup, setShowSetup] = useState(true); // Pre-game screen gate
+  const [showResults, setShowResults] = useState(false); // Results screen gate
   const [numPlayers, setNumPlayers] = useState(3);
   const [gameStarted, setGameStarted] = useState(false);
   const [balloonSize, setBalloonSize] = useState(MIN_BALLOON_SIZE);
   const [hasPopped, setHasPopped] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState(1);
-  const [playerScores, setPlayerScores] = useState<{ [key: number]: number }>({});
+  const [playerScores, setPlayerScores] = useState<{ [key: number]: { score: number; balloons: number[] } }>({});
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isListening, setIsListening] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15); // 15 seconds per turn
-  const [balloons, setBalloons] = useState<Array<{ popped: boolean }>>([]); // Track all balloons
+  const [timeLeft, setTimeLeft] = useState(20); // 20 seconds per round
+  const [roundInflated, setRoundInflated] = useState(0); // Current round inflated count
+  const [roundPopped, setRoundPopped] = useState(0); // Current round popped count
+  const [roundScore, setRoundScore] = useState(0); // Current round total score
+  const [roundBalloons, setRoundBalloons] = useState<number[]>([]); // Sizes of balloons inflated this round
 
   const balloonScale = useRef(new Animated.Value(1)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const popOpacity = useRef(new Animated.Value(0)).current;
+  const recordingRef = useRef<Audio.Recording | null>(null);
 
   // Request microphone permissions and start listening
   const startListening = async () => {
     try {
-      // Stop and unload any existing recording first
-      if (recording) {
+      // Stop and unload any existing recording first from both state and ref
+      const currentRecording = recordingRef.current || recording;
+      if (currentRecording) {
         try {
-          await recording.stopAndUnloadAsync();
-          setRecording(null);
-          setIsListening(false);
+          await currentRecording.stopAndUnloadAsync();
         } catch (e) {
           console.log('Error stopping existing recording:', e);
         }
       }
+      
+      // Clear both state and ref
+      recordingRef.current = null;
+      setRecording(null);
+      setIsListening(false);
+      
+      // Wait longer to ensure complete cleanup
+      await new Promise(resolve => setTimeout(resolve, 400));
 
       const permission = await Audio.requestPermissionsAsync();
       if (!permission.granted) {
@@ -78,9 +91,6 @@ export default function BlownAwayScreen() {
                     Animated.timing(shakeAnim, { toValue: 0, duration: 30, useNativeDriver: true }),
                   ]).start();
                 }
-                if (newSize > prev && newSize < MAX_BALLOON_SIZE) {
-                  setBalloons((old) => [...old, { popped: false }]);
-                }
                 return newSize;
               });
             }
@@ -89,17 +99,21 @@ export default function BlownAwayScreen() {
         100 // Update every 100ms
       );
 
+      recordingRef.current = newRecording;
       setRecording(newRecording);
       setIsListening(true);
     } catch (err) {
       console.error('Failed to start recording', err);
+      alert('Failed to start recording. Please try again.');
     }
   };
 
   const stopListening = async () => {
-    if (recording) {
+    const currentRecording = recordingRef.current || recording;
+    if (currentRecording) {
       try {
-        await recording.stopAndUnloadAsync();
+        await currentRecording.stopAndUnloadAsync();
+        recordingRef.current = null;
         setRecording(null);
         setIsListening(false);
       } catch (err) {
@@ -108,9 +122,10 @@ export default function BlownAwayScreen() {
     }
   };
 
-  const popBalloon = () => {
+  const popBalloon = async () => {
     setHasPopped(true);
-    stopListening();
+    await stopListening();
+    setRoundPopped((prev) => prev + 1);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     Animated.parallel([
       Animated.timing(balloonScale, { toValue: 1.5, duration: 100, useNativeDriver: true }),
@@ -118,53 +133,90 @@ export default function BlownAwayScreen() {
     ]).start(() => {
       Animated.timing(balloonScale, { toValue: 0, duration: 200, useNativeDriver: true }).start();
     });
-    setPlayerScores((prev) => ({ ...prev, [currentPlayer]: 0 }));
-    setTimeout(() => {
-      nextPlayer();
-    }, 2000);
+    // Reset balloon for next attempt in same round
+    setTimeout(async () => {
+      setBalloonSize(MIN_BALLOON_SIZE);
+      setHasPopped(false);
+      balloonScale.setValue(1);
+      popOpacity.setValue(0);
+      if (timeLeft > 0) {
+        await new Promise(resolve => setTimeout(resolve, 400));
+        startListening();
+      }
+    }, 1000);
   };
 
   const handleStartTurn = () => {
     setGameStarted(true);
     setBalloonSize(MIN_BALLOON_SIZE);
     setHasPopped(false);
-    setTimeLeft(15);
-    setBalloons([]);
+    setTimeLeft(20);
+    setRoundInflated(0);
+    setRoundPopped(0);
+    setRoundScore(0);
+    setRoundBalloons([]);
     balloonScale.setValue(1);
     popOpacity.setValue(0);
     startListening();
   };
 
-  const handleStopBlowing = () => {
+  const handleStopBlowing = async () => {
     if (!hasPopped) {
-      // Save the score for this player
-      setPlayerScores((prev) => ({ ...prev, [currentPlayer]: balloonSize }));
-      stopListening();
-      setGameStarted(false);
+      await stopListening();
+      const points = Math.round(balloonSize);
+      setRoundInflated((prev) => prev + 1);
+      setRoundScore((prev) => prev + points);
+      setRoundBalloons((prev) => [...prev, points]);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => {
-        nextPlayer();
-      }, 1500);
+      // Reset balloon for next attempt in same round
+      setBalloonSize(MIN_BALLOON_SIZE);
+      setHasPopped(false);
+      balloonScale.setValue(1);
+      popOpacity.setValue(0);
+      if (timeLeft > 0) {
+        await new Promise(resolve => setTimeout(resolve, 400));
+        startListening();
+      }
     }
   };
 
-  // Timer effect for each turn
+  // Timer effect for each round
   useEffect(() => {
-    if (gameStarted && timeLeft > 0 && !hasPopped) {
+    if (gameStarted && timeLeft > 0) {
       const interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
       return () => clearInterval(interval);
     } else if (gameStarted && timeLeft === 0) {
-      handleStopBlowing();
+      stopListening();
+      setGameStarted(false);
+      // Save round stats and move to next player
+      setPlayerScores((prev) => ({
+        ...prev,
+        [currentPlayer]: { score: roundScore, balloons: roundBalloons },
+      }));
+      // Check if all players finished
+      if (currentPlayer >= numPlayers) {
+        setTimeout(() => {
+          setShowResults(true);
+        }, 1500);
+      } else {
+        setTimeout(() => {
+          nextPlayer();
+        }, 1500);
+      }
     }
-  }, [gameStarted, timeLeft, hasPopped]);
+  }, [gameStarted, timeLeft]);
 
   const nextPlayer = () => {
     setCurrentPlayer((prev) => prev + 1);
     setBalloonSize(MIN_BALLOON_SIZE);
     setHasPopped(false);
     setGameStarted(false);
+    setRoundInflated(0);
+    setRoundPopped(0);
+    setRoundScore(0);
+    setRoundBalloons([]);
     balloonScale.setValue(1);
     popOpacity.setValue(0);
   };
@@ -176,20 +228,24 @@ export default function BlownAwayScreen() {
     setBalloonSize(MIN_BALLOON_SIZE);
     setHasPopped(false);
     setGameStarted(false);
+    setRoundInflated(0);
+    setRoundPopped(0);
+    setRoundScore(0);
+    setRoundBalloons([]);
     balloonScale.setValue(1);
     popOpacity.setValue(0);
   };
 
-  // Determine winner
+  // Determine winner (highest total score)
   const getWinner = () => {
     const scores = Object.entries(playerScores);
     if (scores.length === 0) return null;
     
     const winner = scores.reduce((max, current) => 
-      current[1] > max[1] ? current : max
+      current[1].score > max[1].score ? current : max
     );
     
-    return { player: parseInt(winner[0]), size: winner[1] };
+    return { player: parseInt(winner[0]), score: winner[1].score };
   };
 
   const winner = getWinner();
@@ -302,6 +358,64 @@ export default function BlownAwayScreen() {
     );
   }
 
+  if (showResults) {
+    const avatarImages = [
+      require('../assets/images/avatars/avatar1.png'),
+      require('../assets/images/avatars/avatar2.png'),
+      require('../assets/images/avatars/avatar3.png'),
+      require('../assets/images/avatars/avatar4.png'),
+      require('../assets/images/avatars/avatar5.png'),
+      require('../assets/images/avatars/avatar6.png'),
+    ];
+
+    return (
+      <ImageBackground
+        source={require('../assets/images/Circus.jpg')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.backgroundOverlay} />
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={styles.resultsContainer}>
+            <Text style={styles.resultsTitle}>RESULT</Text>
+            <View style={styles.playerCardsContainer}>
+              {Object.entries(playerScores)
+                .sort((a, b) => b[1].score - a[1].score)
+                .map(([player, stats], index) => {
+                  const playerNum = parseInt(player);
+                  const isWinner = index === 0;
+                  return (
+                    <View key={player} style={styles.playerCard}>
+                      <Image
+                        source={avatarImages[playerNum - 1]}
+                        style={styles.resultAvatar}
+                        resizeMode="contain"
+                      />
+                      <View style={styles.playerCardContent}>
+                        <Text style={styles.playerCardName}>PLAYER {player}</Text>
+                        {isWinner && <Text style={styles.youWinText}>YOU WIN!</Text>}
+                        <Text style={styles.playerCardScore}>{stats.score}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+            </View>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={() => {
+                setShowResults(false);
+                setShowSetup(true);
+                handleReset();
+              }}
+            >
+              <Text style={styles.continueButtonText}>CONTINUE</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
+
   return (
     <ImageBackground
       source={require('../assets/images/Circus.jpg')}
@@ -318,60 +432,86 @@ export default function BlownAwayScreen() {
           <View style={{ width: 28 }} />
         </View>
         <View style={styles.gameContent}>
+          {/* Top-left small balloons with counters */}
+          <View style={styles.topLeftStats} pointerEvents="none">
+            <View style={styles.statRow}>
+              <Image
+                source={require('../assets/images/Balloon.png')}
+                style={styles.statIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.statNumber}>{roundInflated}</Text>
+            </View>
+            <View style={styles.statRow}>
+              <Image
+                source={require('../assets/images/BalloonPopped.png')}
+                style={styles.statIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.statNumber}>{roundPopped}</Text>
+            </View>
+          </View>
+          {/* Top-right timer */}
+          {gameStarted && (
+            <View style={styles.timerContainer}>
+              <Text style={styles.timerText}>{timeLeft}</Text>
+            </View>
+          )}
           <View style={styles.balloonCenter}>
-            <View style={styles.balloonsRow}>
-              {balloons.map((b, idx) => (
-                <Text key={idx} style={{ fontSize: 40 }}>
-                  {b.popped ? '🪁' : '🎈'}
-                </Text>
-              ))}
+            {/* Wind animation behind balloon */}
+            <View style={styles.windAnimationContainer} pointerEvents="none">
+              <LottieView
+                source={require('../assets/animations/Wind.json')}
+                autoPlay
+                loop
+                style={{ width: 400, height: 400 }}
+              />
             </View>
             <View style={styles.balloonContainer}>
               <Animated.View
                 style={[styles.balloon, { transform: [{ scale: balloonScale }, { translateX: shakeAnim }] }]}
               >
-                <Text style={[styles.balloonEmoji, { fontSize: balloonSize }]}>
-                  {hasPopped ? '💥' : '🎈'}
-                </Text>
+                {!hasPopped ? (
+                  <Animated.Image
+                    source={require('../assets/images/Balloon.png')}
+                    resizeMode="contain"
+                    style={[styles.balloonImage, { width: balloonSize, height: balloonSize }]}
+                  />
+                ) : (
+                  <Animated.Image
+                    source={require('../assets/images/BalloonPopped.png')}
+                    resizeMode="contain"
+                    style={[styles.balloonImage, { width: 150, height: 150, opacity: popOpacity }]}
+                  />
+                )}
               </Animated.View>
               {!hasPopped && <View style={styles.balloonString} />}
             </View>
             {gameStarted && !hasPopped && (
               <Text style={styles.instructionText}>🎤 Blow into the microphone!</Text>
             )}
-            {Object.keys(playerScores).length > 0 && (
-              <View style={styles.scoresContainer}>
-                <Text style={styles.scoresTitle}>Scores:</Text>
-                {Object.entries(playerScores).map(([player, size]) => (
-                  <Text key={player} style={styles.scoreText}>
-                    Player {player}: {size === 0 ? '💥 POPPED!' : `${Math.round(size as number)}`}
-                    {winner && winner.player === parseInt(player) && winner.size > 0 && ' 🏆'}
-                  </Text>
-                ))}
-              </View>
-            )}
           </View>
           <View style={styles.gameButtonsWrapper}>
             {!gameStarted ? (
               <TouchableOpacity
-                style={[styles.button, styles.buttonStart]}
+                style={styles.gameButton}
                 onPress={handleStartTurn}
               >
-                <Text style={styles.buttonText}>
-                  {playerScores[currentPlayer] !== undefined ? '▶️ Next Player' : '▶️ Start Turn'}
+                <Text style={[styles.gameButtonText, { color: '#8B0000' }]}>
+                  {playerScores[currentPlayer] !== undefined ? 'Next Player' : 'Start Turn'}
                 </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={[styles.button, styles.buttonStop]}
+                style={styles.gameButton}
                 onPress={handleStopBlowing}
                 disabled={hasPopped}
               >
-                <Text style={styles.buttonText}>🛑 Stop Blowing</Text>
+                <Text style={styles.gameButtonText}>Stop Blowing</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={handleReset}>
-              <Text style={styles.buttonText}>🔄 Reset Game</Text>
+            <TouchableOpacity style={styles.gameButton} onPress={handleReset}>
+              <Text style={[styles.gameButtonText, { color: '#8B0000' }]}>Reset Game</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -573,27 +713,94 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  topLeftStats: {
+    position: 'absolute',
+    top: 0,
+    left: 10,
+    gap: 14,
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statIcon: {
+    width: 28,
+    height: 28,
+  },
+  statNumber: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  timerContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 10,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#FF6B6B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+  },
+  timerText: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
   balloonCenter: {
     flexGrow: 1,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  windAnimationContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 0,
   },
   gameButtonsWrapper: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 15,
+    marginTop: 200,
+    paddingBottom: 20,
   },
-  timerText: {
-    fontSize: 24,
-    color: '#fff',
-    marginBottom: 20,
+  gameButton: {
+    flex: 1,
+    backgroundColor: '#5DADE2',
+    borderRadius: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: '#2874A6',
   },
-  balloonsRow: {
-    flexDirection: 'row',
-    marginBottom: 20,
+  gameButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
+  // ...existing code...
   playerText: {
     fontSize: 32,
     fontWeight: 'bold',
@@ -612,6 +819,9 @@ const styles = StyleSheet.create({
   },
   balloonEmoji: {
     textAlign: 'center',
+  },
+  balloonImage: {
+    alignSelf: 'center',
   },
   balloonString: {
     width: 2,
@@ -676,5 +886,95 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',
+  },
+  // RESULTS SCREEN STYLES
+  resultsContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 40,
+  },
+  resultsTitle: {
+    fontSize: 64,
+    fontWeight: '900',
+    color: '#FF6B35',
+    marginBottom: 30,
+    textShadowColor: '#8B2F00',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 0,
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  playerCardsContainer: {
+    width: '100%',
+    gap: 20,
+    marginBottom: 30,
+  },
+  playerCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FF6B35',
+    borderRadius: 20,
+    padding: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 4,
+    borderColor: '#8B2F00',
+  },
+  resultAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFE0B2',
+    borderWidth: 3,
+    borderColor: '#8B2F00',
+  },
+  playerCardContent: {
+    flex: 1,
+    marginLeft: 15,
+    justifyContent: 'center',
+  },
+  playerCardName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  youWinText: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FFD700',
+    marginVertical: 2,
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  playerCardScore: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    position: 'absolute',
+    right: 20,
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  continueButton: {
+    backgroundColor: '#FF6B35',
+    borderRadius: 30,
+    paddingHorizontal: 60,
+    paddingVertical: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
+    borderWidth: 4,
+    borderColor: '#8B2F00',
+  },
+  continueButtonText: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
 });

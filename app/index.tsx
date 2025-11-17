@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useRef } from 'react';
 import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import LottieView from 'lottie-react-native';
 
 export default function Index() {
   const router = useRouter();
@@ -60,7 +61,15 @@ export default function Index() {
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
-      <View style={styles.center}> 
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }} pointerEvents="none">
+        <LottieView
+          source={require('../assets/animations/Confetti - Full Screen.json')}
+          autoPlay
+          loop
+          style={{ width: '100%', height: '100%' }}
+        />
+      </View>
+      <View style={[styles.center, { zIndex: 2 }]}> 
         <Image source={require('../assets/images/logo.png')} style={styles.logo} />
         <View style={styles.actions}> 
           <Animated.View

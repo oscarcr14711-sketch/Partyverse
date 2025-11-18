@@ -82,7 +82,7 @@ const GameModeItem: React.FC<GameModeItemProps> = ({ title, subtitle, gradient, 
               <Text style={styles.gameTitle}>{title}</Text>
               {subtitle ? <Text style={styles.gameDescription}>{subtitle}</Text> : null}
             </View>
-            <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+            {/* <Ionicons name="chevron-forward" size={24} color="#CCCCCC" /> */}
           </LinearGradient>
         </LinearGradient>
       </Animated.View>

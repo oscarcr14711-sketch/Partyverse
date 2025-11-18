@@ -19,13 +19,13 @@ export default function HomeScreen() {
       <View style={styles.buttons}> 
         <TouchableOpacity activeOpacity={0.9} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push('/(tabs)/games'); }}>
           <LinearGradient colors={['#22c55e','#16a34a']} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.btn}> 
-            <Ionicons name="play" size={20} color="#fff" style={styles.icon} />
+            {/* <Ionicons name="play" size={20} color="#fff" style={styles.icon} /> */}
             <Text style={styles.btnText}>Play Now</Text>
           </LinearGradient>
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.9} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); router.push('/spicy-games'); }}>
           <LinearGradient colors={['#fb7185','#ef4444']} start={{x:0,y:0}} end={{x:1,y:1}} style={[styles.btn, styles.spicy]}> 
-            <Ionicons name="flame" size={20} color="#fff" style={styles.icon} />
+            {/* <Ionicons name="flame" size={20} color="#fff" style={styles.icon} /> */}
             <Text style={styles.btnText}>Spicy Mode 18+</Text>
           </LinearGradient>
         </TouchableOpacity>

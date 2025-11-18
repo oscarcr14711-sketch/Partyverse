@@ -33,7 +33,7 @@ export default function ProfileScreen() {
 
           <View style={styles.premiumContainer}>
             <View style={styles.premiumHeader}>
-              <Ionicons name="diamond" size={24} color="white" />
+              {/* <Ionicons name="diamond" size={24} color="white" /> */}
               <Text style={styles.premiumTitle}>Premium</Text>
             </View>
             <Text style={styles.premiumSubtitle}>Active until Dec 30, 2025</Text>

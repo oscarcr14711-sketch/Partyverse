@@ -22,12 +22,12 @@ export default function StoreScreen() {
         <Text style={styles.subtitle}>Upgrade your party experience!</Text>
 
         <TouchableOpacity style={styles.mainButton}>
-          <Ionicons name="game-controller-outline" size={24} color="#000" style={styles.mainButtonIcon} />
+          {/* <Ionicons name="game-controller-outline" size={24} color="#000" style={styles.mainButtonIcon} /> */}
           <Text style={styles.mainButtonText}>Unlock Themes</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.mainButton, styles.premiumButton]} onPress={() => router.push('/spicy-games')}>
-            <Ionicons name="lock-closed-outline" size={24} color="#000" style={styles.mainButtonIcon} />
+            {/* <Ionicons name="lock-closed-outline" size={24} color="#000" style={styles.mainButtonIcon} /> */}
             <View>
                 <Text style={styles.mainButtonText}>Premium</Text>
                 <Text style={styles.premiumSubtitle}>Extra playlists + Spicy Mode</Text>

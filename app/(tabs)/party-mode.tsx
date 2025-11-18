@@ -1,7 +1,7 @@
-import React from 'react';
-import { StyleSheet, View, Text, FlatList } from 'react-native';
-import { CategoryCard } from '../../components/CategoryCard';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { CategoryCard } from '../../components/CategoryCard';
 
 const categories = [
     {

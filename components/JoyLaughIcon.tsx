@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
 import LottieView from 'lottie-react-native';
-import { StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet } from 'react-native';
 
 export default function JoyLaughIcon() {
   const anim = useRef(null);

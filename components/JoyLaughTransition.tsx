@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
 import LottieView from 'lottie-react-native';
+import React, { useEffect, useRef } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 

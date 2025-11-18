@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const truthImages = [
 	require('../assets/images/Truth or bluff images/T1.png'),
@@ -12,6 +12,9 @@ const truthImages = [
 	require('../assets/images/Truth or bluff images/T7.png'),
 	require('../assets/images/Truth or bluff images/T8.png'),
 	require('../assets/images/Truth or bluff images/T9.png'),
+	require('../assets/images/Truth or bluff images/T10.png'),
+	require('../assets/images/Truth or bluff images/T11.png'),
+	require('../assets/images/Truth or bluff images/T12.png'),
 ];
 
 const avatarImages = [

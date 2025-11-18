@@ -1,53 +1,119 @@
 import React from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import JoyLaughIcon from '../components/JoyLaughIcon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const games = [
   { 
     title: 'Truth or Bluff', 
-    description: 'Describe the picture on screen — but you can either tell the truth or make up a lie. The other player must guess if you’re bluffing or being honest! A game of acting, deception, and laughter inspired by “Box of Lies.”', 
+    description: '', 
     emoji: '🤥', 
-    color: '#ff9f43', 
+    color: '#ff4f81', // Vibrant pink
     path: '/truth-or-bluff' 
   },
   { 
     title: 'If you Laugh you lose', 
-    description: 'Try not to laugh while the app plays funny sounds, memes, or videos. Whoever laughs first… loses the round! Simple, chaotic, and guaranteed to break your poker face.', 
+    description: '', 
     emoji: '😆', 
-    color: '#ff6b6b', 
+    color: '#36c9c6', // Vibrant teal
     path: '/if-you-laugh-you-lose' 
   },
   { 
     title: 'Extreme Challenge Roulette', 
-    description: 'Spin the wheel and complete the crazy dare that appears! Some are funny, some are ridiculous, and some… are just pure chaos. A fast-paced party classic with a Partyverse twist — laugh or lose!', 
+    description: '', 
     emoji: '🎡', 
-    color: '#feca57', 
+    color: '#f9c846', // Vibrant yellow
     path: '/extreme-challenge-roulette' 
   },
   { 
     title: 'Lip Sync Chaos', 
-    description: 'Put on your headphones while loud music plays. Try to guess what your friend is saying just by reading their lips! The louder the music, the funnier it gets.', 
+    description: '', 
     emoji: '🎧', 
-    color: '#48dbfb', 
+    color: '#5f6bff', // Vibrant blue
     path: '/lip-sync-chaos' 
   },
   { 
     title: 'Mic Madness', 
-    description: 'When the timer hits zero, a random word appears. Grab the mic and sing a line or lyric with that word before anyone else! Fast, chaotic, and full of hilarious performances — pure musical mayhem.', 
+    description: '', 
     emoji: '🎤', 
-    color: '#a29bfe', 
+    color: '#7dff6a', // Vibrant green
     path: '/mic-madness' 
   },
 ];
 
-const GameItem = ({ title, description, emoji, color, onPress }) => (
-  <TouchableOpacity style={[styles.gameButton, { backgroundColor: color }]} onPress={onPress}>
-    <Text style={styles.gameTitle}>{emoji} {title}</Text>
-    <Text style={styles.gameDescription}>{description}</Text>
-  </TouchableOpacity>
-);
+// Color helpers to create light/dark shades for the 3D pill effect
+const clamp = (v) => Math.max(0, Math.min(255, v));
+const hexToRgb = (hex) => {
+  const full = hex.replace('#', '');
+  const h = full.length === 3 ? full.split('').map((c) => c + c).join('') : full;
+  const num = parseInt(h, 16);
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+};
+const rgbToHex = (r, g, b) =>
+  '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+const lighten = (hex, amt = 0.2) => {
+  const { r, g, b } = hexToRgb(hex);
+  return rgbToHex(
+    clamp(Math.round(r + (255 - r) * amt)),
+    clamp(Math.round(g + (255 - g) * amt)),
+    clamp(Math.round(b + (255 - b) * amt))
+  );
+};
+const darken = (hex, amt = 0.2) => {
+  const { r, g, b } = hexToRgb(hex);
+  return rgbToHex(
+    clamp(Math.round(r * (1 - amt))),
+    clamp(Math.round(g * (1 - amt))),
+    clamp(Math.round(b * (1 - amt)))
+  );
+};
+
+const GameItem = ({ title, description, emoji, color, onPress }) => {
+  const top = lighten(color, 0.30);
+  const bottom = darken(color, 0.30);
+  const ringLight = lighten(color, 0.45);
+  const ringDark = darken(color, 0.45);
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
+      {/* Outer ring/glow */}
+      <LinearGradient
+        colors={[ringLight, ringDark]}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+        style={[styles.gameButtonOuter, { shadowColor: ringDark }]}
+      >
+        {/* Main pill */}
+        <LinearGradient
+          colors={[top, bottom]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.gameButtonInner}
+        >
+          {/* Bottom inner shadow */}
+          <LinearGradient
+            colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.22)"]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={styles.buttonInnerShadow}
+          />
+
+          {color === '#f9c74f' ? (
+            <JoyLaughIcon />
+          ) : (
+            <Text style={styles.gameEmoji}>{emoji}</Text>
+          )}
+          <View style={styles.gameTextContainer}>
+            <Text style={styles.gameTitle}>{title}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={24} color="#E8E8E8" />
+        </LinearGradient>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+};
 
 export default function HumorCreativityGamesScreen() {
   const router = useRouter();
@@ -76,7 +142,7 @@ export default function HumorCreativityGamesScreen() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#ff9a8d',
+    backgroundColor: '#b34700', // dark orange
   },
   container: {
     flex: 1,
@@ -86,35 +152,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
   },
-  backButton: {
+  gameButtonOuter: {
+    borderRadius: 40,
+    padding: 4,
+    marginBottom: 24,
+    marginHorizontal: 10,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    elevation: 14,
+  },
+  gameButtonInner: {
+    borderRadius: 36,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 22,
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.35)',
+    borderBottomWidth: 3,
+    borderBottomColor: 'rgba(0,0,0,0.25)',
+  },
+  buttonInnerShadow: {
     position: 'absolute',
     left: 0,
+    right: 0,
+    bottom: 0,
+    height: '40%',
   },
-  title: {
+  gameEmoji: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
+    marginRight: 12,
   },
-  grid: {
-    justifyContent: 'space-around',
-  },
-  gameButton: {
-    borderRadius: 15,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    marginBottom: 15,
+  gameTextContainer: {
+    flex: 1,
   },
   gameTitle: {
     color: 'white',
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
+    marginBottom: 4,
   },
   gameDescription: {
-    color: 'white',
+    color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 14,
-    marginTop: 5,
   },
 });

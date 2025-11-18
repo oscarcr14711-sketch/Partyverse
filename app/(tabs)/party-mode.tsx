@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, FlatList } from 'react-native';
+import { CategoryCard } from '../../components/CategoryCard';
 import { useRouter } from 'expo-router';
 
 const categories = [
@@ -59,15 +60,26 @@ const categories = [
     },
 ];
 
+type Category = {
+    id: string;
+    title: string;
+    subtitle: string;
+    icon: string;
+    color: string;
+    path?: string;
+};
+
 const PartyMode = () => {
     const router = useRouter();
 
-    const renderCategory = ({ item }) => (
-        <TouchableOpacity style={[styles.card, { backgroundColor: item.color }]} onPress={() => item.path && router.push(item.path)}>
-            <Text style={styles.cardIcon}>{item.icon}</Text>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-        </TouchableOpacity>
+    const renderCategory = ({ item }: { item: Category }) => (
+        <CategoryCard
+            title={item.title}
+            subtitle={item.subtitle}
+            icon={item.icon}
+            color={item.color}
+            onPress={() => item.path && router.push(item.path as any)}
+        />
     );
 
     return (
@@ -100,27 +112,7 @@ const styles = StyleSheet.create({
     list: {
         justifyContent: 'center',
     },
-    card: {
-        flex: 1,
-        margin: 10,
-        padding: 15,
-        borderRadius: 20,
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        minHeight: 150,
-    },
-    cardIcon: {
-        fontSize: 24,
-    },
-    cardTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-    cardSubtitle: {
-        fontSize: 14,
-        color: '#fff',
-    }
+    // Removed old card button styles, now using CategoryCard component
 });
 
 export default PartyMode;

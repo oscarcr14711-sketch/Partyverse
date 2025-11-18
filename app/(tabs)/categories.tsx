@@ -1,109 +1,51 @@
-import * as Haptics from 'expo-haptics';
+
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const categories = [
-    {
-        id: '1',
-        title: 'Action / Adrenaline',
-        subtitle: 'Move fast or lose!',
-        icon: '⚡️',
-        color: '#F44336',
-        path: '/action-adrenaline-games'
-    },
-    {
-        id: '2',
-        title: 'Humor / Creativity',
-        subtitle: 'Laugh, draw, and act!',
-        icon: '😂',
-        color: '#FF9800',
-        path: '/humor-creativity-games'
-    },
-    {
-        id: '3',
-        title: 'Word / Mental',
-        subtitle: 'Quick wits win!',
-        icon: '💡',
-        color: '#FFC107',
-        path: '/word-mental-games'
-    },
-    {
-        id: '4',
-        title: 'Quick Competition',
-        subtitle: 'Fast duels, instant fun.',
-        icon: '🏁',
-        color: '#4CAF50',
-        path: '/quick-competition-games'
-    },
-    {
-        id: '5',
-        title: 'Social / Truth',
-        subtitle: 'Talk, reveal, and connect.',
-        icon: '💬',
-        color: '#2196F3',
-        path: '/social-truth-games'
-    },
-    {
-        id: '6',
-        title: 'Spicy / 18+ / Alcohol',
-        subtitle: 'Play wild (adults only)!',
-        icon: '🔥',
-        color: '#9C27B0',
-        path: '/spicy-games',
-        disabled: false
-    },
-    {
-        id: '7',
-        title: 'Specials (Weekly / Festive) (Coming Soon)',
-        subtitle: 'Limited-time party themes.',
-        icon: '🎁',
-        color: '#FF9800',
-        path: null,
-        disabled: true
-    },
+    { id: '1', title: 'Action / Adrenaline', icon: '⚡️', color: '#F44336', path: '/action-adrenaline-games' },
+    { id: '2', title: 'Humor / Creativity', icon: '😂', color: '#FF9800', path: '/humor-creativity-games' },
+    { id: '3', title: 'Word / Mental', icon: '💡', color: '#FFC107', path: '/word-mental-games' },
+    { id: '4', title: 'Quick Competition', icon: '🏁', color: '#4CAF50', path: '/quick-competition-games' },
+    { id: '5', title: 'Social / Truth', icon: '💬', color: '#000000', path: '/social-truth-games' },
+    { id: '6', title: 'Spicy / 18+ / Alcohol', icon: '🔥', color: '#9C27B0', path: '/spicy-games' },
+    { id: '7', title: 'Specials (Weekly / Festive) (Coming Soon)', icon: '🎁', color: '#FF9800', path: null, disabled: true },
 ];
 
-const Categories = () => {
+export default function Categories() {
     const router = useRouter();
-
-    const renderCategory = ({ item }: { item: typeof categories[number] }) => {
-        const isDisabled = !!item.disabled || !item.path;
-        const handlePress = () => {
-            if (isDisabled) return;
-            Haptics.selectionAsync();
-            console.log('Navigating to', item.path);
-            try {
-              router.push(item.path as any);
-            } catch (e) {
-              console.warn('Primary push failed, retrying with setTimeout', e);
-              setTimeout(() => router.push(item.path as any), 0);
-            }
-        };
-        return (
-            <TouchableOpacity
-                style={[styles.card, { backgroundColor: item.color, opacity: isDisabled ? 0.5 : 1 }]}
-                disabled={isDisabled}
-                activeOpacity={0.85}
-                onPress={handlePress}
-            >
-                <Text style={styles.cardIcon}>{item.icon}</Text>
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-            </TouchableOpacity>
-        );
-    };
-
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>What kind of fun are you in the mood for?</Text>
-            <FlatList
-                data={categories}
-                renderItem={renderCategory}
-                keyExtractor={item => item.id}
-                numColumns={2}
-                contentContainerStyle={styles.list}
-            />
+            <Text style={styles.header}>Choose a Category</Text>
+            <View style={styles.grid}>
+                {categories.map((cat) => (
+                    <TouchableOpacity
+                        key={cat.id}
+                        style={[styles.buttonOuter, cat.disabled && { opacity: 0.5 }]}
+                        activeOpacity={cat.disabled ? 1 : 0.85}
+                        disabled={cat.disabled}
+                        onPress={() => cat.path && router.push(cat.path)}
+                    >
+                        <LinearGradient
+                            colors={[cat.color, '#fff']}
+                            start={{ x: 0.2, y: 0 }}
+                            end={{ x: 0.8, y: 1 }}
+                            style={styles.buttonInner}
+                        >
+                            <View style={styles.iconCircle}>
+                                <Text style={styles.icon}>{cat.icon}</Text>
+                            </View>
+                            <View style={styles.textContainer}>
+                                <Text style={styles.title}>{cat.title}</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={24} color="#fff" style={styles.chevron} />
+                        </LinearGradient>
+                    </TouchableOpacity>
+                ))}
+            </View>
         </View>
     );
 }
@@ -111,41 +53,73 @@ const Categories = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#00AEEF',
-        paddingTop: 50,
-        paddingHorizontal: 10,
+        backgroundColor: '#230E4B',
+        paddingTop: 48,
+        paddingHorizontal: 16,
     },
     header: {
         fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: 32,
+        letterSpacing: 1.2,
     },
-    list: {
+    grid: {
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 22,
+    },
+    buttonOuter: {
+        width: '98%',
+        borderRadius: 40,
+        marginBottom: 0,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.35,
+        shadowRadius: 14,
+        elevation: 14,
+    },
+    buttonInner: {
+        borderRadius: 36,
+        overflow: 'hidden',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 22,
+        paddingHorizontal: 28,
+        justifyContent: 'flex-start',
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.35)',
+        borderBottomWidth: 3,
+        borderBottomColor: 'rgba(0,0,0,0.25)',
+        minHeight: 80,
+        gap: 18,
+    },
+    iconCircle: {
+        width: 54,
+        height: 54,
+        borderRadius: 27,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 18,
+    },
+    icon: {
+        fontSize: 32,
+        color: '#fff',
+    },
+    textContainer: {
+        flex: 1,
         justifyContent: 'center',
     },
-    card: {
-        flex: 1,
-        margin: 10,
-        padding: 15,
-        borderRadius: 20,
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        minHeight: 150,
-    },
-    cardIcon: {
-        fontSize: 24,
-    },
-    cardTitle: {
-        fontSize: 18,
+    title: {
+        color: '#fff',
+        fontSize: 22,
         fontWeight: 'bold',
-        color: '#fff',
+        marginBottom: 2,
+        letterSpacing: 0.5,
     },
-    cardSubtitle: {
-        fontSize: 14,
-        color: '#fff',
-    }
+    chevron: {
+        marginLeft: 8,
+    },
 });
-
-export default Categories;

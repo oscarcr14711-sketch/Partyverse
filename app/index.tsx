@@ -2,9 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import LottieView from 'lottie-react-native';
 import React, { useRef } from 'react';
 import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import LottieView from 'lottie-react-native';
 
 export default function Index() {
   const router = useRouter();

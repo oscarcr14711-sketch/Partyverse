@@ -1,5 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import JoyLaughIcon from './JoyLaughIcon';
 
 interface CategoryCardProps {
   title: string;
@@ -9,35 +11,88 @@ interface CategoryCardProps {
   onPress: () => void;
 }
 
-export const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress }) => {
+const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress }) => {
   return (
-    <TouchableOpacity onPress={onPress} style={[styles.card, { backgroundColor: color }]}>
-      <Text style={styles.icon}>{icon}</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.cardOuter}>
+      <LinearGradient
+        colors={[color, '#fff']}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+        style={styles.cardInner}
+      >
+        <View style={styles.iconCircle}>
+          {title === 'Humor / Creativity' ? (
+            <JoyLaughIcon />
+          ) : (
+            <Text style={styles.icon}>{icon}</Text>
+          )}
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
+        </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 };
 
+export { CategoryCard };
+
 const styles = StyleSheet.create({
-  card: {
+  cardOuter: {
     width: '45%',
-    aspectRatio: 1,
-    borderRadius: 20,
-    padding: 15,
-    justifyContent: 'space-between',
-    margin: 5,
+    aspectRatio: 1.1,
+    borderRadius: 40,
+    margin: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 14,
+  },
+  cardInner: {
+    borderRadius: 36,
+    overflow: 'hidden',
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 22,
+    paddingHorizontal: 18,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.35)',
+    borderBottomWidth: 3,
+    borderBottomColor: 'rgba(0,0,0,0.25)',
+    gap: 10,
+  },
+  iconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   icon: {
-    fontSize: 24,
+    fontSize: 32,
+    color: '#fff',
+  },
+  textContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 16,
+    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
+    marginBottom: 2,
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 12,
-    color: 'white',
+    fontSize: 13,
+    color: '#fff',
+    textAlign: 'center',
   },
 });

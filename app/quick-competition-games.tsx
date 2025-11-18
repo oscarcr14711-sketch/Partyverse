@@ -1,7 +1,8 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const games = [
@@ -9,14 +10,21 @@ const games = [
   { title: 'Poker Widow', description: 'Build the best poker hand by swapping cards with the five cards in the center — the Widow.\nIn the first round, you can trade your entire hand for the Widow.\nAfter that, swap one card per turn until you decide to stay.', emoji: '♠️', color: '#7209b7', path: '/poker-widow' },
   { title: 'Party Poll', description: 'Guess the most popular answers to funny survey questions before the other team does! The faster and closer you get to the top answers, the more points you score.', emoji: '📊', color: '#ef476f', path: '/party-poll' },
   { title: 'Charades (Party Edition)', description: 'One player acts out a secret word while others try to guess it before time runs out — no speaking allowed!', emoji: '🎭', color: '#fca311', path: '/charades-party-edition' },
-  { title: 'Card Clash', description: 'Choose the perfect card before time runs out!\nOutsmart, block, or steal your way to victory.', emoji: '🃏', color: '#00b4d8', path: '/card-clash' },
+  { title: 'Card Clash', description: 'Choose the perfect card before time runs out!\nOutsmart, block, or steal your way to victory.', emoji: '🃏', color: '#006400', path: '/card-clash' },
 ];
 
 const GameItem = ({ title, description, emoji, color, onPress }) => (
-  <TouchableOpacity style={[styles.gameButton, { backgroundColor: color }]} onPress={onPress}>
-    <Text style={styles.gameTitle}>{emoji} {title}</Text>
-    <Text style={styles.gameDescription}>{description}</Text>
-  </TouchableOpacity>
+  <LinearGradient
+    colors={[color, '#16a34a']}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={styles.gameButtonOuter}
+  >
+    <TouchableOpacity style={styles.gameButtonInner} onPress={onPress}>
+      <Text style={styles.gameTitle}>{emoji} {title}</Text>
+      <Text style={styles.gameDescription}>{description}</Text>
+    </TouchableOpacity>
+  </LinearGradient>
 );
 
 export default function QuickCompetitionGamesScreen() {
@@ -65,26 +73,42 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
+    color: 'green',
     textAlign: 'center',
   },
   grid: {
     justifyContent: 'space-around',
   },
-  gameButton: {
+  gameButtonOuter: {
+    borderRadius: 20,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  gameButtonInner: {
     borderRadius: 15,
     paddingVertical: 20,
     paddingHorizontal: 20,
-    marginBottom: 15,
+    borderWidth: 3,
+    borderColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   gameTitle: {
     color: 'white',
     fontSize: 22,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowRadius: 4,
   },
   gameDescription: {
     color: 'white',
     fontSize: 14,
     marginTop: 5,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowRadius: 2,
   },
 });

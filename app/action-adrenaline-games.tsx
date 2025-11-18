@@ -1,10 +1,11 @@
 
 import { Ionicons } from '@expo/vector-icons';
+import LightningIcon from '../components/LightningIcon';
 import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const games = [
@@ -73,7 +74,11 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
             style={styles.buttonInnerShadow}
           />
 
-          <Text style={styles.gameEmoji}>{emoji}</Text>
+          {title === 'Action / Adrenaline' || emoji === '⚡' ? (
+            <LightningIcon />
+          ) : (
+            <Text style={styles.gameEmoji}>{emoji}</Text>
+          )}
           <View style={styles.gameTextContainer}>
             <Text style={styles.gameTitle}>{title}</Text>
             <Text style={styles.gameDescription}>{description}</Text>
@@ -85,7 +90,7 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
   );
 };
 
-export default function ActionAdrenalineGamesScreen() {
+function ActionAdrenalineGamesScreen() {
   const router = useRouter();
 
   // Preload Hot Bomb assets to reduce perceived load time when navigating
@@ -101,29 +106,47 @@ export default function ActionAdrenalineGamesScreen() {
       require('../assets/images/avatars/avatar4.png'),
       require('../assets/images/avatars/avatar5.png'),
       require('../assets/images/avatars/avatar6.png'),
+      require('../assets/images/Actionbg.png'),
     ];
     Asset.loadAsync(assets).catch(() => {});
   }, []);
 
+  const { width, height } = Dimensions.get('window');
+
   return (
     <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Action / Adrenaline</Text>
-          <View style={{ width: 24 }} />
-        </View>
-        <ScrollView style={styles.grid}>
-          {games.map((game) => (
-            <GameItem key={game.title} {...game} onPress={() => router.push(game.path as any)} />
-          ))}
-        </ScrollView>
-      </SafeAreaView>
+      <Image
+        source={require('../assets/images/Actionbg.png')}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: width,
+          height: height,
+          resizeMode: 'cover',
+        }}
+      />
+      <View style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.title}>Action / Adrenaline</Text>
+            <View style={{ width: 24 }} />
+          </View>
+          <ScrollView style={styles.grid}>
+            {games.map((game) => (
+              <GameItem key={game.title} {...game} onPress={() => router.push(game.path as any)} />
+            ))}
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </View>
   );
 }
+
+export default ActionAdrenalineGamesScreen;
 
 const styles = StyleSheet.create({
   container: {

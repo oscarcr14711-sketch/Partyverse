@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import JoyLaughIcon from '../components/JoyLaughIcon';
 
@@ -119,14 +119,14 @@ export default function HumorCreativityGamesScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.background}>
+    <ImageBackground source={require('../assets/images/HumorBg.png')} style={{ flex: 1 }} resizeMode="cover">
       <SafeAreaView style={styles.container}>
         <ScrollView>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color="white" />
             </TouchableOpacity>
-            <Text style={styles.title}>Humor / Creativity</Text>
+            <Text style={styles.partyHeader}>Humor / Creativity</Text>
           </View>
           <View style={styles.grid}>
             {games.map((game) => (
@@ -135,30 +135,39 @@ export default function HumorCreativityGamesScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    backgroundColor: '#b34700', // dark orange
+  partyHeader: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#ffbe0b',
+    marginBottom: 8,
+    letterSpacing: 2,
+    textShadowColor: '#ff006e',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   container: {
     flex: 1,
-    padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   gameButtonOuter: {
     borderRadius: 40,
     padding: 4,
-    marginBottom: 24,
+    marginBottom: 40,
     marginHorizontal: 10,
     shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    elevation: 14,
+  },
+  grid: {
+    marginTop: 150, // Lower the buttons so the first button is farther from the header
+    marginBottom: 12,
     shadowOpacity: 0.45,
     shadowRadius: 12,
     elevation: 14,

@@ -1,8 +1,17 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const truthImages = [
+function shuffleArray(array: any[]) {
+	for (let i = array.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[array[i], array[j]] = [array[j], array[i]];
+	}
+	return array;
+}
+
+const originalTruthImages = [
 	require('../assets/images/Truth or bluff images/T1.png'),
 	require('../assets/images/Truth or bluff images/T2.png'),
 	require('../assets/images/Truth or bluff images/T3.png'),
@@ -26,10 +35,21 @@ const avatarImages = [
 	require('../assets/images/avatars/avatar6.png'),
 ];
 
+const TOTAL_ROUNDS = 3;
 const TruthOrBluffScreen = () => {
-	// All hooks at top level
+	const navigation = useNavigation();
 	const [showGame, setShowGame] = useState(false);
 	const [numPlayers, setNumPlayers] = useState(2);
+	const [currentPlayer, setCurrentPlayer] = useState(0);
+	const [currentRound, setCurrentRound] = useState(1);
+	const [scores, setScores] = useState(Array(6).fill(0));
+	const [correctAnswers, setCorrectAnswers] = useState(Array(6).fill(0));
+	const [truthImages, setTruthImages] = useState(() => shuffleArray([...originalTruthImages]));
+	const [currentImageIdx, setCurrentImageIdx] = useState(0);
+	const [timer, setTimer] = useState(30);
+	const [isTimerActive, setIsTimerActive] = useState(true);
+	const [answerSelected, setAnswerSelected] = useState<'right' | 'wrong' | null>(null);
+
 	const avatarsMemo = useMemo(() => {
 		const count = Math.min(numPlayers, avatarImages.length);
 		return Array.from({ length: count }, (_, i) => (
@@ -43,11 +63,6 @@ const TruthOrBluffScreen = () => {
 		));
 	}, [numPlayers]);
 
-	// Game screen hooks
-	const [currentImageIdx, setCurrentImageIdx] = useState(() => Math.floor(Math.random() * truthImages.length));
-	const [timer, setTimer] = useState(30);
-	const [isTimerActive, setIsTimerActive] = useState(true);
-
 	useEffect(() => {
 		if (!showGame) return;
 		if (!isTimerActive) return;
@@ -58,10 +73,47 @@ const TruthOrBluffScreen = () => {
 		return () => clearInterval(interval);
 	}, [timer, isTimerActive, showGame]);
 
-	const handleNextPlayer = () => {
-		let nextIdx = Math.floor(Math.random() * truthImages.length);
-		if (nextIdx === currentImageIdx) nextIdx = (nextIdx + 1) % truthImages.length;
-		setCurrentImageIdx(nextIdx);
+	const handleAnswer = (isRight: boolean) => {
+		setAnswerSelected(isRight ? 'right' : 'wrong');
+		setIsTimerActive(false);
+		setTimeout(() => {
+			if (isRight) {
+				setScores((prev) => {
+					const updated = [...prev];
+					updated[currentPlayer] += 1;
+					return updated;
+				});
+			}
+			setAnswerSelected(null);
+			nextTurn();
+		}, 1200);
+	};
+
+	const nextTurn = () => {
+		if (currentRound >= TOTAL_ROUNDS && currentPlayer === numPlayers - 1) {
+			// Game Over
+			navigation.navigate('GameOverScreen', {
+				player1Score: scores[0],
+				player2Score: scores[1],
+			});
+			setShowGame(false);
+			setCurrentPlayer(0);
+			setCurrentRound(1);
+			setScores(Array(6).fill(0));
+			setCorrectAnswers(Array(6).fill(0));
+			setTimer(30);
+			setIsTimerActive(true);
+			return;
+		}
+		let nextPlayer = currentPlayer + 1;
+		let nextRound = currentRound;
+		if (nextPlayer >= numPlayers) {
+			nextPlayer = 0;
+			nextRound += 1;
+		}
+		setCurrentPlayer(nextPlayer);
+		setCurrentRound(nextRound);
+		setCurrentImageIdx((prevIdx) => (prevIdx + 1) % truthImages.length);
 		setTimer(30);
 		setIsTimerActive(true);
 	};
@@ -100,7 +152,11 @@ const TruthOrBluffScreen = () => {
 							<Text style={styles.playerCountCircleText}>+</Text>
 						</TouchableOpacity>
 					</View>
-					<TouchableOpacity style={styles.setupStartButton} onPress={() => setShowGame(true)}>
+					<TouchableOpacity style={styles.setupStartButton} onPress={() => {
+						setTruthImages(shuffleArray([...originalTruthImages]));
+						setCurrentImageIdx(0);
+						setShowGame(true);
+					}}>
 						<Text style={styles.setupStartButtonText}>START</Text>
 					</TouchableOpacity>
 				</View>
@@ -108,10 +164,11 @@ const TruthOrBluffScreen = () => {
 		);
 	}
 
-	// Actual game screen (mockup)
+	// Actual game screen
 	return (
 		<View style={styles.mockupContainer}>
-			<Text style={styles.turnText}>YOUR TURN</Text>
+			<Text style={styles.turnText}>Player {currentPlayer + 1}'s Turn</Text>
+			<Text style={styles.roundText}>Round {currentRound} / {TOTAL_ROUNDS}</Text>
 			<View style={styles.mockupPhoneFrame}>
 				<Image source={truthImages[currentImageIdx]} style={styles.mockupImage} resizeMode="contain" />
 				<View style={styles.timerCircleWrapper}>
@@ -123,18 +180,35 @@ const TruthOrBluffScreen = () => {
 				</View>
 			</View>
 			<View style={styles.mockupButtonsWrapper}>
-				<TouchableOpacity style={styles.mockupButton} disabled={timer === 0}>
-					<Text style={styles.mockupButtonText}>I'LL DESCRIBE IT</Text>
+				<TouchableOpacity
+					style={[styles.mockupButton, { backgroundColor: '#00e676', borderColor: '#00e676', borderWidth: 2 }, answerSelected === 'right' && { opacity: 0.7 } ]}
+					disabled={timer === 0 || !!answerSelected}
+					onPress={() => handleAnswer(true)}
+				>
+					<Text style={[styles.mockupButtonText, { color: '#222', fontWeight: 'bold' }]}>Player {currentPlayer + 1} guessed right!</Text>
 				</TouchableOpacity>
-				<TouchableOpacity style={styles.mockupButton} onPress={handleNextPlayer}>
-					<Text style={styles.mockupButtonText}>NEXT PLAYER</Text>
+				<TouchableOpacity
+					style={[styles.mockupButton, { backgroundColor: '#ff1744', borderColor: '#ff1744', borderWidth: 2 }, answerSelected === 'wrong' && { opacity: 0.7 } ]}
+					disabled={timer === 0 || !!answerSelected}
+					onPress={() => handleAnswer(false)}
+				>
+					<Text style={[styles.mockupButtonText, { color: '#fff', fontWeight: 'bold' }]}>Player {currentPlayer + 1} guessed wrong!</Text>
 				</TouchableOpacity>
 			</View>
+			{/* Removed score display as requested */}
 		</View>
 	);
 };
 
 const styles = StyleSheet.create({
+		roundText: {
+			fontSize: 22,
+			fontWeight: 'bold',
+			color: '#fff',
+			marginBottom: 8,
+			letterSpacing: 1,
+			textAlign: 'center',
+		},
 	// Pre-game styles
 	container: {
 		flex: 1,
@@ -365,6 +439,8 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.3,
 		shadowRadius: 8,
 		elevation: 8,
+		transitionProperty: 'background-color',
+		transitionDuration: '0.2s',
 	},
 	mockupButtonText: {
 		fontSize: 24,

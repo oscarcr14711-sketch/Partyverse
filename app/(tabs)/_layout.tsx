@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import CustomBottomMenu from '../../components/CustomBottomMenu';
 
 export default function TabLayout() {
   return (

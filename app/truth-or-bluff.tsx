@@ -1,7 +1,7 @@
 
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 
 function shuffleArray(array: any[]) {
 	for (let i = array.length - 1; i > 0; i--) {

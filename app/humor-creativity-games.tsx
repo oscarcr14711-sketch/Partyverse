@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ImageBackground } from 'react-native';
+import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import JoyLaughIcon from '../components/JoyLaughIcon';
 
@@ -26,7 +26,7 @@ const games = [
     description: '', 
     emoji: '🎡', 
     color: '#f9c846', // Vibrant yellow
-    path: '/extreme-challenge-roulette' 
+    path: '/PreGameScreen' 
   },
   { 
     title: 'Lip Sync Chaos', 
@@ -130,7 +130,13 @@ export default function HumorCreativityGamesScreen() {
           </View>
           <View style={styles.grid}>
             {games.map((game) => (
-              <GameItem key={game.title} {...game} onPress={() => router.push(game.path)} />
+              <GameItem
+                key={game.title}
+                {...game}
+                onPress={() => {
+                  router.push(game.path === '/mic-madness' ? '/mic-madness-pre-game' : game.path);
+                }}
+              />
             ))}
           </View>
         </ScrollView>

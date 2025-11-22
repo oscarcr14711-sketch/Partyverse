@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import JoyLaughIcon from './JoyLaughIcon';
@@ -14,12 +13,7 @@ interface CategoryCardProps {
 const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress }) => {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.cardOuter}>
-      <LinearGradient
-        colors={[color, '#fff']}
-        start={{ x: 0.2, y: 0 }}
-        end={{ x: 0.8, y: 1 }}
-        style={styles.cardInner}
-      >
+      <View style={[styles.cardInner, { backgroundColor: color }]}> 
         <View style={styles.iconCircle}>
           {title === 'Humor / Creativity' ? (
             <JoyLaughIcon />
@@ -31,7 +25,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, colo
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 };

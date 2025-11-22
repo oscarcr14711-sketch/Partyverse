@@ -1,17 +1,22 @@
-import * as React from 'react';
+import MicMadnessScreen from './app/mic-madness';
+import MicMadnessGameScreen from './app/mic-madness-game';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
-import HomeScreen from './(tabs)/home';
+import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
+import * as React from 'react';
 import GamesScreen from './(tabs)/games';
-import StoreScreen from './(tabs)/store';
+import HomeScreen from './(tabs)/home';
 import ProfileScreen from './(tabs)/profile';
-import SpicyGamesScreen from './SpicyGamesScreen';
+import StoreScreen from './(tabs)/store';
 import PartyModeGamesScreen from './PartyModeGamesScreen';
+import SpicyGamesScreen from './SpicyGamesScreen';
 import ActionAdrenalineGamesScreen from './app/action-adrenaline-games';
 import HumorCreativityGamesScreen from './app/humor-creativity-games';
-import WordMentalGamesScreen from './app/word-mental-games';
 import QuickCompetitionGamesScreen from './app/quick-competition-games';
 import SocialTruthGamesScreen from './app/social-truth-games';
+import WordMentalGamesScreen from './app/word-mental-games';
+import MicMadnessPreGame from './app/mic-madness-pre-game';
+import PreGameScreen from './app/PreGameScreen';
+import ExtremeChallengeRouletteScreen from './app/extreme-challenge-roulette';
 // Import other screens as needed
 
 const Stack = createStackNavigator();
@@ -36,6 +41,11 @@ export default function AppNavigator() {
         <Stack.Screen name="WordMentalGamesScreen" component={WordMentalGamesScreen} />
         <Stack.Screen name="QuickCompetitionGamesScreen" component={QuickCompetitionGamesScreen} />
         <Stack.Screen name="SocialTruthGamesScreen" component={SocialTruthGamesScreen} />
+          <Stack.Screen name="MicMadnessPreGame" component={MicMadnessPreGame} />
+            <Stack.Screen name="MicMadnessGame" component={MicMadnessGameScreen} />
+              <Stack.Screen name="MicMadness" component={MicMadnessScreen} />
+        <Stack.Screen name="PreGameScreen" component={PreGameScreen} />
+        <Stack.Screen name="ExtremeChallengeRouletteScreen" component={ExtremeChallengeRouletteScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

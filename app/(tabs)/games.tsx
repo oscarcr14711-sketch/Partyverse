@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -38,6 +37,7 @@ const gameModes = [
     gradient: ['#D95B27', '#C34310'],
     darkGradient: ['#8B360F', '#B33A0D'],
   },
+  // Mic Madness button removed as requested
 ];
 
 type GradientColors = readonly [string, string, ...string[]];

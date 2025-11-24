@@ -1,0 +1,1 @@
+ipconfig > ip.txt

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 export default function GameOverScreen() {
   return (
@@ -20,4 +20,3 @@ export default function GameOverScreen() {
   );
 }
 
-export default GameOverScreen;

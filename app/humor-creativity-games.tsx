@@ -134,7 +134,13 @@ export default function HumorCreativityGamesScreen() {
                 key={game.title}
                 {...game}
                 onPress={() => {
-                  router.push(game.path === '/mic-madness' ? '/mic-madness-pre-game' : game.path);
+                  if (game.title === 'If you Laugh you lose') {
+                    router.push('/if-you-laugh-you-lose');
+                  } else if (game.path === '/mic-madness') {
+                    router.push('/mic-madness-pre-game');
+                  } else {
+                    router.push(game.path);
+                  }
                 }}
               />
             ))}

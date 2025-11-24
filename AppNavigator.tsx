@@ -1,5 +1,3 @@
-import MicMadnessScreen from './app/mic-madness';
-import MicMadnessGameScreen from './app/mic-madness-game';
 import { NavigationContainer } from '@react-navigation/native';
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
 import * as React from 'react';
@@ -9,14 +7,16 @@ import ProfileScreen from './(tabs)/profile';
 import StoreScreen from './(tabs)/store';
 import PartyModeGamesScreen from './PartyModeGamesScreen';
 import SpicyGamesScreen from './SpicyGamesScreen';
+import PreGameScreen from './app/PreGameScreen';
 import ActionAdrenalineGamesScreen from './app/action-adrenaline-games';
+import ExtremeChallengeRouletteScreen from './app/extreme-challenge-roulette';
 import HumorCreativityGamesScreen from './app/humor-creativity-games';
+import MicMadnessScreen from './app/mic-madness';
+import MicMadnessGameScreen from './app/mic-madness-game';
+import MicMadnessPreGame from './app/mic-madness-pre-game';
 import QuickCompetitionGamesScreen from './app/quick-competition-games';
 import SocialTruthGamesScreen from './app/social-truth-games';
 import WordMentalGamesScreen from './app/word-mental-games';
-import MicMadnessPreGame from './app/mic-madness-pre-game';
-import PreGameScreen from './app/PreGameScreen';
-import ExtremeChallengeRouletteScreen from './app/extreme-challenge-roulette';
 // Import other screens as needed
 
 const Stack = createStackNavigator();

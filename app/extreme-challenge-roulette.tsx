@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, Animated, Easing, Dimensions } from 'react-native';
 import LottieView from 'lottie-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Easing, Image, Text, TouchableOpacity, View } from 'react-native';
 
 const challenges: string[] = [
 	'Lick Soap',            // 0

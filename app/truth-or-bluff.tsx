@@ -92,7 +92,7 @@ const TruthOrBluffScreen = () => {
 	const nextTurn = () => {
 		if (currentRound >= TOTAL_ROUNDS && currentPlayer === numPlayers - 1) {
 			// Game Over
-			navigation.navigate('GameOverScreen', {
+			navigation.navigate('truth-or-bluff-game-over', {
 				player1Score: scores[0],
 				player2Score: scores[1],
 			});

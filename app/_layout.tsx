@@ -31,6 +31,8 @@ export default function RootLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="party-mode-games" />
+      <Stack.Screen name="start" />
+      <Stack.Screen name="mic-madness-card-reveal" />
     </Stack>
   );
 }

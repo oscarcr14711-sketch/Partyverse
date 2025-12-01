@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import JoyLaughIcon from './JoyLaughIcon';
+import { PulsingButton } from './PulsingButton';
 
 interface CategoryCardProps {
   title: string;
@@ -12,8 +13,8 @@ interface CategoryCardProps {
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress }) => {
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.cardOuter}>
-      <View style={[styles.cardInner, { backgroundColor: color }]}> 
+    <PulsingButton onPress={onPress} style={styles.cardWrapper}>
+      <View style={[styles.cardInner, { backgroundColor: color }]}>
         <View style={styles.iconCircle}>
           {title === 'Humor / Creativity' ? (
             <JoyLaughIcon />
@@ -26,28 +27,23 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, colo
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </PulsingButton>
   );
 };
 
 export { CategoryCard };
 
 const styles = StyleSheet.create({
-  cardOuter: {
+  cardWrapper: {
     width: '45%',
     aspectRatio: 1.1,
-    borderRadius: 40,
     margin: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 14,
   },
   cardInner: {
     borderRadius: 36,
     overflow: 'hidden',
-    flex: 1,
+    width: '100%',
+    height: '100%',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
@@ -58,6 +54,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: 'rgba(0,0,0,0.25)',
     gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 14,
   },
   iconCircle: {
     width: 54,

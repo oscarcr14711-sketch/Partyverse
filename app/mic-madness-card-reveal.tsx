@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
-import { View, Image, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect } from "react";
+import { Image, StyleSheet, View } from "react-native";
 
 const micMadnessCards = [
   require('../assets/images/mic madness/water.png'),

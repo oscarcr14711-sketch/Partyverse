@@ -7,40 +7,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import JoyLaughIcon from '../components/JoyLaughIcon';
 
 const games = [
-  { 
-    title: 'Truth or Bluff', 
-    description: '', 
-    emoji: '🤥', 
+  {
+    title: 'Truth or Bluff',
+    description: '',
+    emoji: '🤥',
     color: '#ff4f81', // Vibrant pink
-    path: '/truth-or-bluff' 
+    path: '/truth-or-bluff'
   },
-  { 
-    title: 'If you Laugh you lose', 
-    description: '', 
-    emoji: '😆', 
+  {
+    title: 'If you Laugh you lose',
+    description: '',
+    emoji: '😆',
     color: '#36c9c6', // Vibrant teal
-    path: '/if-you-laugh-you-lose' 
+    path: '/if-you-laugh-you-lose'
   },
-  { 
-    title: 'Extreme Challenge Roulette', 
-    description: '', 
-    emoji: '🎡', 
+  {
+    title: 'Extreme Challenge Roulette',
+    description: '',
+    emoji: '🎡',
     color: '#f9c846', // Vibrant yellow
-    path: '/PreGameScreen' 
+    path: '/PreGameScreen'
   },
-  { 
-    title: 'Lip Sync Chaos', 
-    description: '', 
-    emoji: '🎧', 
+  {
+    title: 'Lip Sync Chaos',
+    description: '',
+    emoji: '🎧',
     color: '#5f6bff', // Vibrant blue
-    path: '/lip-sync-chaos' 
+    path: '/lip-sync-pre-game'
   },
-  { 
-    title: 'Mic Madness', 
-    description: '', 
-    emoji: '🎤', 
+  {
+    title: 'Mic Madness',
+    description: '',
+    emoji: '🎤',
     color: '#7dff6a', // Vibrant green
-    path: '/mic-madness' 
+    path: '/mic-madness'
   },
 ];
 

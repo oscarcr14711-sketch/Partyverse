@@ -1,12 +1,24 @@
+import { Audio } from 'expo-av';
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { PulsingButton } from '../components/PulsingButton';
 
 // Adjust the path if needed
 const micMadnessImage = require("../assets/images/micmadness.png");
 
 export default function MicMadnessPreGame() {
   const router = useRouter();
+  const [permissionResponse, requestPermission] = Audio.usePermissions();
+
+  useEffect(() => {
+    (async () => {
+      if (permissionResponse?.status !== 'granted') {
+        await requestPermission();
+      }
+    })();
+  }, []);
+
   // Start with 3 players and show 3 avatars
   const [numPlayers, setNumPlayers] = useState(3);
   const avatarImages = [
@@ -33,22 +45,22 @@ export default function MicMadnessPreGame() {
         ))}
       </View>
       <View style={styles.playerCountPill}>
-        <TouchableOpacity
+        <PulsingButton
           style={styles.playerCountCircle}
           onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
         >
           <Text style={styles.playerCountCircleText}>−</Text>
-        </TouchableOpacity>
+        </PulsingButton>
         <Text style={styles.playerCountText}>{numPlayers} Players</Text>
-        <TouchableOpacity
+        <PulsingButton
           style={styles.playerCountCircle}
           onPress={() => setNumPlayers(Math.min(6, numPlayers + 1))}
         >
           <Text style={styles.playerCountCircleText}>+</Text>
-        </TouchableOpacity>
+        </PulsingButton>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.startButton} onPress={() => router.push({ pathname: "/mic-madness-game", params: { numPlayers } })}>  
+        <TouchableOpacity style={styles.startButton} onPress={() => router.push({ pathname: "/mic-madness-game", params: { numPlayers } })}>
           <Text style={styles.startButtonText}>Next</Text>
         </TouchableOpacity>
       </View>

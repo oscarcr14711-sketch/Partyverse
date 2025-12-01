@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native';
+import { PulsingButton } from '../components/PulsingButton';
 
 const avatarImages = [
   require('../assets/images/avatars/avatar1.png'),
@@ -37,26 +38,26 @@ export default function PreGameScreen() {
         ))}
       </View>
       <View style={[styles.playerCounterContainer, { paddingHorizontal: 12, paddingVertical: 10, marginTop: 18 }]}>
-        <TouchableOpacity
+        <PulsingButton
           style={[styles.playerCounterButton, { width: 44, height: 44, borderRadius: 22 }]}
           onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
         >
           <Text style={[styles.playerCounterButtonText, { fontSize: 24 }]}>−</Text>
-        </TouchableOpacity>
+        </PulsingButton>
         <Text style={[styles.playerCounterText, { fontSize: 20, minWidth: 90 }]}>{numPlayers} Players</Text>
-        <TouchableOpacity
+        <PulsingButton
           style={[styles.playerCounterButton, { width: 44, height: 44, borderRadius: 22 }]}
           onPress={() => setNumPlayers(Math.min(6, numPlayers + 1))}
         >
           <Text style={[styles.playerCounterButtonText, { fontSize: 24 }]}>+</Text>
-        </TouchableOpacity>
+        </PulsingButton>
       </View>
-      <TouchableOpacity
+      <PulsingButton
         style={[styles.setupStartButton, { paddingHorizontal: 50, paddingVertical: 10, borderRadius: 22, marginTop: 18 }]}
         onPress={() => router.push('/extreme-challenge-roulette')}
       >
         <Text style={[styles.setupStartButtonText, { fontSize: 20 }]}>START</Text>
-      </TouchableOpacity>
+      </PulsingButton>
     </View>
   );
 }

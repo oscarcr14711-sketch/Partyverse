@@ -1,7 +1,9 @@
+import { useRouter } from "expo-router";
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from "react-native";
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function IfYouLaughYouLoseScreen() {
+  const router = useRouter();
   const [numPlayers, setNumPlayers] = React.useState(2);
   const avatarImages = [
     require('../assets/images/avatars/avatar1.png'),
@@ -13,7 +15,10 @@ export default function IfYouLaughYouLoseScreen() {
   ];
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>IF YOU LAUGH{"\n"}YOU LOSE</Text>
+      <Image source={require("../assets/images/lol.png")}
+        style={styles.titleImage}
+        resizeMode="contain"
+      />
       <Image source={require("../assets/images/laugh.png")}
         style={styles.characters}
         resizeMode="contain"
@@ -44,7 +49,13 @@ export default function IfYouLaughYouLoseScreen() {
           <Text style={styles.playerCountCircleText}>+</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.startButton}>
+      <TouchableOpacity
+        style={styles.startButton}
+        onPress={() => router.push({
+          pathname: '/if-you-laugh-game',
+          params: { numPlayers: numPlayers.toString() }
+        } as any)}
+      >
         <Text style={styles.startButtonText}>START</Text>
       </TouchableOpacity>
     </View>
@@ -59,13 +70,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     paddingTop: 60,
   },
-  title: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: '#FFE0B2',
-    textAlign: 'center',
-    marginBottom: 32,
-    letterSpacing: 2,
+  titleImage: {
+    width: 300,
+    height: 120,
+    marginBottom: 20,
   },
   characters: {
     width: 340,

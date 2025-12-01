@@ -1,7 +1,7 @@
 
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function TruthOrBluffGameOverScreen() {
   const { player1Score = 0, player2Score = 0 } = useLocalSearchParams();

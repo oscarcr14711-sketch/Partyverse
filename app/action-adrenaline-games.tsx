@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LightningIcon from '../components/LightningIcon';
+import { PulsingButton } from '../components/PulsingButton';
 
 const games = [
   { title: 'Hot Bomb', description: 'Pass the bomb before it explodes!', emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
@@ -51,7 +52,7 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
   const ringDark = darken(color, 0.45);
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
+    <PulsingButton onPress={onPress}>
       {/* Outer ring/glow */}
       <LinearGradient
         colors={[ringLight, ringDark]}
@@ -86,7 +87,7 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
           <Ionicons name="chevron-forward" size={24} color="#E8E8E8" />
         </LinearGradient>
       </LinearGradient>
-    </TouchableOpacity>
+    </PulsingButton>
   );
 };
 
@@ -108,7 +109,7 @@ function ActionAdrenalineGamesScreen() {
       require('../assets/images/avatars/avatar6.png'),
       require('../assets/images/Actionbg.png'),
     ];
-    Asset.loadAsync(assets).catch(() => {});
+    Asset.loadAsync(assets).catch(() => { });
   }, []);
 
   const { width, height } = Dimensions.get('window');

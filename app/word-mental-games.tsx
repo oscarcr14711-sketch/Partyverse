@@ -1,12 +1,12 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const games = [
-  { title: 'Brain Buzzer', description: 'The app gives you a quick trick question. Answer fast — but think twice before you speak!', emoji: '🧩', color: '#ff6b6b', path: '/brain-buzzer' },
-  { title: 'Brain vs Brain', description: 'Two players face off. The app shows a question. The first one to shout the right answer gets the point!', emoji: '⚔️', color: '#feca57', path: '/brain-vs-brain' },
+  { title: 'Brain Buzzer', description: 'The app gives you a quick trick question. Answer fast — but think twice before you speak!', emoji: '🧩', color: '#ff6b6b', path: '/brain-buzzer-pre-game' },
+  { title: 'Brain vs Brain', description: 'Two players face off. The app shows a question. The first one to shout the right answer gets the point!', emoji: '⚔️', color: '#feca57', path: '/brain-buzzer-pre-game' },
   { title: 'Stop Game', description: 'Be the fastest to type, write or say words that start with a specific letter before everyone else.', emoji: '🛑', color: '#48dbfb', path: '/stop-game' },
   { title: 'Memory Rush', description: 'The app flashes a list of words for 5 seconds. Players must recall as many as possible when time runs out.', emoji: '🧠💨', color: '#ff9f43', path: '/memory-rush' },
   { title: 'Pop Culture Trivia', description: 'Questions related to Musicians, Actors, Movies or Video Games', emoji: '🎤', color: '#a29bfe', path: '/pop-culture-trivia' },

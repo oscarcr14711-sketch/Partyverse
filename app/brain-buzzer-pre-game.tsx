@@ -17,9 +17,9 @@ export default function BrainBuzzerPreGame() {
     ];
 
     return (
-        <View style={[styles.container, { backgroundColor: '#18304A' }]}>
+        <View style={[styles.container, { backgroundColor: '#0A1E3D' }]}>
             <ImageBackground
-                source={require('../assets/images/brainbuzzer.png')}
+                source={require('../assets/images/brain_buzzer_final.png')}
                 style={styles.container}
                 resizeMode="contain"
             >
@@ -61,7 +61,7 @@ export default function BrainBuzzerPreGame() {
                         <View style={styles.buttonContainer}>
                             <TouchableOpacity
                                 style={styles.startButton}
-                                onPress={() => router.push({ pathname: "/brain-buzzer-game", params: { numPlayers } })}
+                                onPress={() => router.push({ pathname: "/brain-buzzer-difficulty", params: { numPlayers } })}
                             >
                                 <Text style={styles.startButtonText}>START</Text>
                             </TouchableOpacity>

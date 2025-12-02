@@ -1,1 +1,1 @@
-npx expo start --dev-client > server_log.txt 2>&1
+npx expo start --dev-client --port 8082 > server_log.txt 2>&1

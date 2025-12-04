@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function BrainBuzzerGameOver() {
+export default function BrainVsBrainGameOver() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
@@ -130,7 +130,7 @@ export default function BrainBuzzerGameOver() {
                 <View style={styles.buttonsSection}>
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={() => router.push({ pathname: '/brain-buzzer-pre-game' })}
+                        onPress={() => router.push({ pathname: '/brain-vs-brain-pre-game' })}
                     >
                         <LinearGradient colors={['#4CAF50', '#66BB6A']} style={styles.buttonGradient}>
                             <Ionicons name="refresh" size={24} color="#fff" />

@@ -11,9 +11,9 @@ import { PulsingButton } from '../components/PulsingButton';
 
 const games = [
   { title: 'Hot Bomb', description: 'Pass the bomb before it explodes!', emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
-  { title: 'Dance Copy', description: 'Mimic the dance moves shown on screen. Others judge', emoji: '💃', color: '#f8961e', path: '/dance-copy' },
+  { title: 'Stack Tower', description: 'Stack blocks as high as you can without falling!', emoji: '📦', color: '#f8961e', path: '/stack-tower-game' },
   { title: 'SpinFreeze', description: 'Music plays; when it stops, freeze.', emoji: '🥶', color: '#f9c74f', path: '/spin-freeze' },
-  { title: 'Selfie Challenge', description: 'Take a selfie in 3 sec showing a prompted emotion', emoji: '🤳', color: '#90be6d', path: '/selfie-challenge' },
+  { title: 'Don\'t Let It PIC You', description: 'Avoid being caught in surprise photos!', emoji: '📸', color: '#90be6d', path: '/dont-let-it-pic-you-pre-game' },
   { title: 'Blown Away', description: 'Players blow into the phone mic and whoever blows the bigger balloon without popping it, wins', emoji: '🎈', color: '#43aa8b', path: '/blown-away' },
 ];
 

@@ -49,8 +49,8 @@ const categories = [
         title: 'Spicy / 18+ / Alcohol',
         subtitle: 'Play wild (adults only)!',
         icon: '🔥',
-        color: '#FFC107', // Mustard color
-        path: '/extreme-challenge-roulette',
+        color: '#9c27b0',
+        path: '/spicy-games',
     },
     {
         id: '7',

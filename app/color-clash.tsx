@@ -1,21 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, ImageBackground, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const deckBackImage = require('../assets/images/Deck.png');
 const cardFrontImage = require('../assets/images/Colorclash.png');
+const pokerTableImage = require('../assets/images/poker_table_bg.jpg');
 
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 type Card = { suit: Suit; rank: string; color: 'red' | 'black'; };
 
-const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'] as const;
+const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'] as const;
 
 function createDeck(): Card[] {
-  const suits: Suit[] = ['hearts','diamonds','clubs','spades'];
+  const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
   const deck: Card[] = [];
   for (const suit of suits) {
     for (const rank of RANKS) {
@@ -40,7 +40,7 @@ export default function ColorClashScreen() {
   const initialDeck = useMemo(() => shuffle(createDeck()), []);
   const [deck, setDeck] = useState<Card[]>(initialDeck);
   const [current, setCurrent] = useState<Card | null>(null);
-  const [selection, setSelection] = useState<'red'|'black'|null>(null);
+  const [selection, setSelection] = useState<'red' | 'black' | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [message, setMessage] = useState<string>('ROUND 1: Pick a color!');
   const [correct, setCorrect] = useState(0);
@@ -50,24 +50,15 @@ export default function ColorClashScreen() {
   const [round, setRound] = useState(1);
   const [drinkSeconds, setDrinkSeconds] = useState(0);
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
-  const [currentCircle, setCurrentCircle] = useState(1); // 1=outer, 2=middle, 3=inner
+  const [showEnlargedView, setShowEnlargedView] = useState(false);
 
-  // Card distribution: outer=8, middle=6, inner=3
-  const outerCards = 8;
-  const middleCards = 6;
-  const innerCards = 3;
-  const totalCards = outerCards + middleCards + innerCards;
-  
-  const numCards = totalCards;
+  // Single Ellipse: 16 cards to match reference style roughly (or just use a fixed number)
+  // Reference image has about 16 cards. Let's use 16.
+  const numCards = 16;
+
   const flipAnims = useRef(Array.from({ length: numCards }, () => new Animated.Value(0))).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
-
-  const getCircleForCard = (index: number): number => {
-    if (index < outerCards) return 1;
-    if (index < outerCards + middleCards) return 2;
-    return 3;
-  };
 
   const getRoundMultiplier = () => {
     if (round === 1) return 1;
@@ -78,8 +69,8 @@ export default function ColorClashScreen() {
 
   const getRoundTitle = () => {
     const multiplier = getRoundMultiplier();
-    if (round === 4) return 'FINAL ROUND: 4x Drinks!';
-    return `ROUND ${round}: ${multiplier}x Multiplier`;
+    if (round === 4) return 'FINAL ROUND\n4x Drinks!';
+    return `ROUND ${round}\n${multiplier}x Multiplier`;
   };
 
   const drawCard = () => {
@@ -94,7 +85,7 @@ export default function ColorClashScreen() {
     return next;
   };
 
-  const handleColorPick = (pick: 'red'|'black') => {
+  const handleColorPick = (pick: 'red' | 'black') => {
     if (revealed) return;
     setSelection(pick);
     setMessage('Now pick a card!');
@@ -102,36 +93,27 @@ export default function ColorClashScreen() {
   };
 
   const getCardValue = (rank: string): number => {
-    if (rank === 'A') return 11; // Ace = 11 seconds base
-    if (rank === 'J' || rank === 'Q' || rank === 'K') return 10;
+    if (rank === 'A') return 1; // Ace = 1 second
+    if (rank === 'J') return 11; // Jack = 11 seconds
+    if (rank === 'Q') return 12; // Queen = 12 seconds
+    if (rank === 'K') return 13; // King = 13 seconds
     return parseInt(rank);
   };
 
   const handleCardPick = async (cardIndex: number) => {
-    const cardCircle = getCircleForCard(cardIndex);
-    
-    // Only allow picking from current active circle
-    if (cardCircle !== currentCircle) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      if (cardCircle > currentCircle) {
-        setMessage(`Complete circle ${currentCircle} first!`);
-      }
-      return;
-    }
-    
     if (revealed || !selection || flippedCards.has(cardIndex)) return;
-    
+
     setSelectedCardIndex(cardIndex);
     const cardToFlip = drawCard();
     setCurrent(cardToFlip);
-    
+
     const multiplier = getRoundMultiplier();
     const baseValue = getCardValue(cardToFlip.rank);
     const totalDrinks = baseValue * multiplier;
-    
+
     // Mark this card as flipped
     setFlippedCards(prev => new Set(prev).add(cardIndex));
-    
+
     // small delay so state sets before animation
     setTimeout(() => {
       Animated.timing(flipAnims[cardIndex], { toValue: 1, duration: 400, useNativeDriver: true }).start(() => {
@@ -162,63 +144,60 @@ export default function ColorClashScreen() {
           ]).start();
         }
         setRevealed(true);
-        
-        // Auto-reset selection after 1.5 seconds
+        setShowEnlargedView(true); // Show the enlarged card view
+
+        // Auto-reset selection after 2 seconds (increased for enlarged view)
         setTimeout(() => {
+          setShowEnlargedView(false);
           setSelection(null);
           setRevealed(false);
           setSelectedCardIndex(null);
           setCurrent(null);
           setDrinkSeconds(0);
-          
-          // Check circle completion
+
+          // Check round completion
           const newFlippedCount = flippedCards.size + 1;
-          if (currentCircle === 1 && newFlippedCount >= outerCards) {
-            setCurrentCircle(2);
-            setMessage(`Circle 1 done! Now pick from Circle 2!`);
-          } else if (currentCircle === 2 && newFlippedCount >= outerCards + middleCards) {
-            setCurrentCircle(3);
-            setMessage(`Circle 2 done! Final Circle 3!`);
-          } else if (currentCircle === 3 && newFlippedCount >= totalCards) {
+          if (newFlippedCount >= numCards) {
             setMessage(`Round ${round} Complete! Tap Next Round.`);
           } else {
-            const cardsLeftInCircle = 
-              currentCircle === 1 ? outerCards - newFlippedCount :
-              currentCircle === 2 ? (outerCards + middleCards) - newFlippedCount :
-              totalCards - newFlippedCount;
-            setMessage(`Circle ${currentCircle}: ${cardsLeftInCircle} cards left!`);
+            setMessage(`Pick a color! ${numCards - newFlippedCount} cards left.`);
           }
-        }, 1500);
+        }, 2000);
       });
     }, 50);
   };
 
   const handleNext = () => {
     // Only advance if all cards have been flipped
-    if (flippedCards.size < totalCards) {
+    if (flippedCards.size < numCards) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      setMessage(`Flip all ${totalCards} cards first! ${totalCards - flippedCards.size} remaining.`);
+      setMessage(`Flip all ${numCards} cards first! ${numCards - flippedCards.size} remaining.`);
       return;
     }
-    
+
     setSelection(null);
     setRevealed(false);
     setSelectedCardIndex(null);
     setCurrent(null);
     setDrinkSeconds(0);
     setFlippedCards(new Set()); // Reset flipped cards for new round
-    setCurrentCircle(1); // Reset to outer circle
-    
+
     // Advance to next round (up to round 4)
     if (round < 4) {
       setRound((r) => r + 1);
       setMessage(`ROUND ${round + 1}: Pick a color!`);
     } else {
-      // Reset to round 1 after completing round 4
-      setRound(1);
-      setMessage('ROUND 1: Pick a color!');
+      // Game Over - Navigate to results
+      router.push({
+        pathname: '/color-clash-game-over',
+        params: {
+          correct,
+          wrong,
+          bestStreak: streak
+        }
+      });
     }
-    
+
     flipAnims.forEach(anim => anim.setValue(0));
     pulseAnim.setValue(1);
     shakeAnim.setValue(0);
@@ -235,156 +214,178 @@ export default function ColorClashScreen() {
   const suitColor = (s: Suit) => (s === 'hearts' || s === 'diamonds' ? '#D11A2A' : '#111827');
 
   return (
-    <LinearGradient colors={["#18061F", "#2B0B3F"]} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.background}>
+    <ImageBackground source={pokerTableImage} style={styles.background} resizeMode="cover">
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
+
+        {/* Top Bar: Back Button, Round Info, and Stats */}
+        <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={24} color="rgba(255,255,255,0.9)" />
           </TouchableOpacity>
-          <View style={styles.titleContainer}>
-            <Text style={styles.titleNeon}>COLOR CLASH</Text>
-          </View>
-          <View style={{ width: 24 }} />
-        </View>
 
-        <View style={styles.roundIndicator}>
-          <Text style={styles.roundTitle}>{getRoundTitle()}</Text>
-          <Text style={styles.roundSubtitle}>Round {round} of 4</Text>
-        </View>
+          <View style={styles.roundInfo}>
+            <Text style={styles.roundTitle}>{getRoundTitle()}</Text>
+          </View>
 
-        <View style={styles.scoreRow}>
-          <View style={styles.scoreBox}>
-            <Text style={styles.scoreLabel}>Correct</Text>
-            <Text style={styles.scoreValue}>✅ {correct}</Text>
-          </View>
-          <View style={styles.messageBox}>
-            <Text style={styles.message}>{message}</Text>
-            {streak >= 3 && (
-              <View style={styles.streakBadge}>
-                <Text style={styles.streakText}>🔥 {streak} STREAK!</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.scoreBox}>
-            <Text style={styles.scoreLabel}>Wrong</Text>
-            <Text style={styles.scoreValue}>❌ {wrong}</Text>
+          <View style={styles.topRightStats}>
+            <Text style={styles.miniStat}>✅ {correct}  ❌ {wrong}</Text>
+            {streak >= 3 && <Text style={styles.miniStreak}>🔥 {streak}</Text>}
           </View>
         </View>
 
-        <Animated.View style={[styles.table, { transform: [{ scale: pulseAnim }, { translateX: shakeAnim }] }]}>
-          {Array.from({ length: numCards }).map((_, index) => {
-            let angle, radius, cardSize;
-            
-            // Determine which circle and calculate position - optimized for landscape
-            if (index < outerCards) {
-              // Outer circle - 8 cards
-              const circleIndex = index;
-              angle = (circleIndex / outerCards) * 2 * Math.PI - Math.PI / 2;
-              radius = 160;
-              cardSize = { width: 70, height: 100 };
-            } else if (index < outerCards + middleCards) {
-              // Middle circle - 6 cards
-              const circleIndex = index - outerCards;
-              angle = (circleIndex / middleCards) * 2 * Math.PI - Math.PI / 2;
-              radius = 105;
-              cardSize = { width: 65, height: 92 };
-            } else {
-              // Inner circle - 3 cards
-              const circleIndex = index - outerCards - middleCards;
-              angle = (circleIndex / innerCards) * 2 * Math.PI - Math.PI / 2;
-              radius = 50;
-              cardSize = { width: 58, height: 82 };
-            }
-            
-            const x = Math.cos(angle) * radius;
-            const y = Math.sin(angle) * radius;
-            
-            const flipAnim = flipAnims[index];
-            const frontRotateY = flipAnim.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
-            const backRotateY = flipAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
-            
-            const isFlipped = flippedCards.has(index);
-            const isCurrentCard = selectedCardIndex === index && revealed;
-            const cardCircle = getCircleForCard(index);
-            const isActiveCircle = cardCircle === currentCircle;
-            
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.cardWrapper,
-                  {
-                    transform: [{ translateX: x }, { translateY: y }],
-                  },
-                ]}
-                onPress={() => handleCardPick(index)}
-                disabled={revealed || !selection || isFlipped || !isActiveCircle}
-                activeOpacity={0.8}
-              >
-                <Animated.View style={[
-                  styles.card,
-                  { 
-                    width: cardSize.width,
-                    height: cardSize.height,
-                    transform: [{ perspective: 600 }],
-                    opacity: isActiveCircle ? 1 : 0.4,
-                  }
-                ]}>
-                  {/* Front */}
-                  <Animated.View style={[styles.cardFace, styles.cardFront, { transform: [{ rotateY: frontRotateY }] }]}> 
-                    {isCurrentCard && current && (
-                      <>
-                        <View style={styles.cornerTL}>
-                          <Text style={[styles.cornerRank, current.color === 'red' ? styles.red : styles.black]}>{current.rank}</Text>
-                          <Text style={[styles.cornerSuit, { color: suitColor(current.suit) }]}>{suitSymbol(current.suit)}</Text>
-                        </View>
-                        <View style={styles.cornerBR}>
-                          <Text style={[styles.cornerRank, current.color === 'red' ? styles.red : styles.black]}>
-                            {current.rank}
-                          </Text>
-                          <Text style={[styles.cornerSuit, { color: suitColor(current.suit) }]}>{suitSymbol(current.suit)}</Text>
-                        </View>
-                        <View style={styles.centerPip}>
-                          <Text style={[styles.centerSuit, { color: suitColor(current.suit) }]}>{suitSymbol(current.suit)}</Text>
-                        </View>
-                      </>
-                    )}
-                  </Animated.View>
-                  {/* Back */}
-                  <Animated.View style={[styles.cardFace, styles.cardBack, { transform: [{ rotateY: backRotateY }] }]}> 
-                    <View style={styles.deckBackContainer}>
+        {/* Message Bar */}
+        <View style={styles.messageBar}>
+          <Text style={styles.messageText}>{message}</Text>
+        </View>
+
+        {/* Center: Card Table */}
+        <View style={styles.gameArea}>
+          <Animated.View style={[styles.cardTable, { transform: [{ scale: pulseAnim }, { translateX: shakeAnim }] }]}>
+            {Array.from({ length: numCards }).map((_, index) => {
+              // Single Ellipse distribution - Vertical (Portrait)
+              // To make it vertical, we use a larger radiusY than radiusX
+              const angle = (index / numCards) * 2 * Math.PI - Math.PI / 2; // Start from top (-PI/2)
+              const radiusX = 160; // Narrower
+              const radiusY = 280; // Taller
+              const cardSize = { width: 50, height: 70 };
+
+              const x = Math.cos(angle) * radiusX;
+              const y = Math.sin(angle) * radiusY;
+
+              // Rotate card to face center
+              const rotateAngle = angle + Math.PI / 2;
+              const rotateString = `${rotateAngle}rad`;
+
+              const flipAnim = flipAnims[index];
+              const frontRotateY = flipAnim.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
+              const backRotateY = flipAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+
+              const isFlipped = flippedCards.has(index);
+              const isCurrentCard = selectedCardIndex === index && revealed;
+
+              const isActive = !isFlipped;
+
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.cardWrapper,
+                    {
+                      transform: [
+                        { translateX: x },
+                        { translateY: y },
+                        { rotate: rotateString }
+                      ],
+                      zIndex: isActive ? 10 : 1,
+                    },
+                  ]}
+                  onPress={() => handleCardPick(index)}
+                  disabled={revealed || !selection || isFlipped}
+                  activeOpacity={0.8}
+                >
+                  <Animated.View style={[
+                    styles.card,
+                    {
+                      width: cardSize.width,
+                      height: cardSize.height,
+                      transform: [{ perspective: 600 }],
+                      opacity: isActive ? 1 : 0.5,
+                      // Removed border/glow for cleaner look matching reference
+                    }
+                  ]}>
+                    {/* Front */}
+                    <Animated.View style={[styles.cardFace, styles.cardFront, { transform: [{ rotateY: frontRotateY }] }]}>
+                      {isCurrentCard && current && (
+                        <>
+                          <Text style={[styles.centerRank, current.color === 'red' ? styles.red : styles.black, { fontSize: cardSize.width * 0.4 }]}>{current.rank}</Text>
+                          <Text style={[styles.centerSuitSmall, { color: suitColor(current.suit), fontSize: cardSize.width * 0.5 }]}>{suitSymbol(current.suit)}</Text>
+                        </>
+                      )}
+                    </Animated.View>
+                    {/* Back */}
+                    <Animated.View style={[styles.cardFace, styles.cardBack, { transform: [{ rotateY: backRotateY }] }]}>
                       <Image source={deckBackImage} style={styles.deckBackImage} resizeMode="cover" />
-                    </View>
+                    </Animated.View>
                   </Animated.View>
-                </Animated.View>
-              </TouchableOpacity>
-            );
-          })}
-        </Animated.View>
+                </TouchableOpacity>
+              );
+            })}
+          </Animated.View>
+        </View>
 
-        <View style={styles.buttons}>
+        {/* Bottom Controls */}
+        <View style={styles.bottomControls}>
           <TouchableOpacity
-            style={[styles.pickButton, styles.redBtn, selection === 'red' && styles.selectedBtn]}
+            style={[styles.colorButton, styles.redButton, selection === 'red' && styles.selectedColorBtn]}
             onPress={() => handleColorPick('red')}
             disabled={revealed}
           >
-            <Text style={styles.pickText}>Red ♥️</Text>
+            <Text style={styles.colorButtonText}>RED ♥️</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.pickButton, styles.blackBtn, selection === 'black' && styles.selectedBtn]}
+            style={[styles.colorButton, styles.blackButton, selection === 'black' && styles.selectedColorBtn]}
             onPress={() => handleColorPick('black')}
             disabled={revealed}
           >
-            <Text style={styles.pickText}>Black ♠️</Text>
+            <Text style={styles.colorButtonText}>BLACK ♠️</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 12 }} />
-        <TouchableOpacity style={[styles.nextButton, !revealed && styles.nextDisabled]} onPress={handleNext} disabled={!revealed}>
-          <Text style={styles.nextText}>Next Round</Text>
-        </TouchableOpacity>
+        {/* Enlarged Card Modal */}
+        <Modal
+          visible={showEnlargedView && current !== null}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowEnlargedView(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowEnlargedView(false)}
+          >
+            <View style={styles.enlargedCardContainer}>
+              {current && (
+                <View style={[styles.enlargedCard, { backgroundColor: '#fff' }]}>
+                  {/* Top-left corner */}
+                  <View style={styles.cardCorner}>
+                    <Text style={[styles.cornerRank, current.color === 'red' ? styles.red : styles.black]}>
+                      {current.rank}
+                    </Text>
+                    <Text style={[styles.cornerSuit, { color: suitColor(current.suit) }]}>
+                      {suitSymbol(current.suit)}
+                    </Text>
+                  </View>
+
+                  {/* Center suit */}
+                  <Text style={[styles.enlargedSuit, { color: suitColor(current.suit) }]}>
+                    {suitSymbol(current.suit)}
+                  </Text>
+
+                  {/* Bottom-right corner (rotated) */}
+                  <View style={[styles.cardCorner, styles.cardCornerBottomRight]}>
+                    <Text style={[styles.cornerRank, current.color === 'red' ? styles.red : styles.black]}>
+                      {current.rank}
+                    </Text>
+                    <Text style={[styles.cornerSuit, { color: suitColor(current.suit) }]}>
+                      {suitSymbol(current.suit)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.drinkInfo}>
+                    <Text style={styles.drinkLabel}>
+                      {current.color === selection ? '✅ CORRECT!' : '❌ WRONG!'}
+                    </Text>
+                    <Text style={styles.drinkValue}>{drinkSeconds} seconds</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
       </SafeAreaView>
-    </LinearGradient>
+    </ImageBackground>
   );
 }
 
@@ -392,140 +393,94 @@ const styles = StyleSheet.create({
   background: { flex: 1 },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    padding: 8,
   },
-  header: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 8,
+    height: 45,
   },
   backButton: {
-    padding: 4,
-  },
-  titleContainer: {
-    alignItems: 'center',
+    width: 40,
+    height: 40,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 20,
   },
-  titleNeon: {
-    fontSize: 26,
-    fontWeight: '900',
-    textAlign: 'center',
-    letterSpacing: 3,
-    color: '#00F5FF',
-    textShadowColor: '#00F5FF',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
-  },
-  roundIndicator: {
-    backgroundColor: 'rgba(0, 245, 255, 0.1)',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+  roundInfo: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     borderWidth: 2,
-    borderColor: 'rgba(0, 245, 255, 0.3)',
+    borderColor: '#FFD700',
+    flex: 1,
+    marginHorizontal: 10,
     alignItems: 'center',
   },
   roundTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#00F5FF',
-    letterSpacing: 1,
-    textShadowColor: '#00F5FF',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-  roundSubtitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 2,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingHorizontal: 6,
-    marginBottom: 12,
-    gap: 8,
-  },
-  scoreBox: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 12,
-    padding: 12,
-    minWidth: 80,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  scoreLabel: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 11,
-    fontWeight: '600',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  scoreValue: {
-    color: '#fff',
-    fontSize: 20,
+    color: '#FFD700',
     fontWeight: 'bold',
-  },
-  messageBox: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  message: {
-    color: '#fff',
-    fontSize: 14,
-    opacity: 0.95,
+    fontSize: 13,
     textAlign: 'center',
-    fontWeight: '600',
   },
-  streakBadge: {
-    backgroundColor: '#FF6B00',
+  topRightStats: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 8,
-    borderWidth: 2,
-    borderColor: '#FFD700',
+    borderRadius: 15,
+    alignItems: 'center',
   },
-  streakText: {
+  miniStat: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 1,
+    fontWeight: 'bold',
   },
-  score: { color: '#fff', fontWeight: 'bold' },
-  table: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 6,
-    marginBottom: 12,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 20,
-    padding: 15,
+  miniStreak: {
+    color: '#FF6B00',
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  messageBar: {
+    backgroundColor: 'rgba(0, 245, 255, 0.2)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 15,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    height: 380,
-    maxWidth: 520,
-    aspectRatio: 1,
-    alignSelf: 'center',
-    position: 'relative',
+    borderColor: 'rgba(0, 245, 255, 0.4)',
+  },
+  messageText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  gameArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardTable: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardWrapper: {
     position: 'absolute',
   },
   card: {
-    borderRadius: 10,
     backgroundColor: 'transparent',
-    shadowColor: '#FF00FF',
-    shadowOpacity: 0.4,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
+    borderRadius: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
     elevation: 8,
   },
   cardFace: {
@@ -537,116 +492,145 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backfaceVisibility: 'hidden',
-    borderRadius: 14,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  cardBack: {
+    backgroundColor: '#fff',
   },
   deckBackImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 14,
   },
-  deckBackContainer: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  cardBack: {
-    overflow: 'hidden',
-  },
-  cardBackGradient: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    borderRadius: 14,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardBackBorder: {
-    position: 'absolute',
-    top: 6,
-    bottom: 6,
-    left: 6,
-    right: 6,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  cardBackEmblem: {
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.35)',
-    backgroundColor: 'rgba(255,255,255,0.06)'
-  },
-  cardBackEmblemText: { color: '#dfe7ff', textAlign: 'center', lineHeight: 22 },
   cardFront: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    overflow: 'hidden',
+    borderColor: '#ccc',
   },
-  cardFrontImage: {
-    width: '100%',
-    height: '100%',
+  centerRank: {
+    fontWeight: 'bold',
+  },
+  centerSuitSmall: {
+    marginTop: -2,
   },
   red: { color: '#D11A2A' },
   black: { color: '#111827' },
-  cornerTL: {
-    position: 'absolute',
-    top: 5,
-    left: 5,
+
+  // Bottom Controls
+  bottomControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  colorButton: {
+    flex: 1,
+    maxWidth: 200,
+    paddingVertical: 16,
+    borderRadius: 15,
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  redButton: {
+    backgroundColor: '#C41E3A',
+  },
+  blackButton: {
+    backgroundColor: '#1a1a1a',
+  },
+  selectedColorBtn: {
+    borderColor: '#00F5FF',
+    borderWidth: 4,
+    shadowColor: '#00F5FF',
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 12,
+    transform: [{ scale: 1.05 }],
+  },
+  colorButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+    letterSpacing: 1,
+  },
+
+  // Enlarged Card Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  cornerBR: {
-    position: 'absolute',
-    bottom: 5,
-    right: 5,
+  enlargedCardContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  enlargedCard: {
+    width: 220,
+    height: 320,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    elevation: 20,
+    borderWidth: 3,
+    borderColor: '#FFD700',
+  },
+  enlargedRank: {
+    fontSize: 80,
+    fontWeight: 'bold',
+  },
+  enlargedSuit: {
+    fontSize: 100,
+    marginTop: -10,
+  },
+  cardCorner: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    alignItems: 'center',
+  },
+  cardCornerBottomRight: {
+    top: undefined,
+    left: undefined,
+    bottom: 10,
+    right: 10,
     transform: [{ rotate: '180deg' }],
   },
-  cornerRank: { fontSize: 14, fontWeight: '700', letterSpacing: 0, fontVariant: ['tabular-nums'] },
-  cornerSuit: { fontSize: 11, marginTop: -1 },
-  centerPip: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginLeft: -15,
-    marginTop: -18,
+  cornerRank: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
-  centerSuit: { fontSize: 30 },
-  buttons: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 6,
+  cornerSuit: {
+    fontSize: 24,
   },
-  pickButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
+  drinkInfo: {
+    marginTop: 20,
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    padding: 10,
+    borderRadius: 10,
+    width: '90%',
   },
-  redBtn: { backgroundColor: '#8B1E3F' },
-  blackBtn: { backgroundColor: '#1B1F3B' },
-  selectedBtn: { 
-    borderWidth: 3,
-    borderColor: '#00F5FF',
-    shadowColor: '#00F5FF',
-    shadowOpacity: 0.5,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 10,
+  drinkLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
   },
-  pickText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  disabledBtn: { opacity: 0.7 },
-  nextButton: {
-    marginTop: 8,
-    marginHorizontal: 6,
-    backgroundColor: '#2A9D8F',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
+  drinkValue: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#D11A2A',
   },
-  nextDisabled: { opacity: 0.5 },
-  nextText: { color: '#001219', fontWeight: '900', fontSize: 16 },
 });

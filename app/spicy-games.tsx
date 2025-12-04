@@ -16,8 +16,8 @@ type SpicyGame = {
 
 const games: SpicyGame[] = [
   { title: 'Drink Domino', description: 'Players drink in a chain reaction following the order of the cards (A, 2, 3… K).', emoji: '🔥🍻', path: '/drink-domino', gradient: ['#FF4500', '#DC143C'], darkGradient: ['#500000', '#A01010'] },
-  { title: 'Color Clash', description: 'Guess whether the next card will be red ♥️ or black ♠️.\nIf players fail to guess the color they drink, if they get it right they choose who drinks.', emoji: '♥️♠️', path: '/color-clash', gradient: ['#4169E1', '#1E90FF'], darkGradient: ['#00003B', '#1C2E5D'] },
-  { title: 'Ride The Bus', description: 'Complete 4 card predictions in a row: Color → Higher or Lower → Inside or Outside → Suit. If you fail at any step → start over and drink.', emoji: '🚌🃏', path: '/ride-the-bus', gradient: ['#2E8B57', '#3CB371'], darkGradient: ['#002000', '#005000'] },
+  { title: 'Color Clash', description: 'Guess whether the next card will be red ♥️ or black ♠️.\nIf players fail to guess the color they drink, if they get it right they choose who drinks.', emoji: '♥️♠️', path: '/color-clash-pre-game', gradient: ['#4169E1', '#1E90FF'], darkGradient: ['#00003B', '#1C2E5D'] },
+  { title: 'Ride The Bus', description: 'Complete 4 card predictions in a row: Color → Higher or Lower → Inside or Outside → Suit. If you fail at any step → start over and drink.', emoji: '🚌🃏', path: '/ride-the-bus-pre-game', gradient: ['#2E8B57', '#3CB371'], darkGradient: ['#002000', '#005000'] },
   { title: 'PartyBoard: Roll & Cheers', description: 'Move around the board completing dares, mini–games, and drink challenges. Each victory earns you a Beer Can Token. First to collect 6 tokens wins.', emoji: '🎲🍻', path: '/party-board', gradient: ['#DA70D6', '#BA55D3'], darkGradient: ['#2B0042', '#6A006A'] },
   { title: 'Hot Cup Spin', description: 'Place shots, dares, prizes, or safe cards hidden under face–down cups. Spin the arrow. Reveal the cup it points to and do whatever it says.', emoji: '🥤🔄', path: '/hot-cup-spin', gradient: ['#CD5C5C', '#F08080'], darkGradient: ['#400000', '#902020'] }
 ];
@@ -30,28 +30,28 @@ const GameItem = ({ title, description, emoji, gradient, darkGradient, onPress }
   darkGradient: [string, string];
   onPress: () => void;
 }) => (
-    <TouchableOpacity onPress={onPress}>
-        <LinearGradient
-            colors={gradient}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={[styles.gameButtonOuter, { shadowColor: gradient[0] }]}
-        >
+  <TouchableOpacity onPress={onPress}>
+    <LinearGradient
+      colors={gradient}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={[styles.gameButtonOuter, { shadowColor: gradient[0] }]}
+    >
       <LinearGradient
         colors={[darkGradient[1], darkGradient[0]]} // Dark-to-light for the button face
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={styles.gameButtonInner}
-            >
-                <Text style={styles.gameEmoji}>{emoji}</Text>
-                <View style={styles.gameTextContainer}>
-                    <Text style={styles.gameTitle}>{title}</Text>
-                    <Text style={styles.gameDescription}>{description}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
-            </LinearGradient>
-        </LinearGradient>
-    </TouchableOpacity>
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.gameButtonInner}
+      >
+        <Text style={styles.gameEmoji}>{emoji}</Text>
+        <View style={styles.gameTextContainer}>
+          <Text style={styles.gameTitle}>{title}</Text>
+          <Text style={styles.gameDescription}>{description}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+      </LinearGradient>
+    </LinearGradient>
+  </TouchableOpacity>
 );
 
 export default function SpicyGamesScreen() {

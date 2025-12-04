@@ -11,7 +11,7 @@ const categories = [
   { title: 'Word / Mental', subtitle: 'Quick wits win!', icon: '💡', color: '#1DE9B6', path: '/word-mental-games' },
   { title: 'Quick Competition', subtitle: 'Fast duels, instant fun.', icon: '🏁', color: '#4caf50', path: '/quick-competition-games' },
   { title: 'Social / Truth', subtitle: 'Talk, reveal, and connect.', icon: '💬', color: '#4169E1', path: '/social-truth-games' },
-  { title: 'Spicy / 18+ / Alcohol', subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0' },
+  { title: 'Spicy / 18+ / Alcohol', subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0', path: '/spicy-games' },
 ];
 
 const specials = {
@@ -38,15 +38,15 @@ export default function PartyModeGamesScreen() {
           <Text style={styles.title}>What kind of fun are you in the mood for?</Text>
           <View style={styles.grid}>
             {categories.map((category) => (
-              <CategoryCard 
-                key={category.title} 
-                {...category} 
-                onPress={() => category.path && router.push(category.path)}
+              <CategoryCard
+                key={category.title}
+                {...category}
+                onPress={() => category.path && router.push(category.path as any)}
               />
             ))}
           </View>
           <View style={styles.fullWidth}>
-            <CategoryCard {...specials} onPress={() => {}} />
+            <CategoryCard {...specials} onPress={() => { }} />
           </View>
         </ScrollView>
       </SafeAreaView>

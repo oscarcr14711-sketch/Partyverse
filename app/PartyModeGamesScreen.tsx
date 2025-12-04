@@ -1,17 +1,17 @@
 import { CategoryCard } from '@/components/CategoryCard';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const categories = [
-  { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', route: 'ActionAdrenalineGamesScreen' },
-  { title: 'Humor / Creativity', subtitle: 'Laugh, draw, and act!', icon: '😂', color: '#ffc107', route: 'HumorCreativityGamesScreen' },
-  { title: 'Word / Mental', subtitle: 'Quick wits win!', icon: '💡', color: '#ffeb3b', route: 'WordMentalGamesScreen' },
-  { title: 'Quick Competition', subtitle: 'Fast duels, instant fun.', icon: '🏁', color: '#4caf50', route: 'QuickCompetitionGamesScreen' },
-  { title: 'Social / Truth', subtitle: 'Talk, reveal, and connect.', icon: '💬', color: '#2196f3', route: 'SocialTruthGamesScreen' },
-  { title: 'Spicy / 18+ / Alcohol', subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0', route: 'SpicyGamesScreen' },
+  { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', route: '/action-adrenaline-games' },
+  { title: 'Humor / Creativity', subtitle: 'Laugh, draw, and act!', icon: '😂', color: '#ffc107', route: '/humor-creativity-games' },
+  { title: 'Word / Mental', subtitle: 'Quick wits win!', icon: '💡', color: '#ffeb3b', route: '/word-mental-games' },
+  { title: 'Quick Competition', subtitle: 'Fast duels, instant fun.', icon: '🏁', color: '#4caf50', route: '/quick-competition-games' },
+  { title: 'Social / Truth', subtitle: 'Talk, reveal, and connect.', icon: '💬', color: '#2196f3', route: '/social-truth-games' },
+  { title: 'Spicy / 18+ / Alcohol', subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0', route: '/spicy-games' },
 ];
 
 const specials = {
@@ -22,13 +22,13 @@ const specials = {
 };
 
 export default function PartyModeGamesScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   return (
     <View style={styles.background}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={26} color="white" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Party Mode</Text>
@@ -38,15 +38,15 @@ export default function PartyModeGamesScreen() {
           <Text style={styles.title}>What kind of fun are you in the mood for?</Text>
           <View style={styles.grid}>
             {categories.map((category) => (
-              <CategoryCard 
-                key={category.title} 
-                {...category} 
-                onPress={() => category.route && navigation.navigate(category.route)}
+              <CategoryCard
+                key={category.title}
+                {...category}
+                onPress={() => category.route && router.push(category.route as any)}
               />
             ))}
           </View>
           <View style={styles.fullWidth}>
-            <CategoryCard {...specials} onPress={() => {}} />
+            <CategoryCard {...specials} onPress={() => { }} />
           </View>
         </ScrollView>
       </SafeAreaView>

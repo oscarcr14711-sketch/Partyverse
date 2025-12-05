@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import JoyLaughIcon from './JoyLaughIcon';
+import { BulbIcon, ChatIcon, FinishFlagsIcon, FireIcon, GiftIcon, JoyLaughIcon, ThunderIcon } from './CategoryIcons';
 import { PulsingButton } from './PulsingButton';
 
 interface CategoryCardProps {
@@ -12,15 +12,32 @@ interface CategoryCardProps {
 }
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress }) => {
+  const renderIcon = () => {
+    switch (title) {
+      case 'Action / Adrenaline':
+        return <ThunderIcon />;
+      case 'Humor / Creativity':
+        return <JoyLaughIcon />;
+      case 'Word / Mental':
+        return <BulbIcon />;
+      case 'Quick Competition':
+        return <FinishFlagsIcon />;
+      case 'Social / Truth':
+        return <ChatIcon />;
+      case 'Spicy / 18+ / Alcohol':
+        return <FireIcon />;
+      case 'Specials (Weekly / Festive)':
+        return <GiftIcon />;
+      default:
+        return <Text style={styles.icon}>{icon}</Text>;
+    }
+  };
+
   return (
     <PulsingButton onPress={onPress} style={styles.cardWrapper}>
       <View style={[styles.cardInner, { backgroundColor: color }]}>
         <View style={styles.iconCircle}>
-          {title === 'Humor / Creativity' ? (
-            <JoyLaughIcon />
-          ) : (
-            <Text style={styles.icon}>{icon}</Text>
-          )}
+          {renderIcon()}
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.title}>{title}</Text>
@@ -61,13 +78,14 @@ const styles = StyleSheet.create({
     elevation: 14,
   },
   iconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+    overflow: 'hidden',
   },
   icon: {
     fontSize: 32,

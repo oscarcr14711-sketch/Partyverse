@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RideTheBusPreGame() {
@@ -10,11 +9,11 @@ export default function RideTheBusPreGame() {
     const [showRules, setShowRules] = useState(false);
 
     return (
-        <View style={styles.container}>
-            <LinearGradient
-                colors={['#002000', '#005000']}
-                style={styles.background}
-            />
+        <ImageBackground
+            source={require('../assets/images/rtb.png')}
+            style={styles.background}
+            resizeMode="cover"
+        >
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -23,50 +22,22 @@ export default function RideTheBusPreGame() {
                 </View>
 
                 <View style={styles.content}>
-                    <View style={styles.iconContainer}>
-                        <Text style={styles.gameIcon}>🚌🃏</Text>
-                    </View>
-
-                    <Text style={styles.title}>RIDE THE BUS</Text>
-                    <Text style={styles.subtitle}>Can you survive the ride?</Text>
-
-                    <View style={styles.infoCard}>
-                        <Text style={styles.infoTitle}>HOW TO PLAY</Text>
-                        <View style={styles.stepRow}>
-                            <View style={styles.stepNumber}><Text style={styles.stepText}>1</Text></View>
-                            <Text style={styles.stepDesc}>Collect cards by guessing their properties.</Text>
-                        </View>
-                        <View style={styles.stepRow}>
-                            <View style={styles.stepNumber}><Text style={styles.stepText}>2</Text></View>
-                            <Text style={styles.stepDesc}>Build the pyramid and assign drinks.</Text>
-                        </View>
-                        <View style={styles.stepRow}>
-                            <View style={styles.stepNumber}><Text style={styles.stepText}>3</Text></View>
-                            <Text style={styles.stepDesc}>Loser rides the bus! Don't hit a face card!</Text>
-                        </View>
-                    </View>
+                    <View style={styles.spacer} />
 
                     <TouchableOpacity
                         style={styles.startButton}
                         onPress={() => router.push('/ride-the-bus-game')}
                     >
-                        <LinearGradient
-                            colors={['#2E8B57', '#3CB371']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.gradientButton}
-                        >
-                            <Text style={styles.startButtonText}>START GAME</Text>
-                            <Ionicons name="play" size={24} color="white" />
-                        </LinearGradient>
+                        <Text style={styles.startButtonText}>START GAME</Text>
                     </TouchableOpacity>
+                </View>
 
+                <View style={styles.infoButtonWrapper}>
                     <TouchableOpacity
-                        style={styles.rulesButton}
+                        style={styles.infoButton}
                         onPress={() => setShowRules(true)}
                     >
-                        <Ionicons name="information-circle-outline" size={24} color="#3CB371" />
-                        <Text style={styles.rulesButtonText}>Detailed Rules</Text>
+                        <Text style={styles.infoButtonText}>i</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -115,20 +86,15 @@ export default function RideTheBusPreGame() {
                     </View>
                 </Modal>
             </SafeAreaView>
-        </View>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
     background: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
+        flex: 1,
+        width: '100%',
+        height: '100%',
     },
     safeArea: {
         flex: 1,
@@ -142,122 +108,64 @@ const styles = StyleSheet.create({
         height: 40,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         borderRadius: 20,
     },
     content: {
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 30,
+        justifyContent: 'flex-end',
+        paddingBottom: 100, // Space for the start button
     },
-    iconContainer: {
-        width: 100,
-        height: 100,
-        backgroundColor: 'rgba(46, 139, 87, 0.2)',
-        borderRadius: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20,
-        borderWidth: 2,
-        borderColor: '#3CB371',
-    },
-    gameIcon: {
-        fontSize: 50,
-    },
-    title: {
-        fontSize: 36,
-        fontWeight: '900',
-        color: '#fff',
-        textAlign: 'center',
-        marginBottom: 5,
-        letterSpacing: 2,
-        textShadowColor: '#3CB371',
-        textShadowOffset: { width: 0, height: 0 },
-        textShadowRadius: 10,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#rgba(255,255,255,0.7)',
-        marginBottom: 40,
-        fontStyle: 'italic',
-    },
-    infoCard: {
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        borderRadius: 20,
-        padding: 20,
-        width: '100%',
-        marginBottom: 40,
-        borderWidth: 1,
-        borderColor: 'rgba(60, 179, 113, 0.3)',
-    },
-    infoTitle: {
-        color: '#3CB371',
-        fontWeight: 'bold',
-        fontSize: 14,
-        marginBottom: 15,
-        letterSpacing: 1,
-    },
-    stepRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    stepNumber: {
-        width: 24,
-        height: 24,
-        backgroundColor: '#3CB371',
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    stepText: {
-        color: '#002000',
-        fontWeight: 'bold',
-        fontSize: 12,
-    },
-    stepDesc: {
-        color: '#fff',
-        fontSize: 14,
+    spacer: {
         flex: 1,
     },
     startButton: {
-        width: '100%',
-        height: 60,
+        backgroundColor: '#263238',
         borderRadius: 30,
-        overflow: 'hidden',
-        marginBottom: 20,
-        shadowColor: '#3CB371',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        paddingHorizontal: 80,
+        paddingVertical: 16,
+        marginBottom: 40,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
         shadowRadius: 8,
-        elevation: 8,
-    },
-    gradientButton: {
-        width: '100%',
-        height: '100%',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 10,
+        elevation: 10,
+        borderBottomWidth: 4,
+        borderBottomColor: '#1a1f23',
     },
     startButtonText: {
-        color: '#fff',
-        fontSize: 20,
+        fontSize: 28,
         fontWeight: 'bold',
-        letterSpacing: 1,
+        color: '#FFE0B2',
+        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
     },
-    rulesButton: {
-        flexDirection: 'row',
+    infoButtonWrapper: {
+        position: 'absolute',
+        bottom: 30,
+        right: 20,
+        zIndex: 100,
+    },
+    infoButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#263238',
         alignItems: 'center',
-        gap: 8,
-        padding: 10,
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
+        borderBottomWidth: 3,
+        borderBottomColor: '#1a1f23',
     },
-    rulesButtonText: {
-        color: '#3CB371',
-        fontSize: 14,
-        fontWeight: '600',
+    infoButtonText: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#FFE0B2',
+        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
     },
     modalOverlay: {
         flex: 1,

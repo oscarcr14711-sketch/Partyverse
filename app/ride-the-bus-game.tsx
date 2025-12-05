@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -60,6 +61,7 @@ export default function RideTheBusGame() {
     const [busCards, setBusCards] = useState<Card[]>([]);
     const [busIndex, setBusIndex] = useState(0);
     const [busFlipped, setBusFlipped] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     // Animations
     const flipAnim = useRef(new Animated.Value(0)).current;
@@ -282,37 +284,61 @@ export default function RideTheBusGame() {
             setMessage('FACE CARD! DRINK & RESTART!');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             setTimeout(() => {
-                // Restart bus with functional update
-                setDeck(currentDeck => {
-                    const deckCopy = [...currentDeck];
-                    const newBus = [];
-
-                    for (let i = 0; i < 7; i++) {
-                        if (deckCopy.length > 0) {
-                            newBus.push(deckCopy.shift()!);
-                        }
-                    }
-
-                    setBusCards(newBus);
-                    return deckCopy;
-                });
-
-                setBusIndex(0);
-                setBusFlipped(false);
                 setMessage('Restarting... Good luck!');
+
+                // Restart bus with functional update
+                setTimeout(() => {
+                    setDeck(currentDeck => {
+                        const deckCopy = [...currentDeck];
+
+                        // Check if we have enough cards left
+                        if (deckCopy.length < 7) {
+                            // Not enough cards, reshuffle and create new deck
+                            const newDeck = shuffle(createDeck());
+                            const newBus = [];
+                            for (let i = 0; i < 7; i++) {
+                                if (newDeck.length > 0) {
+                                    newBus.push(newDeck.shift()!);
+                                }
+                            }
+                            setBusCards(newBus);
+                            setBusIndex(0);
+                            setBusFlipped(false);
+                            setMessage('RIDE THE BUS! Avoid Face Cards!');
+                            return newDeck;
+                        } else {
+                            // Enough cards, continue with current deck
+                            const newBus = [];
+                            for (let i = 0; i < 7; i++) {
+                                if (deckCopy.length > 0) {
+                                    newBus.push(deckCopy.shift()!);
+                                }
+                            }
+                            setBusCards(newBus);
+                            setBusIndex(0);
+                            setBusFlipped(false);
+                            setMessage('RIDE THE BUS! Avoid Face Cards!');
+                            return deckCopy;
+                        }
+                    });
+                }, 500);
             }, 2000);
         } else {
             setMessage('Safe! Next card...');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            setTimeout(() => {
-                if (busIndex < busCards.length - 1) {
+
+            // Check if this is the last card
+            if (busIndex >= busCards.length - 1) {
+                setShowConfetti(true);
+                setTimeout(() => {
+                    router.push('/ride-the-bus-game-over');
+                }, 2000);
+            } else {
+                setTimeout(() => {
                     setBusIndex(busIndex + 1);
                     setBusFlipped(false);
-                } else {
-                    // Win
-                    router.push('/ride-the-bus-game-over');
-                }
-            }, 1000);
+                }, 1000);
+            }
         }
     };
 
@@ -400,6 +426,16 @@ export default function RideTheBusGame() {
                                     </View>
                                 )}
                             </View>
+
+                            {/* Bus Loader Animation */}
+                            <View style={styles.busLoaderContainer}>
+                                <LottieView
+                                    source={require('../assets/animations/Bus Loader.json')}
+                                    autoPlay
+                                    loop
+                                    style={styles.busLoader}
+                                />
+                            </View>
                         </View>
                     )}
 
@@ -458,6 +494,18 @@ export default function RideTheBusGame() {
 
                     {phase === 3 && (
                         <View style={styles.busContainer}>
+                            {/* Confetti Animation (shown on win) */}
+                            {showConfetti && (
+                                <View style={styles.confettiContainer}>
+                                    <LottieView
+                                        source={require('../assets/animations/Confetti.json')}
+                                        autoPlay
+                                        loop={false}
+                                        style={styles.confetti}
+                                    />
+                                </View>
+                            )}
+
                             <View style={styles.busRow}>
                                 {busCards.map((c, i) => (
                                     <View key={i} style={[styles.busCardWrapper, i === busIndex && styles.activeBusCard]}>
@@ -472,6 +520,16 @@ export default function RideTheBusGame() {
                                         )}
                                     </View>
                                 ))}
+                            </View>
+
+                            {/* Bus Loader Animation */}
+                            <View style={styles.busLoaderContainer}>
+                                <LottieView
+                                    source={require('../assets/animations/Bus Loader.json')}
+                                    autoPlay
+                                    loop
+                                    style={styles.busLoader}
+                                />
                             </View>
                         </View>
                     )}
@@ -488,42 +546,184 @@ const styles = StyleSheet.create({
     safeArea: { flex: 1 },
     header: { flexDirection: 'row', alignItems: 'center', padding: 15 },
     backButton: { marginRight: 15 },
-    phaseTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
-    messageBar: { padding: 10, backgroundColor: 'rgba(0,0,0,0.3)', alignItems: 'center' },
-    messageText: { color: '#3CB371', fontSize: 18, fontWeight: 'bold' },
+    phaseTitle: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
+        textShadowColor: '#000',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
+    },
+    messageBar: {
+        padding: 15,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        alignItems: 'center',
+        borderBottomWidth: 2,
+        borderBottomColor: '#FFD700',
+    },
+    messageText: {
+        color: '#FFD700',
+        fontSize: 20,
+        fontWeight: 'bold',
+        textShadowColor: '#000',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+    },
     gameArea: { flex: 1, padding: 20, alignItems: 'center' },
 
     // Phase 1
     phase1Container: { width: '100%', alignItems: 'center', flex: 1 },
     handContainer: { width: '100%', marginBottom: 20 },
-    label: { color: 'white', marginBottom: 5, fontSize: 18, fontWeight: 'bold' },
-    miniHand: { flexDirection: 'row', gap: 8 },
-    miniCard: { width: 50, height: 70, borderRadius: 6, overflow: 'hidden' },
-    mainCardContainer: { width: 160, height: 224, marginBottom: 40 },
+    label: {
+        color: '#FFD700',
+        marginBottom: 8,
+        fontSize: 20,
+        fontWeight: 'bold',
+        textShadowColor: '#000',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+    },
+    miniHand: { flexDirection: 'row', gap: 10 },
+    miniCard: {
+        width: 60,
+        height: 84,
+        borderRadius: 8,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
+    },
+    mainCardContainer: {
+        width: 200,
+        height: 280,
+        marginBottom: 40,
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+        elevation: 15,
+    },
     controls: { flexDirection: 'row', gap: 20, flexWrap: 'wrap', justifyContent: 'center' },
-    btn: { backgroundColor: '#3CB371', paddingVertical: 15, paddingHorizontal: 30, borderRadius: 10 },
-    redBtn: { backgroundColor: '#D11A2A' },
-    blackBtn: { backgroundColor: '#111827' },
-    btnText: { color: 'white', fontWeight: 'bold', fontSize: 18 },
-    suitGrid: { flexDirection: 'row', gap: 15 },
-    suitBtn: { width: 70, height: 70, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', borderRadius: 12 },
-    suitText: { fontSize: 36, color: 'black' },
+    btn: {
+        backgroundColor: '#3CB371',
+        paddingVertical: 18,
+        paddingHorizontal: 40,
+        borderRadius: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 10,
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.3)',
+    },
+    redBtn: {
+        backgroundColor: '#FF1744',
+        shadowColor: '#FF1744',
+    },
+    blackBtn: {
+        backgroundColor: '#263238',
+        shadowColor: '#263238',
+    },
+    btnText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 20,
+        textShadowColor: '#000',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+    },
+    suitGrid: { flexDirection: 'row', gap: 18 },
+    suitBtn: {
+        width: 80,
+        height: 80,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 10,
+        borderWidth: 3,
+        borderColor: '#FFD700',
+    },
+    suitText: { fontSize: 42, color: 'black' },
 
     // Card Styles
     cardImage: { width: '100%', height: '100%' },
-    cardFace: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', borderRadius: 10, overflow: 'hidden' },
-    cardRank: { fontSize: 32, fontWeight: 'bold' },
-    cardSuit: { fontSize: 42 },
+    cardFace: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 12,
+        overflow: 'hidden',
+        borderWidth: 2,
+        borderColor: '#FFD700',
+    },
+    cardRank: { fontSize: 42, fontWeight: 'bold' },
+    cardSuit: { fontSize: 52 },
 
     // Phase 2
     pyramidContainer: { flex: 1, width: '100%', alignItems: 'center' },
-    pyramidRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-    pyramidCard: { width: 60, height: 84 },
+    pyramidRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+    pyramidCard: {
+        width: 70,
+        height: 98,
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 5,
+        elevation: 5,
+    },
 
     // Phase 3
     busContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    busRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
-    busCardWrapper: { width: 70, height: 98 },
-    activeBusCard: { transform: [{ scale: 1.15 }], zIndex: 10 },
+    busRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
+    busCardWrapper: {
+        width: 85,
+        height: 119,
+    },
+    activeBusCard: {
+        transform: [{ scale: 1.2 }],
+        zIndex: 10,
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1,
+        shadowRadius: 20,
+        elevation: 20,
+    },
     busCard: { width: '100%', height: '100%' },
+
+    // Animations
+    busLoaderContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 200,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    busLoader: {
+        width: 300,
+        height: 200,
+    },
+    confettiContainer: {
+        position: 'absolute',
+        top: -100,
+        left: 0,
+        right: 0,
+        height: 400,
+        zIndex: 100,
+        pointerEvents: 'none',
+    },
+    confetti: {
+        width: '100%',
+        height: '100%',
+    },
 });

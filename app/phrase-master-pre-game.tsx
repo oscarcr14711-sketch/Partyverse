@@ -4,13 +4,13 @@ import React, { useState } from 'react';
 import { ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function BrainVsBrainPreGame() {
+export default function PhraseMasterPreGame() {
     const router = useRouter();
     const [showRules, setShowRules] = useState(false);
 
     return (
         <ImageBackground
-            source={require('../assets/images/bvb.png')}
+            source={require('../assets/images/phrase.png')}
             style={styles.background}
             resizeMode="cover"
         >
@@ -27,9 +27,9 @@ export default function BrainVsBrainPreGame() {
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
                             style={styles.startButton}
-                            onPress={() => router.push('/brain-vs-brain-game')}
+                            onPress={() => router.push('/phrase-master-game')}
                         >
-                            <Text style={styles.startButtonText}>CHOOSE DIFFICULTY</Text>
+                            <Text style={styles.startButtonText}>START GAME</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -59,29 +59,31 @@ export default function BrainVsBrainPreGame() {
                             <ScrollView style={styles.modalScroll}>
                                 <Text style={styles.sectionTitle}>Objective</Text>
                                 <Text style={styles.ruleText}>
-                                    Two players compete head-to-head in a battle of wits! Answer trivia questions correctly and faster than your opponent to win.
+                                    Guess the hidden phrase by revealing letters! Use your vocabulary skills and deduction to solve the puzzle before time runs out.
                                 </Text>
 
                                 <Text style={styles.sectionTitle}>Game Flow</Text>
                                 <Text style={styles.ruleText}>
-                                    1. Both players see the same question
-                                    {'\n'}2. First to answer correctly gets the point
-                                    {'\n'}3. Wrong answer? Your opponent gets a chance!
-                                    {'\n'}4. First to reach the target score wins
+                                    1. A phrase is hidden with blank spaces
+                                    {'\n'}2. Tap letters to reveal them in the phrase
+                                    {'\n'}3. Correct letters appear in all positions
+                                    {'\n'}4. Wrong letters count against you
+                                    {'\n'}5. Solve the phrase before running out of guesses!
                                 </Text>
 
-                                <Text style={styles.sectionTitle}>Difficulty Levels</Text>
+                                <Text style={styles.sectionTitle}>Scoring</Text>
                                 <Text style={styles.ruleText}>
-                                    • Easy: Simple questions, more time
-                                    {'\n'}• Medium: Moderate challenge
-                                    {'\n'}• Hard: Tough questions, less time
+                                    • Faster solves = Higher scores
+                                    {'\n'}• Fewer wrong guesses = Bonus points
+                                    {'\n'}• Complete phrases unlock new categories
                                 </Text>
 
                                 <Text style={styles.sectionTitle}>Tips</Text>
                                 <Text style={styles.ruleText}>
-                                    • Speed matters - be quick but accurate!
-                                    {'\n'}• Wrong answers give your opponent an advantage
-                                    {'\n'}• Stay focused and think fast!
+                                    • Start with common letters (E, A, R, T)
+                                    {'\n'}• Look for word patterns and lengths
+                                    {'\n'}• Use context clues from revealed letters
+                                    {'\n'}• Don't guess randomly - think strategically!
                                 </Text>
                             </ScrollView>
                         </View>
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
     startButton: {
         backgroundColor: '#263238',
         borderRadius: 30,
-        paddingHorizontal: 50,
+        paddingHorizontal: 60,
         paddingVertical: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },
@@ -142,7 +144,7 @@ const styles = StyleSheet.create({
         borderBottomColor: '#1a1f23',
     },
     startButtonText: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#FFE0B2',
         fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
@@ -179,7 +181,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         maxHeight: '80%',
         borderWidth: 1,
-        borderColor: '#FFD700',
+        borderColor: '#FF6B9D',
     },
     modalHeader: {
         flexDirection: 'row',
@@ -198,7 +200,7 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     sectionTitle: {
-        color: '#FFD700',
+        color: '#FF6B9D',
         fontSize: 16,
         fontWeight: 'bold',
         marginTop: 15,

@@ -15,7 +15,7 @@ const EXPLOSION_SOUND_URL: string | null = null; // e.g., 'https://example.com/e
 const CrackedTitle: React.FC<{ text: string }> = ({ text }) => {
   const chars = text.split("");
   const rotations = [-5, 3, -4, 6, -3, 4, -5, 3, -2, 5];
-  
+
   return (
     <View style={styles.crackedTitleRow}>
       {chars.map((ch, idx) => (
@@ -84,7 +84,7 @@ export default function HotBombGameScreen() {
       </View>
     ));
   }, [numPlayers]);
-  
+
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const explosionOpacity = React.useRef(new Animated.Value(0)).current;
   const wickBurnAnim = React.useRef(new Animated.Value(0)).current;
@@ -123,25 +123,17 @@ export default function HotBombGameScreen() {
     return () => clearInterval(interval);
   }, [gameStarted, timeLeft]);
 
-  // Sync Lottie bomb animation progress with timer
-  useEffect(() => {
-    if (isLottieAvailable && gameStarted) {
-      const target = Math.min(1, Math.max(0, (totalTime - timeLeft) / totalTime));
-      setLottieProgress(target);
-    } else if (!gameStarted) {
-      setLottieProgress(0);
-    }
-  }, [timeLeft, gameStarted, isLottieAvailable, totalTime]);
+  // NOTE: Removed Lottie progress sync - now using autoPlay for continuous animation
 
   const triggerExplosion = () => {
     setHasExploded(true);
     setShowExplosion(true);
-    
+
     // Multiple intense haptic pulses
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 100);
     setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
-    
+
     // Explosion animation
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 2, duration: 200, useNativeDriver: true }),
@@ -165,7 +157,7 @@ export default function HotBombGameScreen() {
     explosionOpacity.setValue(0);
     wickBurnAnim.setValue(0);
     setLottieProgress(0);
-    
+
     // Start fuse sound if URL provided
     if (FUSE_SOUND_URL) {
       (async () => {
@@ -218,7 +210,7 @@ export default function HotBombGameScreen() {
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
     wickBurnAnim.setValue(0);
-    
+
     // Stop/unload fuse sound
     (async () => {
       try {
@@ -227,7 +219,7 @@ export default function HotBombGameScreen() {
           await fuseSoundRef.current.unloadAsync();
           fuseSoundRef.current = null;
         }
-      } catch {}
+      } catch { }
     })();
   };
 
@@ -277,7 +269,7 @@ export default function HotBombGameScreen() {
           if (explosionSoundRef.current) {
             await explosionSoundRef.current.unloadAsync();
           }
-        } catch {}
+        } catch { }
       })();
     };
   }, []);
@@ -296,7 +288,7 @@ export default function HotBombGameScreen() {
   const burnedRatio = (totalTime - timeLeft) / totalTime;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFB300' }}> 
+    <View style={{ flex: 1, backgroundColor: '#FFB300' }}>
       {/* Background gradient - orange/red flames */}
       <LinearGradient
         colors={['#D84315', '#FF6F00', '#FFB300']}
@@ -304,12 +296,12 @@ export default function HotBombGameScreen() {
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      
+
       {gameOver ? (
         // GAME OVER SCREEN
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
           <View style={styles.gameOverContainer}>
-            <Image 
+            <Image
               source={require('../assets/images/Boom.png')}
               style={styles.gameOverBoomImage}
               resizeMode="contain"
@@ -335,35 +327,35 @@ export default function HotBombGameScreen() {
               style={styles.setupTitleImage}
               resizeMode="contain"
             />
-            
+
             {/* Player avatars */}
             <View style={styles.playerAvatarsContainer}>
               {avatarsMemo}
             </View>
-            
+
             {/* Player counter */}
             <View style={styles.playerCounterContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.playerCounterButton}
                 onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
               >
                 <Text style={styles.playerCounterButtonText}>−</Text>
               </TouchableOpacity>
               <Text style={styles.playerCounterText}>{numPlayers} Players</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.playerCounterButton}
                 onPress={() => setNumPlayers(Math.min(6, numPlayers + 1))}
               >
                 <Text style={styles.playerCounterButtonText}>+</Text>
               </TouchableOpacity>
             </View>
-            
+
             {/* Start button */}
             <TouchableOpacity style={styles.setupStartButton} onPress={handleStartGame}>
               <Text style={styles.setupStartButtonText}>Start</Text>
             </TouchableOpacity>
           </View>
-          
+
           {/* Info button - positioned in bottom-right corner */}
           <View style={styles.infoButtonWrapper}>
             <TouchableOpacity style={styles.infoButton}>
@@ -388,15 +380,14 @@ export default function HotBombGameScreen() {
             </View>
             <View style={styles.content}>
               <View style={styles.bombContainer}>
-                <Animated.View style={[styles.bombWrapper, { transform: [{ translateX: shakeX }, { scale: breathScale }] }]}> 
+                <Animated.View style={[styles.bombWrapper, { transform: [{ translateX: shakeX }, { scale: breathScale }] }]}>
                   {isLottieAvailable ? (
                     <LottieView
-                      key={`bomb-${animationKey}`}
-                      ref={lottieRef}
                       source={require('../assets/animations/Bomb1.json')}
                       style={{ width: 300, height: 300 }}
-                      progress={lottieProgress}
-                      loop={false}
+                      autoPlay
+                      loop
+                      speed={1.0}
                       resizeMode="cover"
                     />
                   ) : (
@@ -454,17 +445,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   content: {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-  paddingHorizontal: 20,
-  backgroundColor: 'transparent',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: 'transparent',
   },
   timerContainer: {
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: 0,
-  backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 0,
+    backgroundColor: 'transparent',
   },
   timerGradientOuter: {
     borderRadius: 40,
@@ -519,13 +510,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   buttonContainer: {
-  flexDirection: 'row',
-  justifyContent: 'center',
-  alignItems: 'center',
-  width: '100%',
-  gap: 15,
-  marginTop: 0,
-  backgroundColor: 'transparent',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    gap: 15,
+    marginTop: 0,
+    backgroundColor: 'transparent',
   },
   button: {
     flex: 1,

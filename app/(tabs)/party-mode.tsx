@@ -10,7 +10,7 @@ const categories = [
         subtitle: 'Move fast or lose!',
         icon: '⚡️',
         color: '#F44336',
-        path: '/action-adrenaline-games'
+        path: '/action-adrenaline-games',
     },
     {
         id: '2',
@@ -18,7 +18,7 @@ const categories = [
         subtitle: 'Laugh, draw, and act!',
         icon: '😂',
         color: '#FF9800',
-        path: '/humor-creativity-games'
+        path: '/humor-creativity-games',
     },
     {
         id: '3',
@@ -26,7 +26,7 @@ const categories = [
         subtitle: 'Quick wits win!',
         icon: '💡',
         color: '#FFC107',
-        path: '/word-mental-games'
+        path: '/word-mental-games',
     },
     {
         id: '4',
@@ -34,7 +34,7 @@ const categories = [
         subtitle: 'Fast duels, instant fun.',
         icon: '🏁',
         color: '#4CAF50',
-        path: '/quick-competition-games'
+        path: '/quick-competition-games',
     },
     {
         id: '5',
@@ -42,7 +42,7 @@ const categories = [
         subtitle: 'Talk, reveal, and connect.',
         icon: '💬',
         color: '#2196F3',
-        path: '/social-truth-games'
+        path: '/social-truth-games',
     },
     {
         id: '6',
@@ -109,11 +109,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#fff',
         textAlign: 'center',
+        marginBottom: 20,
     },
     list: {
         justifyContent: 'center',
+        paddingBottom: 20,
     },
-    // Removed old card button styles, now using CategoryCard component
 });
 
 export default PartyMode;

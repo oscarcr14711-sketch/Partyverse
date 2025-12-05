@@ -11,7 +11,7 @@ import { PulsingButton } from '../components/PulsingButton';
 
 const games = [
   { title: 'Hot Bomb', description: 'Pass the bomb before it explodes!', emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
-  { title: 'Stack Tower', description: 'Stack blocks as high as you can without falling!', emoji: '📦', color: '#f8961e', path: '/stack-tower-game' },
+  { title: 'Stack Tower', description: 'Stack blocks as high as you can without falling!', emoji: '📦', color: '#f8961e', path: '/jenga-pre-game' },
   { title: 'SpinFreeze', description: 'Music plays; when it stops, freeze.', emoji: '🥶', color: '#f9c74f', path: '/spin-freeze' },
   { title: 'Don\'t Let It PIC You', description: 'Avoid being caught in surprise photos!', emoji: '📸', color: '#90be6d', path: '/dont-let-it-pic-you-pre-game' },
   { title: 'Blown Away', description: 'Players blow into the phone mic and whoever blows the bigger balloon without popping it, wins', emoji: '🎈', color: '#43aa8b', path: '/blown-away' },
@@ -82,7 +82,6 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
           )}
           <View style={styles.gameTextContainer}>
             <Text style={styles.gameTitle}>{title}</Text>
-            <Text style={styles.gameDescription}>{description}</Text>
           </View>
           <Ionicons name="chevron-forward" size={24} color="#E8E8E8" />
         </LinearGradient>

@@ -1,20 +1,16 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function StopGameIntro() {
     const router = useRouter();
+    const [showRules, setShowRules] = useState(false);
 
     return (
         <View style={styles.container}>
             <SafeAreaView style={styles.safeArea}>
-                {/* Header */}
-                <Text style={styles.header}>MY PARTYVERSE</Text>
-
-                {/* Title */}
-                <Text style={styles.title}>STOP GAME</Text>
-
                 {/* Character Illustration */}
                 <View style={styles.imageContainer}>
                     <Image
@@ -25,12 +21,39 @@ export default function StopGameIntro() {
                 </View>
 
                 {/* Choose Players Button */}
-                <TouchableOpacity
-                    style={styles.choosePlayersButton}
-                    onPress={() => router.push('/stop-game-pre-game')}
-                >
-                    <Text style={styles.buttonText}>Choose Players</Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                    <TouchableOpacity
+                        style={styles.choosePlayersButton}
+                        onPress={() => router.push('/stop-game-pre-game')}
+                    >
+                        <Text style={styles.buttonText}>Choose Players</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+                        <Text style={styles.infoButtonText}>i</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Rules Modal */}
+                <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>How to Play</Text>
+                                <TouchableOpacity onPress={() => setShowRules(false)}>
+                                    <Ionicons name="close" size={24} color="#0abde3" />
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView style={styles.modalScroll}>
+                                <Text style={styles.sectionTitle}>🎯 Objective</Text>
+                                <Text style={styles.ruleText}>Come up with words for each category that start with a random letter!</Text>
+                                <Text style={styles.sectionTitle}>🎮 How It Works</Text>
+                                <Text style={styles.ruleText}>• Random letter is chosen{'\n'}• Fill each category with a word{'\n'}• Shout "STOP!" when done{'\n'}• Unique answers = points!</Text>
+                                <Text style={styles.sectionTitle}>🏆 Scoring</Text>
+                                <Text style={styles.ruleText}>Unique answers score! Duplicate answers with other players = no points.</Text>
+                            </ScrollView>
+                        </View>
+                    </View>
+                </Modal>
             </SafeAreaView>
         </View>
     );
@@ -112,4 +135,13 @@ const styles = StyleSheet.create({
             android: { fontFamily: 'sans-serif-black' }
         }),
     },
+    infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#FF8C00', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8, borderWidth: 3, borderColor: '#1B4F72' },
+    infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#fff' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+    modalContent: { backgroundColor: '#5DADE2', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#FF8C00' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(27,79,114,0.3)' },
+    modalTitle: { color: '#1B4F72', fontSize: 22, fontWeight: 'bold' },
+    modalScroll: { padding: 20 },
+    sectionTitle: { color: '#1B4F72', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+    ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

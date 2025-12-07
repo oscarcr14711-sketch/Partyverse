@@ -21,7 +21,7 @@ const challenges: string[] = [
 ];
 
 export default function ExtremeChallengeRouletteScreen() {
-		const router = require('expo-router').useRouter();
+	const router = require('expo-router').useRouter();
 	const screenWidth = Dimensions.get('window').width;
 	const rouletteSize = screenWidth;
 	const [currentIndex, setCurrentIndex] = useState(0);
@@ -146,105 +146,105 @@ export default function ExtremeChallengeRouletteScreen() {
 				{/* Pop-outs for each index */}
 				{showSoap && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHideSoap}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipSoapAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipSoapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipSoapAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipSoapAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/soap.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showMom && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHideMom}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipMomAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipMomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipMomAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipMomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/mom.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{show5Bucks && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHide5Bucks}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flip5BucksAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flip5BucksAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flip5BucksAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flip5BucksAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/5bucks.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showLime && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHideLime}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipLimeAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipLimeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipLimeAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipLimeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/lime.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showOil && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHideOil}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipOilAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipOilAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipOilAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipOilAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/oil.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showIce && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHideIce}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipIceAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipIceAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipIceAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipIceAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/ice.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showPhotos && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHidePhotos}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipPhotosAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipPhotosAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipPhotosAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipPhotosAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/photos.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showShake && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }] }} onPress={handleHideShake}>
-						<Animated.View style={{ width: 500, height: 500, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipShakeAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipShakeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipShakeAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipShakeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/shake.png')} style={{ width: 500, height: 500 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showRubber && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }] }} onPress={handleHideRubber}>
-						<Animated.View style={{ width: 500, height: 500, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipRubberAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipRubberAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipRubberAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipRubberAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/rubber.png')} style={{ width: 500, height: 500 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showInsect && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }] }} onPress={handleHideInsect}>
-						<Animated.View style={{ width: 500, height: 500, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipInsectAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipInsectAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '110%', left: '105%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipInsectAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipInsectAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/insect.png')} style={{ width: 500, height: 500 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showPushup && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHidePushup}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipPushupAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipPushupAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipPushupAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipPushupAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/pushup.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showPepper && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHidePepper}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipPepperAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipPepperAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipPepperAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipPepperAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/pepper.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showQuestion && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHideQuestion}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipQuestionAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipQuestionAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipQuestionAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipQuestionAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/question.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showPost && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHidePost}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipPostAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipPostAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipPostAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipPostAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/post.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
 				)}
 				{showSafe && (
 					<TouchableOpacity activeOpacity={0.8} style={{ position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -90 }, { translateY: -90 }] }} onPress={handleHideSafe}>
-						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [ { translateX: -250 }, { translateY: -250 }, { rotateY: flipSafeAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipSafeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) } ] }}>
+						<Animated.View style={{ width: 500, height: 500, borderRadius: 32, justifyContent: 'center', alignItems: 'center', position: 'absolute', top: '65%', left: '70%', zIndex: 100, elevation: 100, transform: [{ translateX: -250 }, { translateY: -250 }, { rotateY: flipSafeAnim.interpolate({ inputRange: [0, 1], outputRange: ['90deg', '0deg'] }) }, { scale: flipSafeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1.1] }) }] }}>
 							<Image source={require('../assets/images/safe1.png')} style={{ width: 500, height: 500, borderRadius: 24 }} resizeMode="contain" />
 						</Animated.View>
 					</TouchableOpacity>
@@ -253,7 +253,7 @@ export default function ExtremeChallengeRouletteScreen() {
 			<TouchableOpacity onPress={spinRoulette} style={{ marginTop: 32, alignSelf: 'center' }} activeOpacity={0.7}>
 				<Image source={require('../assets/images/Button.png')} style={{ width: 120, height: 120 }} resizeMode="contain" />
 			</TouchableOpacity>
-			<TouchableOpacity 
+			<TouchableOpacity
 				style={{ position: 'absolute', bottom: 24, alignSelf: 'center', backgroundColor: '#fff', borderRadius: 16, paddingHorizontal: 28, paddingVertical: 8, borderWidth: 1, borderColor: '#ccc' }}
 				onPress={() => router.push('/game-over-screen')}
 			>

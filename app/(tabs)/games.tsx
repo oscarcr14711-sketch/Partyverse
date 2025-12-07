@@ -7,38 +7,37 @@ import { PulsingButton } from '../../components/PulsingButton';
 const gameModes = [
   {
     id: '1',
-    title: '🎉 Party Mode',
+    title: 'Party Mode',
     subtitle: 'Offline games for 2+ people',
     route: '/party-mode-games',
-    gradient: ['#FFD700', '#FFA500'],
-    darkGradient: ['#B8860B', '#CD853F'],
+    gradient: ['#f94144', '#f3722c', '#f8961e'],
+    emoji: '🎉',
   },
   {
     id: '2',
-    title: '🌐 Online Mode (Coming Soon)',
-    subtitle: 'Play with friends online',
+    title: 'Online Mode',
+    subtitle: 'Coming Soon',
     route: null,
     disabled: true,
-    gradient: ['#4CAF50', '#388E3C'],
-    darkGradient: ['#1B5E20', '#2E7D32'],
+    gradient: ['#90be6d', '#43aa8b', '#4d908e'],
+    emoji: '🌐',
   },
   {
     id: '3',
-    title: '🏋️ Practice Mode',
+    title: 'Practice Mode',
     subtitle: 'Practice your skills',
     route: '/practice-mode-games',
-    gradient: ['#2196F3', '#1976D2'],
-    darkGradient: ['#0D47A1', '#1565C0'],
+    gradient: ['#577590', '#277da1', '#4895ef'],
+    emoji: '🏋️',
   },
   {
     id: '4',
-    title: '🌶️ Spicy',
-    subtitle: '',
+    title: 'Spicy',
+    subtitle: 'For the bold ones',
     route: '/spicy-games',
-    gradient: ['#D95B27', '#C34310'],
-    darkGradient: ['#8B360F', '#B33A0D'],
+    gradient: ['#f72585', '#b5179e', '#7209b7'],
+    emoji: '🌶️',
   },
-  // Mic Madness button removed as requested
 ];
 
 type GradientColors = readonly [string, string, ...string[]];
@@ -46,32 +45,37 @@ interface GameModeItemProps {
   title: string;
   subtitle: string;
   gradient: GradientColors;
-  darkGradient: GradientColors;
+  emoji: string;
   onPress: () => void;
   disabled?: boolean;
 }
 
-const GameModeItem: React.FC<GameModeItemProps> = ({ title, subtitle, gradient, darkGradient, onPress, disabled }) => {
+const GameModeItem: React.FC<GameModeItemProps> = ({
+  title,
+  subtitle,
+  gradient,
+  emoji,
+  onPress,
+  disabled
+}) => {
   return (
     <PulsingButton onPress={onPress} disabled={disabled} style={{ opacity: disabled ? 0.6 : 1 }}>
       <LinearGradient
-        colors={gradient} // Light-to-dark for the border
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={[styles.gameButtonOuter, { shadowColor: gradient[0] }]}
+        colors={gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gameButton}
       >
-        <LinearGradient
-          colors={([...darkGradient].reverse() as unknown) as GradientColors} // Dark-to-light for the button face
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.gameButtonInner}
-        >
-          <View style={styles.gameTextContainer}>
-            <Text style={styles.gameTitle}>{title}</Text>
-            {subtitle ? <Text style={styles.gameDescription}>{subtitle}</Text> : null}
-          </View>
-          {/* <Ionicons name="chevron-forward" size={24} color="#CCCCCC" /> */}
-        </LinearGradient>
+        <View style={styles.emojiContainer}>
+          <Text style={styles.emoji}>{emoji}</Text>
+        </View>
+        <View style={styles.gameTextContainer}>
+          <Text style={styles.gameTitle}>{title}</Text>
+          <Text style={styles.gameDescription}>{subtitle}</Text>
+        </View>
+        <View style={styles.arrowContainer}>
+          <Text style={styles.arrow}>›</Text>
+        </View>
       </LinearGradient>
     </PulsingButton>
   );
@@ -97,15 +101,23 @@ export default function MainScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.background}>
-      <Text style={styles.title}>Let the Games Begin</Text>
-      <FlatList<GameModeData>
-        data={gameModes as unknown as GameModeData[]}
-        renderItem={renderGameMode}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-      />
-    </SafeAreaView>
+    <View style={styles.background}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>Let the Games</Text>
+          <Text style={[styles.title, styles.titleBegin]}>Begin! 🎮</Text>
+          <Text style={styles.subtitle}>Choose your adventure</Text>
+        </View>
+
+        <FlatList<GameModeData>
+          data={gameModes as unknown as GameModeData[]}
+          renderItem={renderGameMode}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -114,49 +126,99 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121212',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginVertical: 20,
+  safeArea: {
+    flex: 1,
+  },
+  headerContainer: {
+    paddingTop: 30,
+    paddingBottom: 20,
     paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  titleBegin: {
+    marginTop: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginTop: 12,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
   list: {
     paddingHorizontal: 20,
-    paddingBottom: 100, // Add more padding to avoid bottom menu
+    paddingBottom: 120,
     paddingTop: 10,
-    flexGrow: 1,
-    justifyContent: 'space-evenly', // Distribute buttons evenly
+    gap: 18,
   },
-  gameButtonOuter: {
-    borderRadius: 18,
-    padding: 3,
-    marginBottom: 25, // Increased from 15 to 25
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-    elevation: 12,
-  },
-  gameButtonInner: {
-    borderRadius: 16,
+  gameButton: {
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    justifyContent: 'space-between',
+    padding: 22,
+    minHeight: 95,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
+    marginBottom: 4,
+  },
+  emojiContainer: {
+    width: 54,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  emoji: {
+    fontSize: 30,
   },
   gameTextContainer: {
     flex: 1,
     marginRight: 10,
   },
   gameTitle: {
-    color: '#CCCCCC',
+    color: '#FFFFFF',
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    marginBottom: 4,
+    letterSpacing: 0.3,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   gameDescription: {
-    color: '#CCCCCC',
-    fontSize: 16,
-    marginTop: 5,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+    fontWeight: '500',
+    letterSpacing: 0.2,
+  },
+  arrowContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  arrow: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: 'bold',
+    lineHeight: 32,
   },
 });

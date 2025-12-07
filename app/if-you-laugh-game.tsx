@@ -1,7 +1,24 @@
 import { Audio } from 'expo-av';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, {
+    cancelAnimation,
+    Easing,
+    useAnimatedStyle,
+    useSharedValue,
+    withRepeat,
+    withSequence,
+    withSpring,
+    withTiming
+} from 'react-native-reanimated';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Funny emojis for animations
+const FUNNY_EMOJIS = ['😂', '🤣', '😆', '😹', '🤪', '😜', '🤡', '💀', '😵', '🫠'];
 
 // Dark humor jokes for Round 1
 const FUNNY_SCENARIOS = [
@@ -21,61 +38,104 @@ const FUNNY_SCENARIOS = [
     "I'm not unlucky… I just attract chaos like WiFi.",
     "We all have that one friend who's the bad influence… and if you don't, it's you.",
     "My brain: 'Be responsible.' Also my brain: 'Let's do something stupid.'",
-    "You know things are bad when your own shadow leaves early.",
-    "The only thing I'm committed to is… being uncommitted.",
-    "Some people have inner peace. I have inner sarcasm.",
-    "If stupidity was contagious, my group chat would be a pandemic.",
-    "I don't know if I need coffee, therapy, a nap, or new friends. Probably all four.",
-    "My diet is like my self-control: I start strong, then crash immediately.",
-    "Sometimes I shock myself with the smart things I say. Other times, I look for my phone… while I'm on a call.",
-    "I'm not anti-social. I'm 'selectively social'… and the selection is very strict.",
-    "I don't have resting bitch face. It's active. Very active.",
 ];
 
 // Laugh Trap content for Round 3
-const LAUGH_TRAPS = {
-    animations: [
-        "Dancing Monkey 🐵",
-        "Confused Cat 🐱",
-        "Laughing Baby 👶",
-        "Goofy Bouncing Face 😜",
-        "Slipping Penguin 🐧",
-    ],
-    sounds: [
-        "Fart Sound 💨",
-        "Baby Laugh 👶",
-        "Duck Quack 🦆",
-        "BRUH Sound 😑",
-        "Chipmunk Scream 🐿️",
-        "Evil Villain Laugh 😈",
-    ],
-    challenges: [
-        "Say your full name like a dramatic villain",
-        "Act like a robot without laughing",
-        "Bite your lip and don't smile",
-        "Try not to blink for 5 seconds",
-        "Pretend you're a confused GPS",
-        "Do your best impression of a broken washing machine",
-    ],
-    phrases: [
-        "My spirit animal is a depressed tamale.",
-        "I am 95% water and 5% bad decisions.",
-        "I am not laughing, I'm just breathing weird.",
-        "My brain is buffering, please wait…",
-        "I identify as a confused potato.",
-        "I'm not short, I'm just vertically efficient.",
-        "My life is like a romantic comedy, minus the romance and the comedy.",
-        "I put the 'pro' in procrastination.",
-    ],
+const LAUGH_TRAPS = [
+    { type: 'sound', content: '💨 FART SOUND!', emoji: '💨', soundId: 'fart' },
+    { type: 'sound', content: '👶 BABY LAUGH!', emoji: '👶', soundId: 'baby' },
+    { type: 'sound', content: '🦆 DUCK QUACK!', emoji: '🦆', soundId: 'duck' },
+    { type: 'sound', content: '😑 BRUH MOMENT!', emoji: '😑', soundId: 'bruh' },
+    { type: 'phrase', content: "My spirit animal is a depressed tamale.", emoji: '🫔' },
+    { type: 'phrase', content: "I am 95% water and 5% bad decisions.", emoji: '💧' },
+    { type: 'phrase', content: "I identify as a confused potato.", emoji: '🥔' },
+    { type: 'phrase', content: "My brain is buffering, please wait…", emoji: '🔄' },
+    { type: 'challenge', content: "Say your full name like a dramatic villain!", emoji: '🦹' },
+    { type: 'challenge', content: "Act like a robot without laughing!", emoji: '🤖' },
+    { type: 'challenge', content: "Do your best impression of a broken washing machine!", emoji: '🌀' },
+    { type: 'challenge', content: "Pretend you're a confused GPS!", emoji: '🗺️' },
+    { type: 'animation', content: "Watch this... 🐵💃", emoji: '🐵' },
+    { type: 'animation', content: "Confused cat loading... 🐱❓", emoji: '🐱' },
+];
+
+// Confetti particle component
+const ConfettiParticle = ({ delay, x }: { delay: number; x: number }) => {
+    const translateY = useSharedValue(-50);
+    const translateX = useSharedValue(x);
+    const rotate = useSharedValue(0);
+    const opacity = useSharedValue(1);
+    const color = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A855F7', '#22D3EE'][Math.floor(Math.random() * 5)];
+
+    useEffect(() => {
+        translateY.value = withTiming(SCREEN_HEIGHT + 100, { duration: 2000 + delay, easing: Easing.linear });
+        translateX.value = withRepeat(withSequence(
+            withTiming(x + 30, { duration: 300 }),
+            withTiming(x - 30, { duration: 300 })
+        ), -1, true);
+        rotate.value = withRepeat(withTiming(360, { duration: 1000 }), -1);
+        opacity.value = withTiming(0, { duration: 2500 + delay });
+    }, []);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [
+            { translateY: translateY.value },
+            { translateX: translateX.value },
+            { rotate: `${rotate.value}deg` }
+        ],
+        opacity: opacity.value,
+    }));
+
+    return (
+        <Animated.View style={[styles.confetti, animatedStyle, { backgroundColor: color }]} />
+    );
 };
 
-// Combine all traps into one array
-const ALL_TRAPS = [
-    ...LAUGH_TRAPS.animations.map(text => ({ type: 'animation', content: text })),
-    ...LAUGH_TRAPS.sounds.map(text => ({ type: 'sound', content: text })),
-    ...LAUGH_TRAPS.challenges.map(text => ({ type: 'challenge', content: text })),
-    ...LAUGH_TRAPS.phrases.map(text => ({ type: 'phrase', content: text })),
-];
+// Bouncing emoji component
+const BouncingEmoji = ({ emoji, startX, startY, delay }: { emoji: string; startX: number; startY: number; delay: number }) => {
+    const scale = useSharedValue(0);
+    const translateY = useSharedValue(0);
+    const rotate = useSharedValue(0);
+
+    useEffect(() => {
+        setTimeout(() => {
+            scale.value = withSequence(
+                withSpring(1.2, { damping: 5 }),
+                withSpring(1)
+            );
+            translateY.value = withRepeat(
+                withSequence(
+                    withTiming(-30, { duration: 400, easing: Easing.out(Easing.quad) }),
+                    withTiming(0, { duration: 400, easing: Easing.in(Easing.quad) })
+                ),
+                -1,
+                true
+            );
+            rotate.value = withRepeat(
+                withSequence(
+                    withTiming(-15, { duration: 200 }),
+                    withTiming(15, { duration: 400 }),
+                    withTiming(-15, { duration: 200 })
+                ),
+                -1,
+                true
+            );
+        }, delay);
+    }, []);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [
+            { scale: scale.value },
+            { translateY: translateY.value },
+            { rotate: `${rotate.value}deg` }
+        ],
+    }));
+
+    return (
+        <Animated.Text style={[styles.bouncingEmoji, animatedStyle, { left: startX, top: startY }]}>
+            {emoji}
+        </Animated.Text>
+    );
+};
 
 export default function IfYouLaughGame() {
     const router = useRouter();
@@ -90,9 +150,22 @@ export default function IfYouLaughGame() {
     const [battlePlayer2, setBattlePlayer2] = useState<number | null>(null);
     const [timeRemaining, setTimeRemaining] = useState(60);
     const [playerNames, setPlayerNames] = useState<string[]>([]);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [showEliminated, setShowEliminated] = useState(false);
+    const [trapRevealed, setTrapRevealed] = useState(false);
+    const [cameraMode, setCameraMode] = useState(false);
 
+    const [permission, requestPermission] = useCameraPermissions();
     const soundRef = useRef<Audio.Sound | null>(null);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const cameraRef = useRef<CameraView>(null);
+
+    // Animation values
+    const screenShake = useSharedValue(0);
+    const timerScale = useSharedValue(1);
+    const eliminatedFlash = useSharedValue(0);
+    const trapCardScale = useSharedValue(0);
+    const backgroundPulse = useSharedValue(1);
 
     // Shuffle array function
     const shuffleArray = <T,>(array: T[]): T[] => {
@@ -105,30 +178,45 @@ export default function IfYouLaughGame() {
     };
 
     const [shuffledJokes] = useState(() => shuffleArray(FUNNY_SCENARIOS));
-    const [shuffledTraps] = useState(() => shuffleArray(ALL_TRAPS));
+    const [shuffledTraps] = useState(() => shuffleArray(LAUGH_TRAPS));
 
     // Round 3 specific state
     const [round3PlayerIndex, setRound3PlayerIndex] = useState(0);
     const [trapPhase, setTrapPhase] = useState<'PASS_PHONE' | 'VIEW_TRAP' | 'RESULT'>('PASS_PHONE');
 
-    // Round 2 specific state (Non-elimination)
+    // Round 2 specific state
     const [scores, setScores] = useState<Record<number, number>>({});
     const [matchups, setMatchups] = useState<Array<[number, number]>>([]);
     const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0);
 
     useEffect(() => {
-        // Initialize players
         const players = Array.from({ length: playerCount }, (_, i) => i);
         setActivePlayers(players);
         setPlayerNames(players.map((_, i) => `Player ${i + 1}`));
     }, []);
 
+    // Timer with pulsing animation
     useEffect(() => {
         if ((gamePhase === 'ROUND_2_BATTLE' || (gamePhase === 'ROUND_3_GAMEPLAY' && trapPhase === 'VIEW_TRAP')) && timeRemaining > 0) {
+            // Pulse timer faster as time runs out
+            const pulseSpeed = Math.max(200, 1000 - (5 - timeRemaining) * 150);
+            timerScale.value = withRepeat(
+                withSequence(
+                    withTiming(1.2, { duration: pulseSpeed / 2 }),
+                    withTiming(1, { duration: pulseSpeed / 2 })
+                ),
+                -1
+            );
+
             timerRef.current = setTimeout(() => {
                 setTimeRemaining(prev => prev - 1);
+                if (timeRemaining <= 3) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                }
             }, 1000);
         } else if (gamePhase === 'ROUND_3_GAMEPLAY' && trapPhase === 'VIEW_TRAP' && timeRemaining === 0) {
+            cancelAnimation(timerScale);
+            timerScale.value = 1;
             setTrapPhase('RESULT');
         }
         return () => {
@@ -136,7 +224,72 @@ export default function IfYouLaughGame() {
         };
     }, [timeRemaining, gamePhase, trapPhase]);
 
+    // Screen shake animation
+    const triggerScreenShake = () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        screenShake.value = withSequence(
+            withTiming(10, { duration: 50 }),
+            withTiming(-10, { duration: 50 }),
+            withTiming(10, { duration: 50 }),
+            withTiming(-10, { duration: 50 }),
+            withTiming(5, { duration: 50 }),
+            withTiming(-5, { duration: 50 }),
+            withTiming(0, { duration: 50 })
+        );
+    };
+
+    // Confetti animation
+    const triggerConfetti = () => {
+        setShowConfetti(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setTimeout(() => setShowConfetti(false), 3000);
+    };
+
+    // Eliminated flash effect
+    const triggerEliminatedEffect = () => {
+        setShowEliminated(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        eliminatedFlash.value = withSequence(
+            withTiming(1, { duration: 100 }),
+            withTiming(0, { duration: 200 }),
+            withTiming(1, { duration: 100 }),
+            withTiming(0, { duration: 200 })
+        );
+        setTimeout(() => setShowEliminated(false), 600);
+    };
+
+    // Reveal trap with animation
+    const revealTrap = () => {
+        setTrapRevealed(true);
+        triggerScreenShake();
+        trapCardScale.value = withSequence(
+            withSpring(1.1, { damping: 5 }),
+            withSpring(1)
+        );
+        // Play sound if it's a sound trap
+        const currentTrap = shuffledTraps[round3PlayerIndex % shuffledTraps.length];
+        if (currentTrap.type === 'sound') {
+            playFunnySound(currentTrap.soundId);
+        }
+    };
+
+    // Play funny sounds
+    const playFunnySound = async (soundId?: string) => {
+        try {
+            // For now, use a placeholder beep - you can add real sounds later
+            const { sound } = await Audio.Sound.createAsync(
+                require('../assets/sounds/wasted.mp3'),
+                { shouldPlay: true, volume: 0.5 }
+            );
+            soundRef.current = sound;
+            setTimeout(() => sound.unloadAsync(), 2000);
+        } catch (error) {
+            console.log('Sound play error:', error);
+        }
+    };
+
     const eliminatePlayer = (playerIndex: number) => {
+        triggerEliminatedEffect();
         setActivePlayers(prev => prev.filter(p => p !== playerIndex));
     };
 
@@ -151,36 +304,28 @@ export default function IfYouLaughGame() {
             setGamePhase('ROUND_3_GAMEPLAY');
             setRound3PlayerIndex(0);
             setTrapPhase('PASS_PHONE');
+            setTrapRevealed(false);
         }
     };
 
     const setupNextBattle = () => {
-        // Initialize scores if empty
         if (Object.keys(scores).length === 0) {
             const initialScores: Record<number, number> = {};
             activePlayers.forEach(p => initialScores[p] = 0);
             setScores(initialScores);
         }
 
-        // Create matchups if not already done
         if (matchups.length === 0) {
             const shuffled = shuffleArray([...activePlayers]);
             const newMatchups: Array<[number, number]> = [];
 
-            // Pair up players
             for (let i = 0; i < shuffled.length - 1; i += 2) {
                 newMatchups.push([shuffled[i], shuffled[i + 1]]);
             }
 
-            // Handle odd player out (Bye)
             if (shuffled.length % 2 !== 0) {
                 const oddPlayer = shuffled[shuffled.length - 1];
-                // Give point to odd player automatically
-                setScores(prev => ({
-                    ...prev,
-                    [oddPlayer]: (prev[oddPlayer] || 0) + 1
-                }));
-                // We don't add them to matchups, they just sit out this round
+                setScores(prev => ({ ...prev, [oddPlayer]: (prev[oddPlayer] || 0) + 1 }));
             }
 
             setMatchups(newMatchups);
@@ -191,11 +336,9 @@ export default function IfYouLaughGame() {
                 setBattlePlayer2(newMatchups[0][1]);
                 setTimeRemaining(60);
             } else {
-                // Should not happen unless 0 or 1 player, but handle it
                 handleRoundComplete();
             }
         } else {
-            // Setup next matchup from existing list
             if (currentMatchupIndex < matchups.length) {
                 setBattlePlayer1(matchups[currentMatchupIndex][0]);
                 setBattlePlayer2(matchups[currentMatchupIndex][1]);
@@ -207,6 +350,7 @@ export default function IfYouLaughGame() {
     };
 
     const handleNextScenario = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         if (currentScenarioIndex < shuffledJokes.length - 1) {
             setCurrentScenarioIndex(prev => prev + 1);
         } else {
@@ -217,32 +361,29 @@ export default function IfYouLaughGame() {
     const handleBattleResult = (loser: 'player1' | 'player2' | 'both' | 'none') => {
         if (battlePlayer1 === null || battlePlayer2 === null) return;
 
-        // Update scores
+        if (loser === 'player1' || loser === 'player2') {
+            triggerEliminatedEffect();
+        } else if (loser === 'none') {
+            triggerConfetti();
+        }
+
         setScores(prev => {
             const newScores = { ...prev };
-
             if (loser === 'player1') {
-                // Player 1 laughed: 0 pts. Player 2 didn't: 1 pt.
                 newScores[battlePlayer2!] = (newScores[battlePlayer2!] || 0) + 1;
             } else if (loser === 'player2') {
-                // Player 2 laughed: 0 pts. Player 1 didn't: 1 pt.
                 newScores[battlePlayer1!] = (newScores[battlePlayer1!] || 0) + 1;
             } else if (loser === 'none') {
-                // Neither laughed: Both get 1 pt (Draw)
                 newScores[battlePlayer1!] = (newScores[battlePlayer1!] || 0) + 1;
                 newScores[battlePlayer2!] = (newScores[battlePlayer2!] || 0) + 1;
             }
-            // If 'both' laughed: 0 pts for both (no change)
-
             return newScores;
         });
 
-        // Move to next matchup
         const nextIndex = currentMatchupIndex + 1;
         setCurrentMatchupIndex(nextIndex);
 
         if (nextIndex < matchups.length) {
-            // More battles to do
             setTimeout(() => {
                 setBattlePlayer1(matchups[nextIndex][0]);
                 setBattlePlayer2(matchups[nextIndex][1]);
@@ -253,108 +394,36 @@ export default function IfYouLaughGame() {
         }
     };
 
-
-
     const startTrap = () => {
         setTrapPhase('VIEW_TRAP');
         setTimeRemaining(5);
+        setTrapRevealed(false);
+
+        // Delay the reveal for dramatic effect
+        setTimeout(() => {
+            revealTrap();
+        }, 500);
     };
 
     const handleTrapResult = (laughed: boolean) => {
-        if (laughed) {
-            eliminatePlayer(activePlayers[round3PlayerIndex]);
-            // Note: When we eliminate, the array shrinks. 
-            // If we are at index i, and we remove i, the next player shifts to i.
-            // So we don't need to increment index if we eliminate.
-            // BUT, we want to give everyone a turn. 
-            // If we eliminate, the next person is now at the current index.
-            // So we should NOT increment round3PlayerIndex if we eliminate?
-            // Wait, if we eliminate, the array length decreases.
-            // Let's say players [A, B, C]. Index 0 is A.
-            // A laughs. Eliminate A. Players [B, C]. Index 0 is now B.
-            // So if we don't increment, B goes next. Correct.
-            // But if A survives. Players [A, B, C]. We increment index to 1. B goes next.
-
-            // However, the user said "After all 6 players have done their trap".
-            // If we eliminate A, they are gone. B is next.
-            // We need to check if we've gone through everyone.
-            // A safer way is to increment ONLY if we didn't eliminate?
-            // Or maybe we should just keep a separate "turn counter" and not rely on array length?
-            // Actually, if we eliminate, the array length changes, so `round3PlayerIndex` might go out of bounds if we aren't careful.
-
-            // Let's try this:
-            // We want to iterate through the *original* set of players for this round?
-            // No, "Last player remaining wins".
-            // If A is eliminated, they are out.
-            // So we just check if `round3PlayerIndex < activePlayers.length`.
-
-            // If we eliminate:
-            // activePlayers changes from [A, B, C] to [B, C].
-            // round3PlayerIndex was 0.
-            // Next turn, we want B (who is now at 0).
-            // So we stay at 0?
-            // Yes.
-
-            // If we DON'T eliminate:
-            // activePlayers is [A, B, C].
-            // round3PlayerIndex was 0.
-            // Next turn, we want B (who is at 1).
-            // So we increment.
-        } else {
-            setRound3PlayerIndex(prev => prev + 1);
-        }
-
-        // Check if round should end
-        // We need to do this check AFTER the state update, but state updates are async.
-        // A better way: check based on the *next* index and *next* array.
-
-        // Actually, simpler logic:
-        // Just increment a "turnsTaken" counter?
-        // No, because eliminated players don't take turns anymore?
-        // "After all 6 players have done their trap".
-        // This implies even if I survive, I don't go again this round.
-
-        // Let's use a separate "playersWhoHadTurn" set?
-        // Or just:
-        // If laughed: eliminate. The next player shifts into current slot.
-        // If survived: increment index.
-
-        // We need to check if we are done.
-        // We are done when we have processed the last player.
-        // If we eliminate the last player (index == length-1), then index becomes out of bounds (index == new length).
-        // If we survive the last player (index == length-1), then index becomes length.
-
-        // So in both cases, if `nextIndex >= nextActivePlayers.length`, we are done?
-        // Wait, if we eliminate player at 0 of [A, B]. Becomes [B]. Index 0.
-        // We processed A. Now we process B.
-        // If we eliminate B of [B]. Becomes []. Index 0.
-        // 0 >= 0. Done.
-
-        // So the logic seems to be:
-        // If laughed: don't increment index.
-        // If survived: increment index.
-        // Check if index >= activePlayers.length (using the *new* length).
-
-        // Since `eliminatePlayer` is async (setState), we can't rely on `activePlayers` updating immediately.
-        // We should handle the logic carefully.
-
-        // Let's use a local variable for the next index and next players.
         let nextPlayers = [...activePlayers];
         let nextIndex = round3PlayerIndex;
 
         if (laughed) {
+            triggerEliminatedEffect();
             nextPlayers = nextPlayers.filter((_, i) => i !== round3PlayerIndex);
             setActivePlayers(nextPlayers);
-            // Index stays same, but effectively points to next player
         } else {
+            triggerConfetti();
             nextIndex++;
             setRound3PlayerIndex(nextIndex);
         }
 
-        if (nextIndex >= nextPlayers.length) {
+        if (nextIndex >= nextPlayers.length || nextPlayers.length <= 1) {
             handleRoundComplete();
         } else {
             setTrapPhase('PASS_PHONE');
+            setTrapRevealed(false);
         }
     };
 
@@ -364,19 +433,16 @@ export default function IfYouLaughGame() {
 
     const handleNextRound = () => {
         if (activePlayers.length === 0) {
-            // Game over (everyone lost)
             router.push({
                 pathname: '/if-you-laugh-game-over',
-                params: {
-                    winner: 'No one',
-                    players: JSON.stringify(playerNames)
-                }
+                params: { winner: 'No one', players: JSON.stringify(playerNames) }
             } as any);
         } else if (currentRound < 3) {
             setCurrentRound((prev) => (prev + 1) as 1 | 2 | 3);
             setGamePhase('ROUND_INTRO');
+            setMatchups([]);
+            setCurrentMatchupIndex(0);
         } else {
-            // Game complete
             router.push({
                 pathname: '/if-you-laugh-game-over',
                 params: {
@@ -393,41 +459,57 @@ export default function IfYouLaughGame() {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // Animated styles
+    const screenShakeStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: screenShake.value }]
+    }));
+
+    const timerAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: timerScale.value }]
+    }));
+
+    const trapCardAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: trapCardScale.value }]
+    }));
+
+    const eliminatedFlashStyle = useAnimatedStyle(() => ({
+        opacity: eliminatedFlash.value,
+    }));
+
+    // Generate confetti particles
+    const confettiParticles = showConfetti ? Array.from({ length: 30 }, (_, i) => ({
+        id: i,
+        x: Math.random() * SCREEN_WIDTH,
+        delay: Math.random() * 500
+    })) : [];
+
+    // Generate bouncing emojis for trap view
+    const bouncingEmojis = trapRevealed ? Array.from({ length: 6 }, (_, i) => ({
+        id: i,
+        emoji: FUNNY_EMOJIS[Math.floor(Math.random() * FUNNY_EMOJIS.length)],
+        x: 20 + Math.random() * (SCREEN_WIDTH - 80),
+        y: 100 + Math.random() * 200,
+        delay: i * 100
+    })) : [];
+
     // Round Intro Screen
     if (gamePhase === 'ROUND_INTRO') {
-        const roundTitles = ['', 'FUNNY SCENARIOS', 'FACE-OFF CHALLENGE', 'LAUGH TRAP'];
-        const roundInstructions = [
-            '',
-            'One person reads funny scenarios. Everyone else tries not to laugh!',
-            'Players face each other and try to make each other laugh! First to laugh loses.',
-            'Pass the phone and try to survive the Laugh Trap! Don\'t laugh at what you see!'
-        ];
+        const roundTitles = ['', '😂 FUNNY SCENARIOS', '🥊 FACE-OFF', '🎭 LAUGH TRAP'];
+        const roundDesc = ['', 'Try not to laugh at these jokes!', 'Make each other crack up!', "Survive the trap - don't laugh!"];
 
         return (
-            <ImageBackground
-                source={require('../assets/images/laughbg.png')}
-                style={styles.container}
-                resizeMode="cover"
-            >
+            <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
                 <View style={styles.overlay}>
-                    <Text style={styles.roundTitle}>ROUND {currentRound}</Text>
-                    <Text style={styles.roundSubtitle}>{roundTitles[currentRound]}</Text>
+                    <Text style={styles.roundNumber}>ROUND {currentRound}</Text>
+                    <Text style={styles.roundTitle}>{roundTitles[currentRound]}</Text>
+                    <Text style={styles.roundDesc}>{roundDesc[currentRound]}</Text>
 
-                    <View style={styles.instructionBox}>
-                        <Text style={styles.instructionText}>{roundInstructions[currentRound]}</Text>
+                    <View style={styles.playersBox}>
+                        <Text style={styles.playersText}>👥 {activePlayers.length} Players</Text>
                     </View>
 
-                    <View style={styles.playersRemainingBox}>
-                        <Text style={styles.playersRemainingText}>
-                            {activePlayers.length} Players Remaining
-                        </Text>
-                    </View>
-
-                    <TouchableOpacity
-                        style={styles.startRoundButton}
-                        onPress={handleStartRound}
-                    >
-                        <Text style={styles.startRoundButtonText}>START ROUND {currentRound}</Text>
+                    <TouchableOpacity style={styles.bigButton} onPress={handleStartRound}>
+                        <Text style={styles.bigButtonText}>START ROUND</Text>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
@@ -437,75 +519,43 @@ export default function IfYouLaughGame() {
     // Round 1: Funny Scenarios
     if (gamePhase === 'ROUND_1_GAMEPLAY') {
         return (
-            <ImageBackground
-                source={require('../assets/images/laughbg.png')}
-                style={styles.container}
-                resizeMode="cover"
-            >
-                <View style={styles.overlay}>
-                    <Text style={styles.phaseTitle}>ROUND 1: FUNNY SCENARIOS</Text>
-                    <Text style={styles.scenarioCounter}>Scenario {currentScenarioIndex + 1}/{shuffledJokes.length}</Text>
+            <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
+                <Animated.View style={[styles.overlay, screenShakeStyle]}>
+                    <Text style={styles.phaseTitle}>😂 JOKE #{currentScenarioIndex + 1}</Text>
 
-                    <View style={styles.scenarioCard}>
-                        <Text style={styles.scenarioText}>{shuffledJokes[currentScenarioIndex]}</Text>
+                    <View style={styles.jokeCard}>
+                        <Text style={styles.jokeText}>{shuffledJokes[currentScenarioIndex]}</Text>
                     </View>
 
-                    <Text style={styles.instructionHint}>Read this out loud!</Text>
+                    <Text style={styles.hint}>Read it out loud! 📢</Text>
 
                     <View style={styles.buttonRow}>
-                        <TouchableOpacity
-                            style={styles.someoneLaughedButton}
-                            onPress={() => {
-                                // Show player selection modal (simplified for now)
-                                alert('Select who laughed to eliminate them');
-                            }}
-                        >
-                            <Text style={styles.someoneLaughedButtonText}>SOMEONE LAUGHED</Text>
+                        <TouchableOpacity style={styles.laughedBtn} onPress={triggerScreenShake}>
+                            <Text style={styles.btnText}>😆 LAUGHED!</Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.nextButton}
-                            onPress={handleNextScenario}
-                        >
-                            <Text style={styles.nextButtonText}>
-                                {currentScenarioIndex < shuffledJokes.length - 1 ? 'NEXT' : 'FINISH ROUND'}
-                            </Text>
+                        <TouchableOpacity style={styles.nextBtn} onPress={handleNextScenario}>
+                            <Text style={styles.btnText}>NEXT ➡️</Text>
                         </TouchableOpacity>
                     </View>
-                </View>
+                </Animated.View>
             </ImageBackground>
         );
     }
 
-    // Round 2: Battle Setup
+    // Round 2: Setup
     if (gamePhase === 'ROUND_2_SETUP') {
         return (
-            <ImageBackground
-                source={require('../assets/images/laughbg.png')}
-                style={styles.container}
-                resizeMode="cover"
-            >
+            <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
                 <View style={styles.overlay}>
-                    <Text style={styles.phaseTitle}>FACE-OFF!</Text>
-
-                    <View style={styles.battleMatchup}>
-                        <Text style={styles.battlePlayerName}>{playerNames[battlePlayer1!]}</Text>
+                    <Text style={styles.phaseTitle}>🥊 FACE-OFF!</Text>
+                    <View style={styles.vsContainer}>
+                        <Text style={styles.playerName}>{playerNames[battlePlayer1!]}</Text>
                         <Text style={styles.vsText}>VS</Text>
-                        <Text style={styles.battlePlayerName}>{playerNames[battlePlayer2!]}</Text>
+                        <Text style={styles.playerName}>{playerNames[battlePlayer2!]}</Text>
                     </View>
-
-                    <Text style={styles.battleInstruction}>
-                        Match {currentMatchupIndex + 1} of {matchups.length}
-                    </Text>
-                    <Text style={styles.instructionHint}>
-                        Make each other laugh! Winner gets +1 Point.
-                    </Text>
-
-                    <TouchableOpacity
-                        style={styles.startBattleButton}
-                        onPress={() => setGamePhase('ROUND_2_BATTLE')}
-                    >
-                        <Text style={styles.startBattleButtonText}>START BATTLE</Text>
+                    <Text style={styles.hint}>Match {currentMatchupIndex + 1} of {matchups.length}</Text>
+                    <TouchableOpacity style={styles.bigButton} onPress={() => setGamePhase('ROUND_2_BATTLE')}>
+                        <Text style={styles.bigButtonText}>FIGHT! 🔔</Text>
                     </TouchableOpacity>
                 </View>
             </ImageBackground>
@@ -515,50 +565,39 @@ export default function IfYouLaughGame() {
     // Round 2: Battle
     if (gamePhase === 'ROUND_2_BATTLE') {
         return (
-            <ImageBackground
-                source={require('../assets/images/laughbg.png')}
-                style={styles.container}
-                resizeMode="cover"
-            >
-                <View style={styles.overlay}>
-                    <Text style={styles.timerText}>{formatTime(timeRemaining)}</Text>
+            <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
+                <Animated.View style={[styles.overlay, screenShakeStyle]}>
+                    {showEliminated && <Animated.View style={[styles.eliminatedFlash, eliminatedFlashStyle]} />}
 
-                    <View style={styles.battleMatchup}>
-                        <Text style={styles.battlePlayerName}>{playerNames[battlePlayer1!]}</Text>
-                        <Text style={styles.vsText}>VS</Text>
-                        <Text style={styles.battlePlayerName}>{playerNames[battlePlayer2!]}</Text>
+                    <Animated.Text style={[styles.bigTimer, timerAnimatedStyle, timeRemaining <= 5 && styles.timerRed]}>
+                        {formatTime(timeRemaining)}
+                    </Animated.Text>
+
+                    <View style={styles.vsContainer}>
+                        <Text style={styles.playerName}>{playerNames[battlePlayer1!]}</Text>
+                        <Text style={styles.vsText}>🆚</Text>
+                        <Text style={styles.playerName}>{playerNames[battlePlayer2!]}</Text>
                     </View>
 
-                    <View style={styles.battleButtonsContainer}>
-                        <TouchableOpacity
-                            style={[styles.laughedButton, styles.player1Button]}
-                            onPress={() => handleBattleResult('player1')}
-                        >
-                            <Text style={styles.laughedButtonText}>{playerNames[battlePlayer1!]} LAUGHED</Text>
+                    <View style={styles.battleButtons}>
+                        <TouchableOpacity style={[styles.resultBtn, styles.redBtn]} onPress={() => handleBattleResult('player1')}>
+                            <Text style={styles.btnText}>{playerNames[battlePlayer1!]} 😂</Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.laughedButton, styles.player2Button]}
-                            onPress={() => handleBattleResult('player2')}
-                        >
-                            <Text style={styles.laughedButtonText}>{playerNames[battlePlayer2!]} LAUGHED</Text>
+                        <TouchableOpacity style={[styles.resultBtn, styles.blueBtn]} onPress={() => handleBattleResult('player2')}>
+                            <Text style={styles.btnText}>{playerNames[battlePlayer2!]} 😂</Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.laughedButton, styles.bothButton]}
-                            onPress={() => handleBattleResult('both')}
-                        >
-                            <Text style={styles.laughedButtonText}>BOTH LAUGHED</Text>
+                        <TouchableOpacity style={[styles.resultBtn, styles.purpleBtn]} onPress={() => handleBattleResult('both')}>
+                            <Text style={styles.btnText}>BOTH LAUGHED 🤣</Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.laughedButton, styles.noneButton]}
-                            onPress={() => handleBattleResult('none')}
-                        >
-                            <Text style={styles.laughedButtonText}>NOBODY LAUGHED</Text>
+                        <TouchableOpacity style={[styles.resultBtn, styles.greenBtn]} onPress={() => handleBattleResult('none')}>
+                            <Text style={styles.btnText}>NEITHER 😐</Text>
                         </TouchableOpacity>
                     </View>
-                </View>
+                </Animated.View>
+
+                {showConfetti && confettiParticles.map(p => (
+                    <ConfettiParticle key={p.id} delay={p.delay} x={p.x} />
+                ))}
             </ImageBackground>
         );
     }
@@ -570,30 +609,37 @@ export default function IfYouLaughGame() {
 
         if (trapPhase === 'PASS_PHONE') {
             return (
-                <ImageBackground
-                    source={require('../assets/images/laughbg.png')}
-                    style={styles.container}
-                    resizeMode="cover"
-                >
+                <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
                     <View style={styles.overlay}>
-                        <Text style={styles.phaseTitle}>ROUND 3: LAUGH TRAP</Text>
+                        <Text style={styles.phaseTitle}>🎭 LAUGH TRAP</Text>
+                        <Text style={styles.passText}>Pass phone to:</Text>
+                        <Text style={styles.bigPlayerName}>{currentPlayerName}</Text>
 
-                        <View style={styles.instructionBox}>
-                            <Text style={styles.instructionText}>
-                                Pass the phone to:
-                            </Text>
-                            <Text style={styles.battlePlayerName}>{currentPlayerName}</Text>
-                        </View>
-
-                        <Text style={styles.instructionHint}>
-                            Everyone else: Watch their face!
-                        </Text>
-
+                        {/* Camera Mode Toggle */}
                         <TouchableOpacity
-                            style={styles.startRoundButton}
-                            onPress={startTrap}
+                            style={[styles.cameraToggle, cameraMode && styles.cameraToggleActive]}
+                            onPress={() => {
+                                if (!permission?.granted) {
+                                    requestPermission();
+                                }
+                                setCameraMode(!cameraMode);
+                            }}
                         >
-                            <Text style={styles.startRoundButtonText}>I'M READY</Text>
+                            <Text style={styles.cameraToggleText}>
+                                {cameraMode ? '📹 Camera ON' : '📷 Enable Camera'}
+                            </Text>
+                        </TouchableOpacity>
+
+                        {cameraMode && permission?.granted && (
+                            <View style={styles.cameraPreview}>
+                                <CameraView ref={cameraRef} style={styles.camera} facing="front" />
+                                <Text style={styles.cameraHint}>👁️ Watch their face!</Text>
+                            </View>
+                        )}
+
+                        <Text style={styles.hint}>Everyone else: Watch for a smile! 👀</Text>
+                        <TouchableOpacity style={styles.bigButton} onPress={startTrap}>
+                            <Text style={styles.bigButtonText}>I'M READY 💪</Text>
                         </TouchableOpacity>
                     </View>
                 </ImageBackground>
@@ -602,61 +648,61 @@ export default function IfYouLaughGame() {
 
         if (trapPhase === 'VIEW_TRAP') {
             return (
-                <ImageBackground
-                    source={require('../assets/images/laughbg.png')}
-                    style={styles.container}
-                    resizeMode="cover"
-                >
-                    <View style={styles.overlay}>
-                        <Text style={styles.timerText}>{timeRemaining}</Text>
+                <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
+                    <Animated.View style={[styles.overlay, screenShakeStyle]}>
+                        {bouncingEmojis.map(e => (
+                            <BouncingEmoji key={e.id} emoji={e.emoji} startX={e.x} startY={e.y} delay={e.delay} />
+                        ))}
 
-                        <View style={styles.scenarioCard}>
-                            <Text style={styles.phaseTitle}>
-                                {currentTrap.type === 'animation' ? '📺 ANIMATION' :
-                                    currentTrap.type === 'sound' ? '🔊 SOUND' :
-                                        currentTrap.type === 'challenge' ? '🔥 CHALLENGE' : '💬 PHRASE'}
-                            </Text>
-                            <Text style={styles.scenarioText}>{currentTrap.content}</Text>
-                        </View>
+                        <Animated.Text style={[styles.bigTimer, timerAnimatedStyle, timeRemaining <= 2 && styles.timerRed]}>
+                            {timeRemaining}
+                        </Animated.Text>
 
-                        <Text style={styles.instructionHint}>
-                            Don't laugh!
-                        </Text>
-                    </View>
+                        {trapRevealed ? (
+                            <Animated.View style={[styles.trapCard, trapCardAnimatedStyle]}>
+                                <Text style={styles.trapEmoji}>{currentTrap.emoji}</Text>
+                                <Text style={styles.trapType}>
+                                    {currentTrap.type === 'sound' ? '🔊 SOUND' :
+                                        currentTrap.type === 'phrase' ? '💬 SAY THIS' :
+                                            currentTrap.type === 'challenge' ? '🎬 DO THIS' : '👀 WATCH'}
+                                </Text>
+                                <Text style={styles.trapContent}>{currentTrap.content}</Text>
+                            </Animated.View>
+                        ) : (
+                            <View style={styles.trapCard}>
+                                <Text style={styles.trapEmoji}>❓</Text>
+                                <Text style={styles.trapContent}>Get ready...</Text>
+                            </View>
+                        )}
+
+                        <Text style={styles.dontLaugh}>DON'T LAUGH! 🤐</Text>
+                    </Animated.View>
                 </ImageBackground>
             );
         }
 
         if (trapPhase === 'RESULT') {
             return (
-                <ImageBackground
-                    source={require('../assets/images/laughbg.png')}
-                    style={styles.container}
-                    resizeMode="cover"
-                >
-                    <View style={styles.overlay}>
-                        <Text style={styles.phaseTitle}>TIME'S UP!</Text>
+                <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
+                    <Animated.View style={[styles.overlay, screenShakeStyle]}>
+                        {showEliminated && <Animated.View style={[styles.eliminatedFlash, eliminatedFlashStyle]} />}
 
-                        <Text style={styles.roundSubtitle}>
-                            Did {currentPlayerName} laugh?
-                        </Text>
+                        <Text style={styles.phaseTitle}>⏰ TIME'S UP!</Text>
+                        <Text style={styles.questionText}>Did {currentPlayerName} laugh? 🤔</Text>
 
                         <View style={styles.buttonRow}>
-                            <TouchableOpacity
-                                style={styles.someoneLaughedButton}
-                                onPress={() => handleTrapResult(true)}
-                            >
-                                <Text style={styles.someoneLaughedButtonText}>YES (ELIMINATE)</Text>
+                            <TouchableOpacity style={styles.laughedBtn} onPress={() => handleTrapResult(true)}>
+                                <Text style={styles.btnText}>😂 YES</Text>
                             </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.nextButton}
-                                onPress={() => handleTrapResult(false)}
-                            >
-                                <Text style={styles.nextButtonText}>NO (SURVIVED)</Text>
+                            <TouchableOpacity style={styles.nextBtn} onPress={() => handleTrapResult(false)}>
+                                <Text style={styles.btnText}>😐 NO</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
+                    </Animated.View>
+
+                    {showConfetti && confettiParticles.map(p => (
+                        <ConfettiParticle key={p.id} delay={p.delay} x={p.x} />
+                    ))}
                 </ImageBackground>
             );
         }
@@ -665,29 +711,22 @@ export default function IfYouLaughGame() {
     // Round Results
     if (gamePhase === 'ROUND_RESULTS') {
         return (
-            <ImageBackground
-                source={require('../assets/images/laughbg.png')}
-                style={styles.container}
-                resizeMode="cover"
-            >
+            <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
                 <View style={styles.overlay}>
-                    <Text style={styles.resultsTitle}>ROUND {currentRound} COMPLETE!</Text>
+                    <Text style={styles.phaseTitle}>🏆 ROUND {currentRound} COMPLETE!</Text>
 
-                    <View style={styles.resultsBox}>
-                        <Text style={styles.resultsSubtitle}>Players Remaining: {activePlayers.length}</Text>
-                        {activePlayers.map((playerIndex) => (
-                            <Text key={playerIndex} style={styles.survivorName}>
-                                ✓ {playerNames[playerIndex]}
+                    <View style={styles.resultsCard}>
+                        <Text style={styles.survivorsTitle}>Survivors: {activePlayers.length}</Text>
+                        {activePlayers.map((p, i) => (
+                            <Text key={p} style={styles.survivorName}>
+                                {i === 0 ? '👑 ' : '✓ '}{playerNames[p]}
                             </Text>
                         ))}
                     </View>
 
-                    <TouchableOpacity
-                        style={styles.continueButton}
-                        onPress={handleNextRound}
-                    >
-                        <Text style={styles.continueButtonText}>
-                            {currentRound < 3 && activePlayers.length > 0 ? 'NEXT ROUND' : 'FINISH GAME'}
+                    <TouchableOpacity style={styles.bigButton} onPress={handleNextRound}>
+                        <Text style={styles.bigButtonText}>
+                            {currentRound < 3 && activePlayers.length > 0 ? 'NEXT ROUND ➡️' : 'SEE RESULTS 🎉'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -699,325 +738,74 @@ export default function IfYouLaughGame() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-    },
-    overlay: {
-        flex: 1,
-        backgroundColor: 'transparent',
-        padding: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    roundTitle: {
-        fontSize: 48,
-        fontWeight: 'bold',
-        color: '#FFE0B2',
-        marginBottom: 10,
-        fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-black' }),
-    },
-    roundSubtitle: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        marginBottom: 30,
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    instructionBox: {
-        backgroundColor: 'rgba(139, 76, 27, 0.9)',
-        borderRadius: 20,
-        padding: 25,
-        marginBottom: 20,
-        width: '90%',
-    },
-    instructionText: {
-        color: '#FFE0B2',
-        fontSize: 18,
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Medium', android: 'sans-serif-medium' }),
-    },
-    playersRemainingBox: {
-        backgroundColor: '#8B4C1B',
-        borderRadius: 15,
-        padding: 15,
-        marginBottom: 30,
-    },
-    playersRemainingText: {
-        color: '#FFE0B2',
-        fontSize: 20,
-        fontWeight: 'bold',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    startRoundButton: {
-        backgroundColor: '#FFE0B2',
-        borderRadius: 30,
-        paddingHorizontal: 50,
-        paddingVertical: 18,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 10,
-    },
-    startRoundButtonText: {
-        color: '#18304A',
-        fontSize: 24,
-        fontWeight: 'bold',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    phaseTitle: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#FFE0B2',
-        marginBottom: 20,
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-black' }),
-    },
-    scenarioCounter: {
-        fontSize: 18,
-        color: '#FFFFFF',
-        marginBottom: 20,
-        fontFamily: Platform.select({ ios: 'Avenir-Medium', android: 'sans-serif-medium' }),
-    },
-    scenarioCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 25,
-        padding: 30,
-        marginBottom: 20,
-        width: '90%',
-        minHeight: 200,
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 12,
-    },
-    scenarioText: {
-        color: '#18304A',
-        fontSize: 22,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    instructionHint: {
-        color: '#FFE0B2',
-        fontSize: 16,
-        marginBottom: 20,
-        fontStyle: 'italic',
-    },
-    buttonRow: {
-        flexDirection: 'row',
-        gap: 15,
-        width: '90%',
-    },
-    someoneLaughedButton: {
-        flex: 1,
-        backgroundColor: '#E74C3C',
-        borderRadius: 25,
-        paddingVertical: 15,
-        borderWidth: 3,
-        borderColor: '#C0392B',
-    },
-    someoneLaughedButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    nextButton: {
-        flex: 1,
-        backgroundColor: '#27AE60',
-        borderRadius: 25,
-        paddingVertical: 15,
-        borderWidth: 3,
-        borderColor: '#229954',
-    },
-    nextButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    battleMatchup: {
-        alignItems: 'center',
-        marginVertical: 30,
-    },
-    battlePlayerName: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#FFE0B2',
-        marginVertical: 10,
-        fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-black' }),
-    },
-    vsText: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-black' }),
-    },
-    battleInstruction: {
-        fontSize: 18,
-        color: '#FFFFFF',
-        marginBottom: 30,
-        textAlign: 'center',
-    },
-    startBattleButton: {
-        backgroundColor: '#FFE0B2',
-        borderRadius: 30,
-        paddingHorizontal: 50,
-        paddingVertical: 18,
-    },
-    startBattleButtonText: {
-        color: '#18304A',
-        fontSize: 24,
-        fontWeight: 'bold',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    timerText: {
-        fontSize: 64,
-        fontWeight: 'bold',
-        color: '#F39C12',
-        marginBottom: 20,
-        fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-black' }),
-    },
-    battleButtonsContainer: {
-        width: '90%',
-        gap: 15,
-    },
-    laughedButton: {
-        borderRadius: 25,
-        paddingVertical: 18,
-        borderWidth: 3,
-    },
-    player1Button: {
-        backgroundColor: '#E74C3C',
-        borderColor: '#C0392B',
-    },
-    player2Button: {
-        backgroundColor: '#3498DB',
-        borderColor: '#2980B9',
-    },
-    bothButton: {
-        backgroundColor: '#9B59B6',
-        borderColor: '#8E44AD',
-    },
-    noneButton: {
-        backgroundColor: '#27AE60',
-        borderColor: '#229954',
-    },
-    laughedButtonText: {
-        color: '#FFFFFF',
-        fontSize: 20,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    soundCounter: {
-        fontSize: 18,
-        color: '#FFFFFF',
-        marginBottom: 30,
-    },
-    playSoundButton: {
-        backgroundColor: '#FFE0B2',
-        borderRadius: 30,
-        paddingHorizontal: 50,
-        paddingVertical: 25,
-        marginBottom: 30,
-    },
-    playSoundButtonText: {
-        color: '#18304A',
-        fontSize: 28,
-        fontWeight: 'bold',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    playersList: {
-        width: '90%',
-        maxHeight: 300,
-        marginBottom: 20,
-    },
-    playerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: 'rgba(139, 76, 27, 0.7)',
-        borderRadius: 15,
-        padding: 15,
-        marginBottom: 10,
-    },
-    playerRowName: {
-        color: '#FFE0B2',
-        fontSize: 20,
-        fontWeight: 'bold',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    playerLaughedButton: {
-        backgroundColor: '#E74C3C',
-        borderRadius: 20,
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-    },
-    playerLaughedButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    nextSoundButton: {
-        backgroundColor: '#27AE60',
-        borderRadius: 30,
-        paddingHorizontal: 50,
-        paddingVertical: 18,
-    },
-    nextSoundButtonText: {
-        color: '#FFFFFF',
-        fontSize: 20,
-        fontWeight: 'bold',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    resultsTitle: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        color: '#FFE0B2',
-        marginBottom: 30,
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-black' }),
-    },
-    resultsBox: {
-        backgroundColor: 'rgba(139, 76, 27, 0.9)',
-        borderRadius: 25,
-        padding: 30,
-        marginBottom: 30,
-        width: '90%',
-    },
-    resultsSubtitle: {
-        color: '#FFE0B2',
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    survivorName: {
-        color: '#FFFFFF',
-        fontSize: 20,
-        marginVertical: 5,
-        fontFamily: Platform.select({ ios: 'Avenir-Medium', android: 'sans-serif-medium' }),
-    },
-    continueButton: {
-        backgroundColor: '#FFE0B2',
-        borderRadius: 30,
-        paddingHorizontal: 50,
-        paddingVertical: 18,
-    },
-    continueButtonText: {
-        color: '#18304A',
-        fontSize: 24,
-        fontWeight: 'bold',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
+    container: { flex: 1 },
+    overlay: { flex: 1, padding: 20, justifyContent: 'center', alignItems: 'center' },
+
+    // Round intro
+    roundNumber: { fontSize: 28, color: '#FFE0B2', fontWeight: '600', marginBottom: 5 },
+    roundTitle: { fontSize: 38, fontWeight: 'bold', color: '#fff', marginBottom: 10, textAlign: 'center' },
+    roundDesc: { fontSize: 18, color: '#FFE0B2', marginBottom: 30, textAlign: 'center' },
+    playersBox: { backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 20, paddingHorizontal: 25, paddingVertical: 12, marginBottom: 40 },
+    playersText: { fontSize: 20, color: '#fff', fontWeight: 'bold' },
+
+    // Buttons
+    bigButton: { backgroundColor: '#FFE0B2', borderRadius: 30, paddingHorizontal: 50, paddingVertical: 18, elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 8 },
+    bigButtonText: { fontSize: 22, fontWeight: 'bold', color: '#18304A' },
+    buttonRow: { flexDirection: 'row', gap: 12, width: '100%' },
+    laughedBtn: { flex: 1, backgroundColor: '#E74C3C', borderRadius: 20, paddingVertical: 16, alignItems: 'center' },
+    nextBtn: { flex: 1, backgroundColor: '#27AE60', borderRadius: 20, paddingVertical: 16, alignItems: 'center' },
+    btnText: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+
+    // Phase title
+    phaseTitle: { fontSize: 32, fontWeight: 'bold', color: '#FFE0B2', marginBottom: 20, textAlign: 'center' },
+    hint: { fontSize: 16, color: '#FFE0B2', marginBottom: 20, fontStyle: 'italic' },
+
+    // Joke card
+    jokeCard: { backgroundColor: '#fff', borderRadius: 25, padding: 30, marginBottom: 25, width: '95%', minHeight: 180, justifyContent: 'center', elevation: 10 },
+    jokeText: { fontSize: 22, color: '#18304A', textAlign: 'center', fontWeight: '600', lineHeight: 32 },
+
+    // Battle/VS
+    vsContainer: { alignItems: 'center', marginVertical: 25 },
+    playerName: { fontSize: 26, fontWeight: 'bold', color: '#FFE0B2', marginVertical: 8 },
+    bigPlayerName: { fontSize: 36, fontWeight: 'bold', color: '#fff', marginVertical: 15 },
+    vsText: { fontSize: 40, fontWeight: 'bold', color: '#fff' },
+
+    // Timer
+    bigTimer: { fontSize: 72, fontWeight: 'bold', color: '#F39C12', marginBottom: 15 },
+    timerRed: { color: '#E74C3C' },
+
+    // Battle buttons
+    battleButtons: { width: '100%', gap: 12 },
+    resultBtn: { borderRadius: 20, paddingVertical: 16, alignItems: 'center' },
+    redBtn: { backgroundColor: '#E74C3C' },
+    blueBtn: { backgroundColor: '#3498DB' },
+    purpleBtn: { backgroundColor: '#9B59B6' },
+    greenBtn: { backgroundColor: '#27AE60' },
+
+    // Trap
+    passText: { fontSize: 22, color: '#FFE0B2', marginBottom: 10 },
+    trapCard: { backgroundColor: '#fff', borderRadius: 25, padding: 35, marginVertical: 20, width: '90%', alignItems: 'center', elevation: 15 },
+    trapEmoji: { fontSize: 60, marginBottom: 15 },
+    trapType: { fontSize: 18, fontWeight: 'bold', color: '#8B4513', marginBottom: 10 },
+    trapContent: { fontSize: 24, color: '#18304A', textAlign: 'center', fontWeight: '600', lineHeight: 32 },
+    dontLaugh: { fontSize: 20, fontWeight: 'bold', color: '#E74C3C', marginTop: 20 },
+    questionText: { fontSize: 24, color: '#fff', marginBottom: 30, textAlign: 'center' },
+
+    // Results
+    resultsCard: { backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: 25, marginBottom: 30, width: '90%' },
+    survivorsTitle: { fontSize: 22, fontWeight: 'bold', color: '#FFE0B2', marginBottom: 15, textAlign: 'center' },
+    survivorName: { fontSize: 20, color: '#fff', marginVertical: 5 },
+
+    // Effects
+    eliminatedFlash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#E74C3C' },
+    confetti: { position: 'absolute', width: 10, height: 10, borderRadius: 5 },
+    bouncingEmoji: { position: 'absolute', fontSize: 40 },
+
+    // Camera
+    cameraToggle: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, paddingHorizontal: 25, paddingVertical: 12, marginVertical: 15, borderWidth: 2, borderColor: '#FFE0B2' },
+    cameraToggleActive: { backgroundColor: '#27AE60', borderColor: '#2ECC71' },
+    cameraToggleText: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+    cameraPreview: { width: '90%', height: 200, borderRadius: 20, overflow: 'hidden', marginVertical: 15, borderWidth: 3, borderColor: '#FFE0B2', position: 'relative' },
+    camera: { flex: 1 },
+    cameraHint: { position: 'absolute', bottom: 10, left: 0, right: 0, textAlign: 'center', color: '#fff', fontSize: 14, fontWeight: 'bold', backgroundColor: 'rgba(0,0,0,0.5)', paddingVertical: 5 },
 });

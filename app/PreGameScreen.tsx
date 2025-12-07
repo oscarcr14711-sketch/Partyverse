@@ -1,6 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Platform, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PulsingButton } from '../components/PulsingButton';
 
 const avatarImages = [
@@ -15,6 +16,7 @@ const avatarImages = [
 export default function PreGameScreen() {
   const router = useRouter();
   const [numPlayers, setNumPlayers] = useState(2);
+  const [showRules, setShowRules] = useState(false);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#3B1A5A', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}>
@@ -52,12 +54,39 @@ export default function PreGameScreen() {
           <Text style={[styles.playerCounterButtonText, { fontSize: 24 }]}>+</Text>
         </PulsingButton>
       </View>
-      <PulsingButton
-        style={[styles.setupStartButton, { paddingHorizontal: 50, paddingVertical: 10, borderRadius: 22, marginTop: 18 }]}
-        onPress={() => router.push('/extreme-challenge-roulette')}
-      >
-        <Text style={[styles.setupStartButtonText, { fontSize: 20 }]}>START</Text>
-      </PulsingButton>
+      <View style={styles.buttonContainer}>
+        <PulsingButton
+          style={[styles.setupStartButton, { paddingHorizontal: 50, paddingVertical: 10, borderRadius: 22, marginTop: 18 }]}
+          onPress={() => router.push('/extreme-challenge-roulette')}
+        >
+          <Text style={[styles.setupStartButtonText, { fontSize: 20 }]}>START</Text>
+        </PulsingButton>
+        <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+          <Text style={styles.infoButtonText}>i</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Rules Modal */}
+      <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>How to Play</Text>
+              <TouchableOpacity onPress={() => setShowRules(false)}>
+                <Ionicons name="close" size={24} color="#3B1A5A" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalScroll}>
+              <Text style={styles.sectionTitle}>🎯 Objective</Text>
+              <Text style={styles.ruleText}>Spin and complete crazy challenges!</Text>
+              <Text style={styles.sectionTitle}>🎰 How It Works</Text>
+              <Text style={styles.ruleText}>• Press the button to spin{'\n'}• The wheel picks a random challenge{'\n'}• Complete the challenge shown{'\n'}• Tap to dismiss and spin again!</Text>
+              <Text style={styles.sectionTitle}>💡 Tips</Text>
+              <Text style={styles.ruleText}>Be brave! Some challenges are extreme!</Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -150,4 +179,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
+  buttonContainer: { flexDirection: 'row', alignItems: 'center', gap: 15, marginTop: 18 },
+  infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#E74C3C', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8, borderBottomWidth: 3, borderBottomColor: '#C0392B' },
+  infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#fff' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#f9c846', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#FFD700' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' },
+  modalTitle: { color: '#3B1A5A', fontSize: 22, fontWeight: 'bold' },
+  modalScroll: { padding: 20 },
+  sectionTitle: { color: '#3B1A5A', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+  ruleText: { color: '#333', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

@@ -29,7 +29,7 @@ export default function BrainVsBrainPreGame() {
                             style={styles.startButton}
                             onPress={() => router.push('/brain-vs-brain-game')}
                         >
-                            <Text style={styles.startButtonText}>CHOOSE DIFFICULTY</Text>
+                            <Text style={styles.startButtonText}>START GAME</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity

@@ -89,13 +89,31 @@ export default function WordMentalGamesScreen() {
 
   return (
     <View style={styles.background}>
+      {/* Decorative Background Emojis */}
+      <View style={styles.emojiBackground}>
+        <Text style={[styles.bgEmoji, { top: '5%', left: '10%' }]}>🧩</Text>
+        <Text style={[styles.bgEmoji, { top: '15%', right: '15%' }]}>⚔️</Text>
+        <Text style={[styles.bgEmoji, { top: '30%', left: '5%' }]}>🛑</Text>
+        <Text style={[styles.bgEmoji, { top: '45%', right: '10%' }]}>🧠</Text>
+        <Text style={[styles.bgEmoji, { top: '60%', left: '15%' }]}>🎯</Text>
+        <Text style={[styles.bgEmoji, { top: '75%', right: '8%' }]}>🧩</Text>
+        <Text style={[styles.bgEmoji, { top: '20%', left: '80%' }]}>⚔️</Text>
+        <Text style={[styles.bgEmoji, { top: '50%', left: '70%' }]}>🛑</Text>
+        <Text style={[styles.bgEmoji, { top: '85%', left: '50%' }]}>🧠</Text>
+        <Text style={[styles.bgEmoji, { top: '10%', left: '50%' }]}>🎯</Text>
+      </View>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <Text style={styles.title}>Word / Mental</Text>
           <View style={{ width: 24 }} />
+        </View>
+        <View style={styles.titleSection}>
+          <Text style={styles.titleGlow}>WORD</Text>
+          <Text style={styles.titleMain}>WORD</Text>
+          <Text style={styles.subtitleGlow}>MENTAL</Text>
+          <Text style={styles.subtitleMain}>MENTAL</Text>
         </View>
         <ScrollView style={styles.grid}>
           {games.map((game) => (
@@ -110,7 +128,20 @@ export default function WordMentalGamesScreen() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#ffeb3b',
+    backgroundColor: '#d8b5ff',
+  },
+  emojiBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  bgEmoji: {
+    position: 'absolute',
+    fontSize: 60,
+    opacity: 0.15,
   },
   container: {
     flex: 1,
@@ -136,13 +167,61 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   grid: {
+    marginTop: 20,
+    marginBottom: 12,
     paddingHorizontal: 5,
+  },
+  titleSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 30,
+    marginTop: 30,
+  },
+  titleGlow: {
+    fontSize: 56,
+    fontWeight: '900',
+    color: 'transparent',
+    textShadowColor: '#ff6b6b',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 25,
+    letterSpacing: 10,
+    position: 'absolute',
+  },
+  titleMain: {
+    fontSize: 56,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: 10,
+    textShadowColor: 'rgba(255,107,107,0.8)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+  },
+  subtitleGlow: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'transparent',
+    textShadowColor: '#8b5cf6',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
+    letterSpacing: 8,
+    position: 'absolute',
+    top: 75,
+  },
+  subtitleMain: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#8b5cf6',
+    letterSpacing: 8,
+    marginTop: 8,
+    textShadowColor: 'rgba(139,92,246,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 8,
   },
   gameButtonOuter: {
     borderRadius: 40,
     padding: 4,
-    marginBottom: 16,
-    marginHorizontal: 6,
+    marginBottom: 40,
+    marginHorizontal: 10,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.45,
     shadowRadius: 12,

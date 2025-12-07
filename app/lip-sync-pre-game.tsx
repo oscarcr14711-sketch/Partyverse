@@ -1,11 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { PulsingButton } from '../components/PulsingButton';
 
 export default function LipSyncPreGame() {
     const router = useRouter();
     const [numPlayers, setNumPlayers] = useState(3);
+    const [showRules, setShowRules] = useState(false);
 
     const avatarImages = [
         require('../assets/images/avatars/avatar1.png'),
@@ -67,15 +69,37 @@ export default function LipSyncPreGame() {
 
                     {/* Start Button */}
                     <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={styles.startButton}
-                            onPress={() => router.push({ pathname: "/lip-sync-game", params: { numPlayers } })}
-                        >
+                        <TouchableOpacity style={styles.startButton} onPress={() => router.push({ pathname: "/lip-sync-game", params: { numPlayers } })}>
                             <Text style={styles.startButtonText}>START</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+                            <Text style={styles.infoButtonText}>i</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
+
+            {/* Rules Modal */}
+            <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>How to Play</Text>
+                            <TouchableOpacity onPress={() => setShowRules(false)}>
+                                <Ionicons name="close" size={24} color="#1ABC9C" />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView style={styles.modalScroll}>
+                            <Text style={styles.sectionTitle}>🎯 Objective</Text>
+                            <Text style={styles.ruleText}>Lip sync to the song while others try to guess!</Text>
+                            <Text style={styles.sectionTitle}>🎧 Requirements</Text>
+                            <Text style={styles.ruleText}>• One player wears headphones{'\n'}• Music plays only for them{'\n'}• They lip sync the lyrics</Text>
+                            <Text style={styles.sectionTitle}>🎮 How It Works</Text>
+                            <Text style={styles.ruleText}>• Others watch and laugh{'\n'}• Try to guess the song{'\n'}• Points for correct guesses!</Text>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
         </ImageBackground>
     );
 }
@@ -201,31 +225,16 @@ const styles = StyleSheet.create({
         minWidth: 120,
         ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
     },
-    buttonContainer: {
-        marginTop: 0,
-        alignItems: 'center',
-    },
-    startButton: {
-        backgroundColor: '#004D40', // Dark Teal/Turquoise
-        borderRadius: 30,
-        paddingHorizontal: 80,
-        paddingVertical: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 10,
-        borderBottomWidth: 4,
-        borderBottomColor: '#00332A',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#1ABC9C',
-    },
-    startButtonText: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#1ABC9C', // Turquoise Text
-        letterSpacing: 1,
-        ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
-    },
+    buttonContainer: { marginTop: 0, alignItems: 'center', flexDirection: 'row', gap: 15 },
+    startButton: { backgroundColor: '#004D40', borderRadius: 30, paddingHorizontal: 60, paddingVertical: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 10, borderBottomWidth: 4, borderBottomColor: '#00332A', alignItems: 'center', borderWidth: 1, borderColor: '#1ABC9C' },
+    startButtonText: { fontSize: 24, fontWeight: 'bold', color: '#1ABC9C', letterSpacing: 1, ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }) },
+    infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#1ABC9C', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },
+    infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#004D40' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+    modalContent: { backgroundColor: '#004D40', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#1ABC9C' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(26,188,156,0.3)' },
+    modalTitle: { color: '#1ABC9C', fontSize: 22, fontWeight: 'bold' },
+    modalScroll: { padding: 20 },
+    sectionTitle: { color: '#1ABC9C', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+    ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

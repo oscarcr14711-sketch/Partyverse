@@ -1,11 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { PulsingButton } from '../components/PulsingButton';
 
 export default function BrainBuzzerPreGame() {
     const router = useRouter();
     const [numPlayers, setNumPlayers] = useState(2);
+    const [showRules, setShowRules] = useState(false);
 
     const avatarImages = [
         require('../assets/images/avatars/avatar1.png'),
@@ -65,9 +67,43 @@ export default function BrainBuzzerPreGame() {
                             >
                                 <Text style={styles.startButtonText}>START</Text>
                             </TouchableOpacity>
+                            <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+                                <Text style={styles.infoButtonText}>i</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
+
+                {/* Rules Modal */}
+                <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>How to Play</Text>
+                                <TouchableOpacity onPress={() => setShowRules(false)}>
+                                    <Ionicons name="close" size={24} color="#FFC107" />
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView style={styles.modalScroll}>
+                                <Text style={styles.sectionTitle}>🎯 Objective</Text>
+                                <Text style={styles.ruleText}>
+                                    Answer trivia questions correctly before time runs out!
+                                </Text>
+                                <Text style={styles.sectionTitle}>🎮 How It Works</Text>
+                                <Text style={styles.ruleText}>
+                                    • Choose your difficulty level{'\n'}
+                                    • Each player takes turns{'\n'}
+                                    • Tap the correct answer{'\n'}
+                                    • Faster answers = more points
+                                </Text>
+                                <Text style={styles.sectionTitle}>🏆 Scoring</Text>
+                                <Text style={styles.ruleText}>
+                                    Correct answers earn points. Build streaks for bonus points!
+                                </Text>
+                            </ScrollView>
+                        </View>
+                    </View>
+                </Modal>
             </ImageBackground>
         </View>
     );
@@ -162,11 +198,13 @@ const styles = StyleSheet.create({
     buttonContainer: {
         marginTop: 0,
         alignItems: 'center',
+        flexDirection: 'row',
+        gap: 15,
     },
     startButton: {
-        backgroundColor: '#FFC107', // Amber
+        backgroundColor: '#FFC107',
         borderRadius: 30,
-        paddingHorizontal: 80,
+        paddingHorizontal: 60,
         paddingVertical: 18,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },
@@ -174,16 +212,39 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 10,
         borderBottomWidth: 4,
-        borderBottomColor: '#FFA000', // Darker Amber
+        borderBottomColor: '#FFA000',
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#FFD54F',
     },
     startButtonText: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#18304A', // Dark Blue Text
+        color: '#18304A',
         letterSpacing: 1,
         ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
     },
+    infoButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#FFC107',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
+        borderBottomWidth: 3,
+        borderBottomColor: '#FFA000',
+    },
+    infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#18304A' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+    modalContent: { backgroundColor: '#18304A', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#FFC107' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(255,193,7,0.3)' },
+    modalTitle: { color: '#FFC107', fontSize: 22, fontWeight: 'bold' },
+    modalScroll: { padding: 20 },
+    sectionTitle: { color: '#FFC107', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+    ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

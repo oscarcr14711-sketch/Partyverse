@@ -126,7 +126,12 @@ export default function HumorCreativityGamesScreen() {
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color="white" />
             </TouchableOpacity>
-            <Text style={styles.partyHeader}>Humor / Creativity</Text>
+          </View>
+          <View style={styles.titleSection}>
+            <Text style={styles.titleGlow}>HUMOR</Text>
+            <Text style={styles.titleMain}>HUMOR</Text>
+            <Text style={styles.subtitleGlow}>CREATIVITY</Text>
+            <Text style={styles.subtitleMain}>CREATIVITY</Text>
           </View>
           <View style={styles.grid}>
             {games.map((game) => (
@@ -167,6 +172,63 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 15,
+    zIndex: 10,
+  },
+  titleSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 30,
+    marginTop: 30,
+  },
+  titleGlow: {
+    fontSize: 52,
+    fontWeight: '900',
+    color: 'transparent',
+    textShadowColor: '#ff006e',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 25,
+    letterSpacing: 6,
+    position: 'absolute',
+  },
+  titleMain: {
+    fontSize: 52,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: 6,
+    textShadowColor: 'rgba(255,0,110,0.8)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+  },
+  subtitleGlow: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'transparent',
+    textShadowColor: '#00f5ff',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
+    letterSpacing: 4,
+    position: 'absolute',
+    top: 75,
+  },
+  subtitleMain: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#00f5ff',
+    letterSpacing: 4,
+    marginTop: 8,
+    textShadowColor: 'rgba(0,245,255,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 8,
+  },
   gameButtonOuter: {
     borderRadius: 40,
     padding: 4,
@@ -178,11 +240,8 @@ const styles = StyleSheet.create({
     elevation: 14,
   },
   grid: {
-    marginTop: 150, // Lower the buttons so the first button is farther from the header
+    marginTop: 20,
     marginBottom: 12,
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 14,
   },
   gameButtonInner: {
     borderRadius: 36,

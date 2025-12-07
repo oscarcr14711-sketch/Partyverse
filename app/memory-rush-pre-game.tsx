@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
 
@@ -10,6 +10,7 @@ const memoryImage = require('../assets/images/memory.png');
 export default function MemoryRushPreGame() {
     const router = useRouter();
     const [numPlayers, setNumPlayers] = useState(2);
+    const [showRules, setShowRules] = useState(false);
 
     const handleStart = () => {
         // Generate players array
@@ -62,9 +63,36 @@ export default function MemoryRushPreGame() {
                 </View>
 
                 {/* Start Button */}
-                <TouchableOpacity style={styles.startButton} onPress={handleStart}>
-                    <Text style={styles.startButtonText}>START</Text>
-                </TouchableOpacity>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity style={styles.startButton} onPress={handleStart}>
+                        <Text style={styles.startButtonText}>START</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+                        <Text style={styles.infoButtonText}>i</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Rules Modal */}
+                <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>How to Play</Text>
+                                <TouchableOpacity onPress={() => setShowRules(false)}>
+                                    <Ionicons name="close" size={24} color="#FFE4B5" />
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView style={styles.modalScroll}>
+                                <Text style={styles.sectionTitle}>🎯 Objective</Text>
+                                <Text style={styles.ruleText}>Memorize a sequence, then find what changed!</Text>
+                                <Text style={styles.sectionTitle}>🎮 How It Works</Text>
+                                <Text style={styles.ruleText}>• View the original sequence{'\n'}• Spot the difference{'\n'}• Tap the changed item{'\n'}• Be fast for bonus points!</Text>
+                                <Text style={styles.sectionTitle}>🏆 Scoring</Text>
+                                <Text style={styles.ruleText}>• Combo multipliers for streaks{'\n'}• Speed bonus for fast answers{'\n'}• 3 lives per game</Text>
+                            </ScrollView>
+                        </View>
+                    </View>
+                </Modal>
             </SafeAreaView>
         </View>
     );
@@ -145,22 +173,16 @@ const styles = StyleSheet.create({
         minWidth: 150,
         ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
     },
-    startButton: {
-        backgroundColor: '#1E3A5F',
-        borderRadius: 30,
-        paddingHorizontal: 80,
-        paddingVertical: 18,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 10,
-    },
-    startButtonText: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#FFE4B5',
-        letterSpacing: 2,
-        ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
-    },
+    startButton: { backgroundColor: '#1E3A5F', borderRadius: 30, paddingHorizontal: 60, paddingVertical: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 10 },
+    startButtonText: { fontSize: 24, fontWeight: 'bold', color: '#FFE4B5', letterSpacing: 2, ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }) },
+    buttonContainer: { flexDirection: 'row', alignItems: 'center', gap: 15 },
+    infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#1E3A5F', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },
+    infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#FFE4B5' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+    modalContent: { backgroundColor: '#E88B8B', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#1E3A5F' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(30,58,95,0.3)' },
+    modalTitle: { color: '#1E3A5F', fontSize: 22, fontWeight: 'bold' },
+    modalScroll: { padding: 20 },
+    sectionTitle: { color: '#1E3A5F', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+    ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

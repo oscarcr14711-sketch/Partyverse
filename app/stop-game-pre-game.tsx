@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
 
@@ -22,6 +22,7 @@ export default function StopGamePreGame() {
     );
     const [customCategory, setCustomCategory] = useState('');
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+    const [showRules, setShowRules] = useState(false);
 
     const toggleCategory = (category: string) => {
         if (selectedCategories.includes(category)) {
@@ -61,7 +62,6 @@ export default function StopGamePreGame() {
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                             <Ionicons name="arrow-back" size={28} color="white" />
                         </TouchableOpacity>
-                        <Text style={styles.title}>🛑 STOP GAME</Text>
                     </View>
 
                     {/* Game Mode Selection */}
@@ -214,6 +214,28 @@ export default function StopGamePreGame() {
                         </LinearGradient>
                     </TouchableOpacity>
                 </ScrollView>
+
+                {/* Rules Modal */}
+                <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>How to Play</Text>
+                                <TouchableOpacity onPress={() => setShowRules(false)}>
+                                    <Ionicons name="close" size={24} color="#0abde3" />
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView style={styles.modalScroll}>
+                                <Text style={styles.ruleSectionTitle}>🎯 Objective</Text>
+                                <Text style={styles.ruleText}>Come up with words for each category that start with a random letter!</Text>
+                                <Text style={styles.ruleSectionTitle}>🎮 How It Works</Text>
+                                <Text style={styles.ruleText}>• Random letter is chosen{'\n'}• Fill each category with a word{'\n'}• Shout "STOP!" when done{'\n'}• Unique answers = points!</Text>
+                                <Text style={styles.ruleSectionTitle}>🏆 Scoring</Text>
+                                <Text style={styles.ruleText}>Unique answers score! Duplicate answers with other players = no points.</Text>
+                            </ScrollView>
+                        </View>
+                    </View>
+                </Modal>
             </SafeAreaView>
         </LinearGradient>
     );
@@ -434,4 +456,13 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
         ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
     },
+    infoButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: 0 },
+    infoButtonText: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+    modalContent: { backgroundColor: '#fff', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#0abde3' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(10,189,227,0.2)' },
+    modalTitle: { color: '#0abde3', fontSize: 22, fontWeight: 'bold' },
+    modalScroll: { padding: 20 },
+    ruleSectionTitle: { color: '#0abde3', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+    ruleText: { color: '#333', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

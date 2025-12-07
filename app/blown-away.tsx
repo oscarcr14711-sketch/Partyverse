@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MAX_BALLOON_SIZE = 500; // Size at which balloon pops
@@ -14,8 +14,9 @@ const BLOW_THRESHOLD = -40; // Audio level threshold (more sensitive)
 
 export default function BlownAwayScreen() {
   const router = useRouter();
-  const [showSetup, setShowSetup] = useState(true); // Pre-game screen gate
-  const [showResults, setShowResults] = useState(false); // Results screen gate
+  const [showSetup, setShowSetup] = useState(true);
+  const [showRules, setShowRules] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [numPlayers, setNumPlayers] = useState(3);
   const [gameStarted, setGameStarted] = useState(false);
   const [balloonSize, setBalloonSize] = useState(MIN_BALLOON_SIZE);
@@ -47,12 +48,12 @@ export default function BlownAwayScreen() {
           console.log('Error stopping existing recording:', e);
         }
       }
-      
+
       // Clear both state and ref
       recordingRef.current = null;
       setRecording(null);
       setIsListening(false);
-      
+
       // Wait longer to ensure complete cleanup
       await new Promise(resolve => setTimeout(resolve, 400));
 
@@ -72,12 +73,12 @@ export default function BlownAwayScreen() {
         (status) => {
           if (status.isRecording && status.metering !== undefined) {
             const audioLevel = status.metering; // Raw metering value (-160 to 0)
-            
+
             // Only inflate if audio level is above threshold (louder = more negative number becomes less negative)
             if (audioLevel > BLOW_THRESHOLD && !hasPopped) {
               // Calculate inflation amount based on how loud the blow is
               const blowStrength = Math.max(0, (audioLevel - BLOW_THRESHOLD) / 10);
-              
+
               setBalloonSize((prev) => {
                 const newSize = Math.min(MAX_BALLOON_SIZE, prev + blowStrength * 2);
                 if (newSize >= MAX_BALLOON_SIZE) {
@@ -240,11 +241,11 @@ export default function BlownAwayScreen() {
   const getWinner = () => {
     const scores = Object.entries(playerScores);
     if (scores.length === 0) return null;
-    
-    const winner = scores.reduce((max, current) => 
+
+    const winner = scores.reduce((max, current) =>
       current[1].score > max[1].score ? current : max
     );
-    
+
     return { player: parseInt(winner[0]), score: winner[1].score };
   };
 
@@ -349,10 +350,32 @@ export default function BlownAwayScreen() {
             </View>
           </View>
           <View style={styles.infoButtonWrapper}>
-            <TouchableOpacity style={styles.infoButton}>
+            <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
               <Text style={styles.infoButtonText}>i</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Rules Modal */}
+          <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>How to Play</Text>
+                  <TouchableOpacity onPress={() => setShowRules(false)}>
+                    <Ionicons name="close" size={24} color="#5DADE2" />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView style={styles.modalScroll}>
+                  <Text style={styles.sectionTitle}>🎯 Objective</Text>
+                  <Text style={styles.ruleText}>Blow up balloons as much as you can without popping!</Text>
+                  <Text style={styles.sectionTitle}>🎈 How It Works</Text>
+                  <Text style={styles.ruleText}>• Blow into the microphone{'\n'}• Bigger balloon = more points{'\n'}• Press "Stop Blowing" to lock in points{'\n'}• If it pops, you lose those points!</Text>
+                  <Text style={styles.sectionTitle}>🏆 Tips</Text>
+                  <Text style={styles.ruleText}>Risk vs reward - know when to stop!</Text>
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
         </SafeAreaView>
       </LinearGradient>
     );
@@ -977,4 +1000,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#5DADE2', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#E74C3C' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(231,76,60,0.3)' },
+  modalTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
+  modalScroll: { padding: 20 },
+  sectionTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+  ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

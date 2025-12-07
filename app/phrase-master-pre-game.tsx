@@ -27,7 +27,13 @@ export default function PhraseMasterPreGame() {
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
                             style={styles.startButton}
-                            onPress={() => router.push('/phrase-master-game')}
+                            onPress={() => router.push({
+                                pathname: '/phrase-master-game',
+                                params: {
+                                    players: JSON.stringify([{ id: '1', name: 'Player 1', color: '#f94144' }]),
+                                    category: 'Random Mix'
+                                }
+                            })}
                         >
                             <Text style={styles.startButtonText}>START GAME</Text>
                         </TouchableOpacity>

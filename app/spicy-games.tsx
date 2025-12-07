@@ -4,10 +4,10 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PulsingButton } from '../components/PulsingButton';
 
 type SpicyGame = {
   title: string;
-  description: string;
   emoji: string;
   path: string;
   gradient: [string, string];
@@ -15,22 +15,21 @@ type SpicyGame = {
 };
 
 const games: SpicyGame[] = [
-  { title: 'Drink Domino', description: 'Players drink in a chain reaction following the order of the cards (A, 2, 3… K).', emoji: '🔥🍻', path: '/drink-domino', gradient: ['#FF4500', '#DC143C'], darkGradient: ['#500000', '#A01010'] },
-  { title: 'Color Clash', description: 'Guess whether the next card will be red ♥️ or black ♠️.\nIf players fail to guess the color they drink, if they get it right they choose who drinks.', emoji: '♥️♠️', path: '/color-clash-pre-game', gradient: ['#4169E1', '#1E90FF'], darkGradient: ['#00003B', '#1C2E5D'] },
-  { title: 'Ride The Bus', description: 'Complete 4 card predictions in a row: Color → Higher or Lower → Inside or Outside → Suit. If you fail at any step → start over and drink.', emoji: '🚌🃏', path: '/ride-the-bus-pre-game', gradient: ['#2E8B57', '#3CB371'], darkGradient: ['#002000', '#005000'] },
-  { title: 'PartyBoard: Roll & Cheers', description: 'Move around the board completing dares, mini–games, and drink challenges. Each victory earns you a Beer Can Token. First to collect 6 tokens wins.', emoji: '🎲🍻', path: '/party-board', gradient: ['#DA70D6', '#BA55D3'], darkGradient: ['#2B0042', '#6A006A'] },
-  { title: 'Hot Cup Spin', description: 'Place shots, dares, prizes, or safe cards hidden under face–down cups. Spin the arrow. Reveal the cup it points to and do whatever it says.', emoji: '🥤🔄', path: '/hot-cup-spin', gradient: ['#CD5C5C', '#F08080'], darkGradient: ['#400000', '#902020'] }
+  { title: 'Color Clash', emoji: '♥️♠️', path: '/color-clash-pre-game', gradient: ['#4169E1', '#1E90FF'], darkGradient: ['#00003B', '#1C2E5D'] },
+  { title: 'Ride The Bus', emoji: '🚌🃏', path: '/ride-the-bus-pre-game', gradient: ['#2E8B57', '#3CB371'], darkGradient: ['#002000', '#005000'] },
+  { title: 'Drink Domino', emoji: '🔥🍻', path: '/drink-domino', gradient: ['#FF4500', '#DC143C'], darkGradient: ['#500000', '#A01010'] },
+  { title: 'PartyBoard: Roll & Cheers', emoji: '🎲🍻', path: '/party-board', gradient: ['#DA70D6', '#BA55D3'], darkGradient: ['#2B0042', '#6A006A'] },
+  { title: 'Hot Cup Spin', emoji: '🥤🔄', path: '/hot-cup-spin', gradient: ['#CD5C5C', '#F08080'], darkGradient: ['#400000', '#902020'] }
 ];
 
-const GameItem = ({ title, description, emoji, gradient, darkGradient, onPress }: {
+const GameItem = ({ title, emoji, gradient, darkGradient, onPress }: {
   title: string;
-  description: string;
   emoji: string;
   gradient: [string, string];
   darkGradient: [string, string];
   onPress: () => void;
 }) => (
-  <TouchableOpacity onPress={onPress}>
+  <PulsingButton onPress={onPress}>
     <LinearGradient
       colors={gradient}
       start={{ x: 0.5, y: 0 }}
@@ -38,7 +37,7 @@ const GameItem = ({ title, description, emoji, gradient, darkGradient, onPress }
       style={[styles.gameButtonOuter, { shadowColor: gradient[0] }]}
     >
       <LinearGradient
-        colors={[darkGradient[1], darkGradient[0]]} // Dark-to-light for the button face
+        colors={[darkGradient[1], darkGradient[0]]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.gameButtonInner}
@@ -46,12 +45,11 @@ const GameItem = ({ title, description, emoji, gradient, darkGradient, onPress }
         <Text style={styles.gameEmoji}>{emoji}</Text>
         <View style={styles.gameTextContainer}>
           <Text style={styles.gameTitle}>{title}</Text>
-          <Text style={styles.gameDescription}>{description}</Text>
         </View>
         <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
       </LinearGradient>
     </LinearGradient>
-  </TouchableOpacity>
+  </PulsingButton>
 );
 
 export default function SpicyGamesScreen() {
@@ -150,13 +148,15 @@ const styles = StyleSheet.create({
     color: '#121212',
   },
   grid: {
+    marginTop: 150,
     paddingHorizontal: 10,
     paddingTop: 10,
   },
   gameButtonOuter: {
     borderRadius: 18,
     padding: 3,
-    marginBottom: 15,
+    marginBottom: 40,
+    marginHorizontal: 10,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 5,
@@ -179,10 +179,5 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  gameDescription: {
-    color: '#CCCCCC',
-    fontSize: 14,
-    marginTop: 5,
   },
 });

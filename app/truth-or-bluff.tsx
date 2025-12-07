@@ -1,7 +1,8 @@
 
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 function shuffleArray(array: any[]) {
 	for (let i = array.length - 1; i > 0; i--) {
@@ -49,6 +50,7 @@ const TruthOrBluffScreen = () => {
 	const [timer, setTimer] = useState(30);
 	const [isTimerActive, setIsTimerActive] = useState(true);
 	const [answerSelected, setAnswerSelected] = useState<'right' | 'wrong' | null>(null);
+	const [showRules, setShowRules] = useState(false);
 
 	const avatarsMemo = useMemo(() => {
 		const count = Math.min(numPlayers, avatarImages.length);
@@ -152,14 +154,41 @@ const TruthOrBluffScreen = () => {
 							<Text style={styles.playerCountCircleText}>+</Text>
 						</TouchableOpacity>
 					</View>
-					<TouchableOpacity style={styles.setupStartButton} onPress={() => {
-						setTruthImages(shuffleArray([...originalTruthImages]));
-						setCurrentImageIdx(0);
-						setShowGame(true);
-					}}>
-						<Text style={styles.setupStartButtonText}>START</Text>
-					</TouchableOpacity>
+					<View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+						<TouchableOpacity style={styles.setupStartButton} onPress={() => {
+							setTruthImages(shuffleArray([...originalTruthImages]));
+							setCurrentImageIdx(0);
+							setShowGame(true);
+						}}>
+							<Text style={styles.setupStartButtonText}>START</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+							<Text style={styles.infoButtonText}>i</Text>
+						</TouchableOpacity>
+					</View>
 				</View>
+
+				{/* Rules Modal */}
+				<Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+					<View style={styles.modalOverlay}>
+						<View style={styles.modalContent}>
+							<View style={styles.modalHeader}>
+								<Text style={styles.modalTitle}>How to Play</Text>
+								<TouchableOpacity onPress={() => setShowRules(false)}>
+									<Ionicons name="close" size={24} color="#6c5ce7" />
+								</TouchableOpacity>
+							</View>
+							<ScrollView style={styles.modalScroll}>
+								<Text style={styles.sectionTitle}>🎯 Objective</Text>
+								<Text style={styles.ruleText}>Read statements and guess if they're TRUTH or BLUFF!</Text>
+								<Text style={styles.sectionTitle}>🎮 How It Works</Text>
+								<Text style={styles.ruleText}>• One player reads a statement{'\n'}• Others vote Truth or Bluff{'\n'}• Reveal the answer{'\n'}• Points for correct guesses!</Text>
+								<Text style={styles.sectionTitle}>🏆 Strategy</Text>
+								<Text style={styles.ruleText}>Keep a poker face when it's your turn to fool others!</Text>
+							</ScrollView>
+						</View>
+					</View>
+				</Modal>
 			</View>
 		);
 	}
@@ -181,14 +210,14 @@ const TruthOrBluffScreen = () => {
 			</View>
 			<View style={styles.mockupButtonsWrapper}>
 				<TouchableOpacity
-					style={[styles.mockupButton, { backgroundColor: '#00e676', borderColor: '#00e676', borderWidth: 2 }, answerSelected === 'right' && { opacity: 0.7 } ]}
+					style={[styles.mockupButton, { backgroundColor: '#00e676', borderColor: '#00e676', borderWidth: 2 }, answerSelected === 'right' && { opacity: 0.7 }]}
 					disabled={timer === 0 || !!answerSelected}
 					onPress={() => handleAnswer(true)}
 				>
 					<Text style={[styles.mockupButtonText, { color: '#222', fontWeight: 'bold' }]}>Player {currentPlayer + 1} guessed right!</Text>
 				</TouchableOpacity>
 				<TouchableOpacity
-					style={[styles.mockupButton, { backgroundColor: '#ff1744', borderColor: '#ff1744', borderWidth: 2 }, answerSelected === 'wrong' && { opacity: 0.7 } ]}
+					style={[styles.mockupButton, { backgroundColor: '#ff1744', borderColor: '#ff1744', borderWidth: 2 }, answerSelected === 'wrong' && { opacity: 0.7 }]}
 					disabled={timer === 0 || !!answerSelected}
 					onPress={() => handleAnswer(false)}
 				>
@@ -201,14 +230,14 @@ const TruthOrBluffScreen = () => {
 };
 
 const styles = StyleSheet.create({
-		roundText: {
-			fontSize: 22,
-			fontWeight: 'bold',
-			color: '#fff',
-			marginBottom: 8,
-			letterSpacing: 1,
-			textAlign: 'center',
-		},
+	roundText: {
+		fontSize: 22,
+		fontWeight: 'bold',
+		color: '#fff',
+		marginBottom: 8,
+		letterSpacing: 1,
+		textAlign: 'center',
+	},
 	// Pre-game styles
 	container: {
 		flex: 1,
@@ -448,6 +477,15 @@ const styles = StyleSheet.create({
 		color: '#fff',
 		letterSpacing: 1,
 	},
+	infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#6c5ce7', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8, borderBottomWidth: 3, borderBottomColor: '#1a1f23' },
+	infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#fff' },
+	modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+	modalContent: { backgroundColor: '#e6d8f7', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#6c5ce7' },
+	modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(108,92,231,0.2)' },
+	modalTitle: { color: '#6c5ce7', fontSize: 22, fontWeight: 'bold' },
+	modalScroll: { padding: 20 },
+	sectionTitle: { color: '#6c5ce7', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+	ruleText: { color: '#3d348b', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });
 
 export default TruthOrBluffScreen;

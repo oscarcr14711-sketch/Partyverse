@@ -179,8 +179,8 @@ const styles = StyleSheet.create({
   gameButtonOuter: {
     borderRadius: 40,
     padding: 4,
-    marginBottom: 16,
-    marginHorizontal: 6,
+    marginBottom: 40,
+    marginHorizontal: 10,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.45,
     shadowRadius: 12,

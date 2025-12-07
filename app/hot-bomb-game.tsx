@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
+import { Animated, Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Optional: remote audio URLs (set to valid URLs or keep null to disable)
 const FUSE_SOUND_URL: string | null = null; // e.g., 'https://example.com/fuse-sizzle.mp3'
@@ -60,8 +60,8 @@ export default function HotBombGameScreen() {
   const [numPlayers, setNumPlayers] = useState(3); // Number of players (can be adjusted)
   const [showExplosion, setShowExplosion] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  const [lottieProgress, setLottieProgress] = useState(0); // 0..1 progress for bomb Lottie
-  // Lazy-loaded explosion animation JSON (reduces initial load time)
+  const [lottieProgress, setLottieProgress] = useState(0);
+  const [showRules, setShowRules] = useState(false);
   const [explosionAnim] = useState<any>(require('../assets/animations/Cartoon explosion.json'));
   // Memoize avatar elements AFTER numPlayers state is declared
   const avatarsMemo = useMemo(() => {
@@ -358,10 +358,32 @@ export default function HotBombGameScreen() {
 
           {/* Info button - positioned in bottom-right corner */}
           <View style={styles.infoButtonWrapper}>
-            <TouchableOpacity style={styles.infoButton}>
+            <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
               <Text style={styles.infoButtonText}>i</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Rules Modal */}
+          <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>How to Play</Text>
+                  <TouchableOpacity onPress={() => setShowRules(false)}>
+                    <Ionicons name="close" size={24} color="#FFB300" />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView style={styles.modalScroll}>
+                  <Text style={styles.sectionTitle}>🎯 Objective</Text>
+                  <Text style={styles.ruleText}>Pass the bomb before it explodes!</Text>
+                  <Text style={styles.sectionTitle}>🎮 How It Works</Text>
+                  <Text style={styles.ruleText}>• The bomb has a random timer{'\n'}• Pass the phone to another player{'\n'}• Whoever is holding it when it explodes loses!{'\n'}• Stay calm under pressure!</Text>
+                  <Text style={styles.sectionTitle}>💣 Tips</Text>
+                  <Text style={styles.ruleText}>Watch the intensity - the bomb shakes as time runs out!</Text>
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
         </SafeAreaView>
       ) : (
         // GAME SCREEN
@@ -919,4 +941,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFE0B2',
   },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#D84315', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#FFB300' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(255,179,0,0.3)' },
+  modalTitle: { color: '#FFB300', fontSize: 22, fontWeight: 'bold' },
+  modalScroll: { padding: 20 },
+  sectionTitle: { color: '#FFB300', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
+  ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

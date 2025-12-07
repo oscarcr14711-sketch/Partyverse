@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
 
@@ -88,20 +88,11 @@ export default function WordMentalGamesScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.background}>
-      {/* Decorative Background Emojis */}
-      <View style={styles.emojiBackground}>
-        <Text style={[styles.bgEmoji, { top: '5%', left: '10%' }]}>🧩</Text>
-        <Text style={[styles.bgEmoji, { top: '15%', right: '15%' }]}>⚔️</Text>
-        <Text style={[styles.bgEmoji, { top: '30%', left: '5%' }]}>🛑</Text>
-        <Text style={[styles.bgEmoji, { top: '45%', right: '10%' }]}>🧠</Text>
-        <Text style={[styles.bgEmoji, { top: '60%', left: '15%' }]}>🎯</Text>
-        <Text style={[styles.bgEmoji, { top: '75%', right: '8%' }]}>🧩</Text>
-        <Text style={[styles.bgEmoji, { top: '20%', left: '80%' }]}>⚔️</Text>
-        <Text style={[styles.bgEmoji, { top: '50%', left: '70%' }]}>🛑</Text>
-        <Text style={[styles.bgEmoji, { top: '85%', left: '50%' }]}>🧠</Text>
-        <Text style={[styles.bgEmoji, { top: '10%', left: '50%' }]}>🎯</Text>
-      </View>
+    <ImageBackground
+      source={require('../assets/images/wordbg.png')}
+      style={styles.background}
+      resizeMode="cover"
+    >
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -121,7 +112,7 @@ export default function WordMentalGamesScreen() {
           ))}
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 

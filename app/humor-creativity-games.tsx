@@ -5,6 +5,7 @@ import React from 'react';
 import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import JoyLaughIcon from '../components/JoyLaughIcon';
+import { PulsingButton } from '../components/PulsingButton';
 
 const games = [
   {
@@ -77,7 +78,7 @@ const GameItem = ({ title, description, emoji, color, onPress }) => {
   const ringLight = lighten(color, 0.45);
   const ringDark = darken(color, 0.45);
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
+    <PulsingButton onPress={onPress}>
       {/* Outer ring/glow */}
       <LinearGradient
         colors={[ringLight, ringDark]}
@@ -111,7 +112,7 @@ const GameItem = ({ title, description, emoji, color, onPress }) => {
           <Ionicons name="chevron-forward" size={24} color="#E8E8E8" />
         </LinearGradient>
       </LinearGradient>
-    </TouchableOpacity>
+    </PulsingButton>
   );
 };
 

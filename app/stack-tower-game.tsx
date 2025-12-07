@@ -15,7 +15,7 @@ const BLOCK_LENGTH = 1.5;
 const BLOCK_WIDTH = 0.5;
 const BLOCK_HEIGHT = 0.3;
 const BLOCKS_PER_LEVEL = 3;
-const INITIAL_LEVELS = 10;
+const INITIAL_LEVELS = 18; // Taller tower for more gameplay
 const GRAVITY = 0.018;
 
 interface Block {
@@ -100,8 +100,11 @@ export default function JengaTowerGame() {
     const sceneRef = useRef<THREE.Scene | null>(null);
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
     const towerGroupRef = useRef<THREE.Group | null>(null);
-    const cameraAngleRef = useRef({ theta: 0 });
+    const cameraAngleRef = useRef({ theta: 0, phi: 0.3 }); // Added phi for vertical angle
+    const zoomRef = useRef(18); // Camera distance (zoom level)
     const lastTouchRef = useRef({ x: 0, y: 0 });
+    const lastPinchDistRef = useRef(0); // For pinch-to-zoom
+    const touchCountRef = useRef(0); // Track number of fingers
     const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
     const animationFrameRef = useRef<number>();
     const dragPlaneRef = useRef<THREE.Plane>(new THREE.Plane());
@@ -119,12 +122,13 @@ export default function JengaTowerGame() {
 
     const updateCamera = () => {
         if (cameraRef.current) {
-            const radius = 11;
-            const { theta } = cameraAngleRef.current;
-            cameraRef.current.position.x = radius * Math.sin(theta);
-            cameraRef.current.position.y = 5;
-            cameraRef.current.position.z = radius * Math.cos(theta);
-            cameraRef.current.lookAt(0, 1.5, 0);
+            const radius = zoomRef.current; // Use zoom level
+            const { theta, phi } = cameraAngleRef.current;
+            // Spherical coordinates for full camera control
+            cameraRef.current.position.x = radius * Math.sin(theta) * Math.cos(phi);
+            cameraRef.current.position.y = 4 + radius * Math.sin(phi); // Base height + vertical
+            cameraRef.current.position.z = radius * Math.cos(theta) * Math.cos(phi);
+            cameraRef.current.lookAt(0, 3, 0); // Look at tower center
         }
     };
 
@@ -140,8 +144,8 @@ export default function JengaTowerGame() {
 
         const aspect = gl.drawingBufferWidth / gl.drawingBufferHeight;
         const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100);
-        camera.position.set(0, 5, 11);
-        camera.lookAt(0, 1.5, 0);
+        camera.position.set(0, 12, 18); // Much higher and further back
+        camera.lookAt(0, 4, 0); // Look at upper tower
         cameraRef.current = camera;
 
         // Lighting - warm cafe feel
@@ -164,22 +168,89 @@ export default function JengaTowerGame() {
         warmLight.position.set(-4, 5, 4);
         scene.add(warmLight);
 
-        // === COFFEE SHOP ENVIRONMENT ===
+        // === GRADIENT SKY BACKGROUND ===
+        // Create a large sphere for gradient sky
+        const skyGeo = new THREE.SphereGeometry(50, 32, 32);
+        const skyColors: number[] = [];
+        const skyVertices = skyGeo.attributes.position;
+
+        for (let i = 0; i < skyVertices.count; i++) {
+            const y = skyVertices.getY(i);
+            // Gradient from warm sunset orange at horizon to deep blue at top
+            const t = (y + 50) / 100; // 0 at bottom, 1 at top
+            const r = 0.2 + 0.6 * (1 - t); // More red at bottom
+            const g = 0.4 + 0.3 * t; // Green varies
+            const b = 0.5 + 0.4 * t; // More blue at top
+            skyColors.push(r, g, b);
+        }
+        skyGeo.setAttribute('color', new THREE.Float32BufferAttribute(skyColors, 3));
+
+        const skyMat = new THREE.MeshBasicMaterial({
+            vertexColors: true,
+            side: THREE.BackSide
+        });
+        const sky = new THREE.Mesh(skyGeo, skyMat);
+        scene.add(sky);
+
+        // === FLOATING CLOUDS ===
+        const createCloud = (x: number, y: number, z: number, scale: number) => {
+            const cloudGroup = new THREE.Group();
+            const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+
+            // Multiple spheres form a cloud
+            for (let i = 0; i < 5; i++) {
+                const radius = (Math.random() * 0.5 + 0.4) * scale;
+                const sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 8, 6), cloudMat);
+                sphere.position.set(
+                    (Math.random() - 0.5) * 2 * scale,
+                    (Math.random() - 0.5) * 0.5 * scale,
+                    (Math.random() - 0.5) * scale
+                );
+                cloudGroup.add(sphere);
+            }
+            cloudGroup.position.set(x, y, z);
+            return cloudGroup;
+        };
+
+        // Add several clouds
+        scene.add(createCloud(-15, 12, -20, 1.5));
+        scene.add(createCloud(10, 14, -25, 2));
+        scene.add(createCloud(-8, 10, -18, 1));
+        scene.add(createCloud(18, 11, -22, 1.8));
+
+        // === CITY SKYLINE SILHOUETTE ===
+        const buildingSilhouetteMat = new THREE.MeshBasicMaterial({ color: 0x1a1a2e });
+        const addBuilding = (x: number, w: number, h: number) => {
+            const building = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.1), buildingSilhouetteMat);
+            building.position.set(x, h / 2 - 4, -30);
+            scene.add(building);
+        };
+        addBuilding(-20, 3, 8);
+        addBuilding(-15, 2, 12);
+        addBuilding(-11, 4, 6);
+        addBuilding(-6, 2.5, 15);
+        addBuilding(-2, 3, 9);
+        addBuilding(3, 2, 18);
+        addBuilding(8, 4, 7);
+        addBuilding(13, 2.5, 13);
+        addBuilding(18, 3, 10);
+
+        // === COFFEE SHOP ENVIRONMENT (Enhanced) ===
         const tableTexture = createWoodTexture(true);
 
-        // Large wooden table
+        // Large wooden table (polished)
         const tableTop = new THREE.Mesh(
             new THREE.BoxGeometry(12, 0.4, 8),
-            new THREE.MeshStandardMaterial({ map: tableTexture, color: 0x6a4530, roughness: 0.6 })
+            new THREE.MeshStandardMaterial({ map: tableTexture, color: 0x8b5a2b, roughness: 0.4, metalness: 0.1 })
         );
         tableTop.position.set(0, -0.7, 0);
         tableTop.receiveShadow = true;
         tableTop.castShadow = true;
         scene.add(tableTop);
 
-        // Table legs
-        const legGeo = new THREE.BoxGeometry(0.4, 3.5, 0.4);
-        const legMat = new THREE.MeshStandardMaterial({ map: tableTexture, color: 0x4a2d18 });
+        // Table legs (elegant carved)
+        const legGeo = new THREE.BoxGeometry(0.35, 3.5, 0.35);
+        const legMat = new THREE.MeshStandardMaterial({ map: tableTexture, color: 0x4a2d18, roughness: 0.5 });
         [[-5.5, -2.6, 3.5], [5.5, -2.6, 3.5], [-5.5, -2.6, -3.5], [5.5, -2.6, -3.5]].forEach(pos => {
             const leg = new THREE.Mesh(legGeo, legMat);
             leg.position.set(pos[0], pos[1], pos[2]);
@@ -187,10 +258,34 @@ export default function JengaTowerGame() {
             scene.add(leg);
         });
 
-        // Coffee cup
+        // Pendant lights hanging above table
+        const createPendantLight = (x: number, z: number) => {
+            const cord = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.02, 0.02, 3, 8),
+                new THREE.MeshStandardMaterial({ color: 0x333333 })
+            );
+            cord.position.set(x, 10, z);
+            scene.add(cord);
+
+            const shade = new THREE.Mesh(
+                new THREE.ConeGeometry(0.4, 0.5, 8, 1, true),
+                new THREE.MeshStandardMaterial({ color: 0xe8d4b8, side: THREE.DoubleSide })
+            );
+            shade.position.set(x, 8.5, z);
+            shade.rotation.x = Math.PI;
+            scene.add(shade);
+
+            const bulb = new THREE.PointLight(0xffdd88, 0.6, 8);
+            bulb.position.set(x, 8.3, z);
+            scene.add(bulb);
+        };
+        createPendantLight(-2, 0);
+        createPendantLight(2, 0);
+
+        // Coffee cup with steam effect (white porcelain)
         const cupBody = new THREE.Mesh(
             new THREE.CylinderGeometry(0.28, 0.22, 0.55, 16),
-            new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })
+            new THREE.MeshStandardMaterial({ color: 0xfffef8, roughness: 0.2, metalness: 0.05 })
         );
         cupBody.position.set(4.5, -0.2, 2.5);
         cupBody.castShadow = true;
@@ -203,75 +298,95 @@ export default function JengaTowerGame() {
         coffee.position.set(4.5, 0.02, 2.5);
         scene.add(coffee);
 
-        // Floor - wooden planks look
+        // Saucer
+        const saucer = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.4, 0.38, 0.06, 16),
+            new THREE.MeshStandardMaterial({ color: 0xfffef8, roughness: 0.2 })
+        );
+        saucer.position.set(4.5, -0.48, 2.5);
+        scene.add(saucer);
+
+        // Books stack
+        const bookColors = [0x8b4513, 0x2e4a62, 0x654321, 0x3d5c5c];
+        bookColors.forEach((color, i) => {
+            const book = new THREE.Mesh(
+                new THREE.BoxGeometry(0.6, 0.12, 0.8),
+                new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
+            );
+            book.position.set(-4.5, -0.35 + i * 0.12, 2);
+            book.rotation.y = (Math.random() - 0.5) * 0.3;
+            scene.add(book);
+        });
+
+        // Floor - rich hardwood
         const floor = new THREE.Mesh(
             new THREE.PlaneGeometry(40, 40),
-            new THREE.MeshStandardMaterial({ map: createWoodTexture(true), color: 0x5a3d25, roughness: 0.8 })
+            new THREE.MeshStandardMaterial({ map: createWoodTexture(true), color: 0x6b4423, roughness: 0.6, metalness: 0.05 })
         );
         floor.rotation.x = -Math.PI / 2;
         floor.position.y = -4.35;
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // Back wall with windows
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0xe8dcc8, roughness: 0.9 });
-        const wall = new THREE.Mesh(new THREE.PlaneGeometry(40, 18), wallMat);
-        wall.position.set(0, 4, -12);
+        // Elegant wallpaper back wall
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0xd4c4b0, roughness: 0.9 });
+        const wall = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), wallMat);
+        wall.position.set(0, 5, -12);
         scene.add(wall);
 
-        // Window frames (two large windows)
+        // Window frames (two large arched windows)
         const windowFrame = (x: number) => {
-            // Window glass (sky reflection)
+            // Window glass (gradient reflection)
             const glass = new THREE.Mesh(
-                new THREE.PlaneGeometry(5, 6),
-                new THREE.MeshStandardMaterial({ color: 0xa8d8ea, roughness: 0.1, metalness: 0.3 })
+                new THREE.PlaneGeometry(5, 7),
+                new THREE.MeshStandardMaterial({ color: 0xa8d8ea, roughness: 0.05, metalness: 0.4, transparent: true, opacity: 0.7 })
             );
-            glass.position.set(x, 5, -11.9);
+            glass.position.set(x, 5.5, -11.9);
             scene.add(glass);
 
-            // Frame
-            const frameMat = new THREE.MeshStandardMaterial({ color: 0x4a3520 });
-            // Top
-            const fTop = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.2, 0.15), frameMat);
-            fTop.position.set(x, 8.1, -11.85);
+            // Elegant dark frame
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x2d1f14, roughness: 0.4, metalness: 0.2 });
+            const fTop = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.25, 0.18), frameMat);
+            fTop.position.set(x, 9.2, -11.85);
             scene.add(fTop);
-            // Bottom
-            const fBot = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.2, 0.15), frameMat);
+            const fBot = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.25, 0.18), frameMat);
             fBot.position.set(x, 2, -11.85);
             scene.add(fBot);
-            // Left
-            const fLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 6.3, 0.15), frameMat);
-            fLeft.position.set(x - 2.6, 5.05, -11.85);
+            const fLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 7.4, 0.18), frameMat);
+            fLeft.position.set(x - 2.7, 5.6, -11.85);
             scene.add(fLeft);
-            // Right
-            const fRight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 6.3, 0.15), frameMat);
-            fRight.position.set(x + 2.6, 5.05, -11.85);
+            const fRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 7.4, 0.18), frameMat);
+            fRight.position.set(x + 2.7, 5.6, -11.85);
             scene.add(fRight);
-            // Cross
-            const fMid = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.15, 0.12), frameMat);
-            fMid.position.set(x, 5, -11.85);
-            scene.add(fMid);
-            const fMidV = new THREE.Mesh(new THREE.BoxGeometry(0.15, 6.3, 0.12), frameMat);
-            fMidV.position.set(x, 5.05, -11.85);
-            scene.add(fMidV);
         };
         windowFrame(-5);
         windowFrame(5);
 
-        // Potted plant on table
+        // Elegant potted palm plant
         const pot = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.3, 0.25, 0.4, 8),
-            new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+            new THREE.CylinderGeometry(0.35, 0.28, 0.5, 12),
+            new THREE.MeshStandardMaterial({ color: 0x654321, roughness: 0.6 })
         );
-        pot.position.set(-4.5, -0.3, -2.5);
+        pot.position.set(-4.5, -0.25, -2.5);
         scene.add(pot);
 
-        const plant = new THREE.Mesh(
-            new THREE.SphereGeometry(0.4, 8, 6),
-            new THREE.MeshStandardMaterial({ color: 0x228b22 })
+        const soil = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.32, 0.32, 0.1, 12),
+            new THREE.MeshStandardMaterial({ color: 0x3d2817 })
         );
-        plant.position.set(-4.5, 0.2, -2.5);
-        scene.add(plant);
+        soil.position.set(-4.5, 0.02, -2.5);
+        scene.add(soil);
+
+        // Palm leaves (simple representation)
+        const leafMat = new THREE.MeshStandardMaterial({ color: 0x228b22, side: THREE.DoubleSide });
+        for (let i = 0; i < 6; i++) {
+            const leaf = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 1.2), leafMat);
+            const angle = (i / 6) * Math.PI * 2;
+            leaf.position.set(-4.5 + Math.sin(angle) * 0.3, 0.7, -2.5 + Math.cos(angle) * 0.3);
+            leaf.rotation.x = -0.5;
+            leaf.rotation.y = angle;
+            scene.add(leaf);
+        }
 
         // === JENGA TOWER ===
         const towerGroup = new THREE.Group();
@@ -431,49 +546,53 @@ export default function JengaTowerGame() {
         }
     };
 
-    // Simple and aggressive collapse check
+    // More realistic collapse check - real Jenga can have many blocks removed
     const checkCollapse = (): boolean => {
-        // Count how many blocks have been removed from bottom levels
-        let bottomRemoved = 0;
-        let totalRemoved = 0;
+        // Count blocks on each level and check structural integrity
+        const levelCounts: number[] = [];
 
         for (let level = 0; level < INITIAL_LEVELS; level++) {
             const blocksOnLevel = blocksRef.current.filter(b =>
-                b.originalLevel === level && !b.isBeingDragged
+                b.originalLevel === level && !b.isBeingDragged && !b.falling
             );
             const onLevelNow = blocksOnLevel.filter(b => b.level === level).length;
-            const removed = 3 - onLevelNow;
+            levelCounts[level] = onLevelNow;
+        }
 
-            if (removed > 0) {
-                totalRemoved += removed;
-                if (level < 5) { // Bottom half
-                    bottomRemoved += removed;
+        // Rule 1: Bottom 3 levels must have at least 1 block each
+        for (let level = 0; level < 3; level++) {
+            if (levelCounts[level] === 0) {
+                console.log(`Collapse: Bottom level ${level} is completely empty!`);
+                return true;
+            }
+        }
+
+        // Rule 2: Can't have 3 consecutive empty levels anywhere
+        let consecutiveEmpty = 0;
+        for (let level = 0; level < INITIAL_LEVELS; level++) {
+            if (levelCounts[level] === 0) {
+                consecutiveEmpty++;
+                if (consecutiveEmpty >= 3) {
+                    console.log(`Collapse: 3 consecutive empty levels!`);
+                    return true;
                 }
-            }
-
-            // If a level in bottom half has 0 blocks = instant collapse
-            if (level < 5 && onLevelNow === 0) {
-                console.log(`Collapse: Level ${level} is empty!`);
-                return true;
+            } else {
+                consecutiveEmpty = 0;
             }
         }
 
-        console.log(`Bottom removed: ${bottomRemoved}, Total: ${totalRemoved}`);
+        // Rule 3: Tower becomes VERY unstable only when >50% of blocks removed
+        const totalBlocks = INITIAL_LEVELS * 3;
+        const remainingBlocks = blocksRef.current.filter(b => !b.falling && !b.isBeingDragged).length;
+        const removedPercent = 1 - (remainingBlocks / totalBlocks);
 
-        // More than 3 blocks from bottom = very likely collapse
-        if (bottomRemoved >= 3) {
-            // Random chance increases with more blocks removed
-            const collapseChance = (bottomRemoved - 2) * 0.35;
+        if (removedPercent > 0.6) {
+            // 60%+ blocks removed - increasing collapse chance
+            const collapseChance = (removedPercent - 0.6) * 0.8;
             if (Math.random() < collapseChance) {
-                console.log(`Collapse: ${bottomRemoved} blocks from bottom, chance ${collapseChance}`);
+                console.log(`Collapse: ${Math.round(removedPercent * 100)}% blocks removed`);
                 return true;
             }
-        }
-
-        // 5+ blocks removed from anywhere = collapse
-        if (totalRemoved >= 5) {
-            console.log(`Collapse: ${totalRemoved} total blocks removed`);
-            return true;
         }
 
         return false;
@@ -595,9 +714,34 @@ export default function JengaTowerGame() {
                 }
             }
         } else if (!draggedBlockId && gameStarted && !gameOver) {
-            const deltaX = touchX - lastTouchRef.current.x;
-            cameraAngleRef.current.theta += deltaX * 0.008;
-            updateCamera();
+            // Check for pinch-to-zoom (two fingers)
+            const touches = (e.nativeEvent as any).touches;
+            if (touches && touches.length === 2) {
+                // Calculate pinch distance
+                const dx = touches[0].pageX - touches[1].pageX;
+                const dy = touches[0].pageY - touches[1].pageY;
+                const pinchDist = Math.sqrt(dx * dx + dy * dy);
+
+                if (lastPinchDistRef.current > 0) {
+                    const delta = pinchDist - lastPinchDistRef.current;
+                    // Zoom in/out based on pinch
+                    zoomRef.current = Math.max(8, Math.min(30, zoomRef.current - delta * 0.05));
+                    updateCamera();
+                }
+                lastPinchDistRef.current = pinchDist;
+            } else {
+                // Single finger: rotate camera
+                const deltaX = touchX - lastTouchRef.current.x;
+                const deltaY = touchY - lastTouchRef.current.y;
+
+                cameraAngleRef.current.theta += deltaX * 0.008;
+                // Vertical camera angle (clamped)
+                cameraAngleRef.current.phi = Math.max(0.1, Math.min(0.8,
+                    cameraAngleRef.current.phi + deltaY * 0.005
+                ));
+                updateCamera();
+                lastPinchDistRef.current = 0; // Reset pinch
+            }
         }
 
         lastTouchRef.current = { x: touchX, y: touchY };

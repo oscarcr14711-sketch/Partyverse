@@ -5,6 +5,7 @@ import React from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
+import { isGameLocked } from '../utils/devMode';
 
 type SpicyGame = {
   title: string;
@@ -12,41 +13,53 @@ type SpicyGame = {
   path: string;
   gradient: [string, string];
   darkGradient: [string, string];
+  id: string;
 };
 
 const games: SpicyGame[] = [
-  { title: 'Color Clash', emoji: '♥️♠️', path: '/color-clash-pre-game', gradient: ['#4169E1', '#1E90FF'], darkGradient: ['#00003B', '#1C2E5D'] },
-  { title: 'Ride The Bus', emoji: '🚌🃏', path: '/ride-the-bus-pre-game', gradient: ['#2E8B57', '#3CB371'], darkGradient: ['#002000', '#005000'] },
-  { title: 'Drink Domino', emoji: '🔥🍻', path: '/drink-domino', gradient: ['#FF4500', '#DC143C'], darkGradient: ['#500000', '#A01010'] },
-  { title: 'PartyBoard: Roll & Cheers', emoji: '🎲🍻', path: '/party-board', gradient: ['#DA70D6', '#BA55D3'], darkGradient: ['#2B0042', '#6A006A'] },
-  { title: 'Hot Cup Spin', emoji: '🥤🔄', path: '/hot-cup-spin', gradient: ['#CD5C5C', '#F08080'], darkGradient: ['#400000', '#902020'] }
+  { title: 'Color Clash', emoji: '♥️♠️', path: '/color-clash-pre-game', gradient: ['#4169E1', '#1E90FF'], darkGradient: ['#00003B', '#1C2E5D'], id: 'color-clash' },
+  { title: 'Ride The Bus', emoji: '🚌🃏', path: '/ride-the-bus-pre-game', gradient: ['#2E8B57', '#3CB371'], darkGradient: ['#002000', '#005000'], id: 'ride-the-bus' },
+  { title: 'Drink Domino', emoji: '🔥🍻', path: '/drink-domino', gradient: ['#FF4500', '#DC143C'], darkGradient: ['#500000', '#A01010'], id: 'drink-domino' },
+  { title: 'PartyBoard: Roll & Cheers', emoji: '🎲🍻', path: '/party-board', gradient: ['#DA70D6', '#BA55D3'], darkGradient: ['#2B0042', '#6A006A'], id: 'party-board' },
+  { title: 'Hot Cup Spin', emoji: '🥤🔄', path: '/hot-cup-spin', gradient: ['#CD5C5C', '#F08080'], darkGradient: ['#400000', '#902020'], id: 'hot-cup-spin' }
 ];
 
-const GameItem = ({ title, emoji, gradient, darkGradient, onPress }: {
+const GameItem = ({ title, emoji, gradient, darkGradient, onPress, locked = false }: {
   title: string;
   emoji: string;
   gradient: [string, string];
   darkGradient: [string, string];
   onPress: () => void;
+  locked?: boolean;
 }) => (
-  <PulsingButton onPress={onPress}>
+  <PulsingButton onPress={onPress} style={locked && styles.lockedWrapper}>
     <LinearGradient
       colors={gradient}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
       style={[styles.gameButtonOuter, { shadowColor: gradient[0] }]}
     >
+      {locked && <View style={styles.grayOverlay} />}
+      {locked && (
+        <View style={styles.comingSoonBadge}>
+          <Text style={styles.comingSoonText}>COMING SOON</Text>
+        </View>
+      )}
       <LinearGradient
         colors={[darkGradient[1], darkGradient[0]]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.gameButtonInner}
       >
-        <Text style={styles.gameEmoji}>{emoji}</Text>
+        {locked ? (
+          <Ionicons name="lock-closed" size={28} color="#fff" style={{ opacity: 0.9 }} />
+        ) : (
+          <Text style={styles.gameEmoji}>{emoji}</Text>
+        )}
         <View style={styles.gameTextContainer}>
-          <Text style={styles.gameTitle}>{title}</Text>
+          <Text style={[styles.gameTitle, locked && styles.gameTitleLocked]}>{title}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+        <Ionicons name="chevron-forward" size={24} color={locked ? "#999999" : "#CCCCCC"} />
       </LinearGradient>
     </LinearGradient>
   </PulsingButton>
@@ -77,7 +90,12 @@ export default function SpicyGamesScreen() {
         <ScrollView>
           <View style={styles.grid}>
             {games.map((game) => (
-              <GameItem key={game.title} {...game} onPress={() => router.push(game.path as any)} />
+              <GameItem
+                key={game.title}
+                {...game}
+                locked={isGameLocked(game.id)}
+                onPress={() => router.push(game.path as any)}
+              />
             ))}
           </View>
         </ScrollView>
@@ -179,5 +197,37 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  lockedWrapper: {
+    opacity: 0.65,
+  },
+  grayOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(80, 80, 80, 0.7)',
+    borderRadius: 18,
+    zIndex: 1,
+  },
+  comingSoonBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    zIndex: 10,
+  },
+  comingSoonText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  gameTitleLocked: {
+    opacity: 0.7,
   },
 });

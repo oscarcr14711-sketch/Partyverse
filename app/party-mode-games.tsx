@@ -4,14 +4,15 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { isCategoryLocked } from '../utils/devMode';
 
 const categories = [
-  { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', path: '/action-adrenaline-games' },
-  { title: 'Humor / Creativity', subtitle: 'Laugh, draw, and act!', icon: '😂', color: '#ffc107', path: '/humor-creativity-games' },
-  { title: 'Word / Mental', subtitle: 'Quick wits win!', icon: '💡', color: '#1DE9B6', path: '/word-mental-games' },
-  { title: 'Quick Competition', subtitle: 'Fast duels, instant fun.', icon: '🏁', color: '#4caf50', path: '/quick-competition-games' },
-  { title: 'Social / Truth', subtitle: 'Talk, reveal, and connect.', icon: '💬', color: '#4169E1', path: '/social-truth-games' },
-  { title: 'Spicy / 18+ / Alcohol', subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0', path: '/spicy-games' },
+  { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', path: '/action-adrenaline-games', id: 'action-adrenaline' },
+  { title: 'Humor / Creativity', subtitle: 'Laugh, draw, and act!', icon: '😂', color: '#ffc107', path: '/humor-creativity-games', id: 'humor-creativity' },
+  { title: 'Word / Mental', subtitle: 'Quick wits win!', icon: '💡', color: '#1DE9B6', path: '/word-mental-games', id: 'word-mental' },
+  { title: 'Quick Competition', subtitle: 'Fast duels, instant fun.', icon: '🏁', color: '#4caf50', path: '/quick-competition-games', id: 'quick-competition' },
+  { title: 'Social / Truth', subtitle: 'Talk, reveal, and connect.', icon: '💬', color: '#4169E1', path: '/social-truth-games', id: 'social-truth' },
+  { title: 'Spicy / 18+ / Alcohol', subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0', path: '/spicy-games', id: 'spicy' },
 ];
 
 const specials = {
@@ -19,6 +20,7 @@ const specials = {
   subtitle: 'Limited-time party themes.',
   icon: '🎁',
   color: '#ff9800',
+  id: 'specials',
 };
 
 export default function PartyModeGamesScreen() {
@@ -41,16 +43,17 @@ export default function PartyModeGamesScreen() {
               <CategoryCard
                 key={category.title}
                 {...category}
+                locked={isCategoryLocked(category.id)}
                 onPress={() => category.path && router.push(category.path as any)}
               />
             ))}
           </View>
           <View style={styles.fullWidth}>
-            <CategoryCard {...specials} onPress={() => { }} />
+            <CategoryCard {...specials} locked={isCategoryLocked(specials.id)} onPress={() => { }} />
           </View>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </View >
   );
 }
 

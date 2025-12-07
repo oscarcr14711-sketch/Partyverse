@@ -132,8 +132,13 @@ function ActionAdrenalineGamesScreen() {
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color="white" />
             </TouchableOpacity>
-            <Text style={styles.title}>Action / Adrenaline</Text>
             <View style={{ width: 24 }} />
+          </View>
+          <View style={styles.titleSection}>
+            <Text style={styles.titleGlow}>ACTION</Text>
+            <Text style={styles.titleMain}>ACTION</Text>
+            <Text style={styles.subtitleGlow}>ADRENALINE</Text>
+            <Text style={styles.subtitleMain}>ADRENALINE</Text>
           </View>
           <ScrollView style={styles.grid}>
             {games.map((game) => (
@@ -174,7 +179,55 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   grid: {
+    marginTop: 20,
+    marginBottom: 12,
     paddingHorizontal: 5,
+  },
+  titleSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 30,
+    marginTop: 30,
+  },
+  titleGlow: {
+    fontSize: 52,
+    fontWeight: '900',
+    color: 'transparent',
+    textShadowColor: '#ff6b35',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 25,
+    letterSpacing: 6,
+    position: 'absolute',
+  },
+  titleMain: {
+    fontSize: 52,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: 6,
+    textShadowColor: 'rgba(255,107,53,0.8)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+  },
+  subtitleGlow: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'transparent',
+    textShadowColor: '#ffd700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
+    letterSpacing: 4,
+    position: 'absolute',
+    top: 75,
+  },
+  subtitleMain: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#ffd700',
+    letterSpacing: 4,
+    marginTop: 8,
+    textShadowColor: 'rgba(255,215,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 8,
   },
   gameButtonOuter: {
     borderRadius: 40,

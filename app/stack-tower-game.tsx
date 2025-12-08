@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Asset } from 'expo-asset';
 import { Audio } from 'expo-av';
 import { GLView } from 'expo-gl';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Renderer } from 'expo-three';
+import { Renderer, loadTextureAsync } from 'expo-three';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, GestureResponderEvent, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import * as THREE from 'three';
 
 const { width, height } = Dimensions.get('window');
@@ -36,40 +36,39 @@ interface Player {
     color: string;
 }
 
+// Enhanced wood texture with rich detail for modern realistic look
 function createWoodTexture(dark = false): THREE.Texture {
-    const size = 512; // Higher resolution for better detail
+    const size = 512;
     const data = new Uint8Array(size * size * 4);
 
-    // Base wood colors
-    const baseR = dark ? 90 : 215;
-    const baseG = dark ? 55 : 175;
-    const baseB = dark ? 35 : 130;
+    const baseR = dark ? 85 : 190;
+    const baseG = dark ? 50 : 140;
+    const baseB = dark ? 30 : 95;
 
-    // Create wood grain with rings and natural variation
     for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {
             const i = (y * size + x) * 4;
 
-            // Wood grain pattern - horizontal lines with wave
-            const grainWave = Math.sin(y * 0.03) * 8;
-            const grain1 = Math.sin((x + grainWave) * 0.08) * 20;
-            const grain2 = Math.sin((x + grainWave) * 0.15 + y * 0.02) * 10;
+            const flowOffset = Math.sin(y * 0.008) * 30 + Math.sin(y * 0.025) * 15;
+            const grain1 = Math.sin((x + flowOffset) * 0.04) * 25;
+            const grain2 = Math.sin((x + flowOffset) * 0.12 + y * 0.008) * 12;
+            const grain3 = Math.sin((x + flowOffset) * 0.25) * 6;
 
-            // Annual rings effect
-            const ringPattern = Math.sin(Math.sqrt((x - size / 2) ** 2 + (y * 3) ** 2) * 0.03) * 8;
+            const centerX = size * 0.3 + Math.sin(y * 0.01) * 40;
+            const dist = Math.sqrt((x - centerX) ** 2 + (y * 2.5) ** 2);
+            const rings = Math.sin(dist * 0.018) * 15 + Math.sin(dist * 0.035) * 8;
 
-            // Random noise for natural look
-            const noise = (Math.random() - 0.5) * 15;
+            const fineGrain = Math.sin(x * 0.8 + y * 0.3) * 3 + Math.sin(x * 1.2 - y * 0.5) * 2;
+            const noise = (Math.random() - 0.5) * 8;
 
-            // Occasional darker streaks (knots)
-            const knotNoise = Math.sin(x * 0.5 + y * 0.3) * Math.sin(y * 0.2);
-            const knot = knotNoise > 0.95 ? -25 : 0;
+            const knotCheck = Math.sin(x * 0.15 + y * 0.1) * Math.sin(y * 0.08 + x * 0.05);
+            const knot = knotCheck > 0.92 ? -35 : knotCheck > 0.85 ? -15 : 0;
 
-            // Combine all effects
-            const variation = grain1 + grain2 + ringPattern + noise + knot;
+            const highlight = Math.sin(y * 0.005) * 8;
+            const variation = grain1 + grain2 + grain3 + rings + fineGrain + noise + knot + highlight;
 
-            data[i] = Math.max(0, Math.min(255, baseR + variation));
-            data[i + 1] = Math.max(0, Math.min(255, baseG + variation * 0.85));
+            data[i] = Math.max(0, Math.min(255, baseR + variation * 1.05));
+            data[i + 1] = Math.max(0, Math.min(255, baseG + variation * 0.88));
             data[i + 2] = Math.max(0, Math.min(255, baseB + variation * 0.65));
             data[i + 3] = 255;
         }
@@ -96,6 +95,7 @@ export default function JengaTowerGame() {
     const [draggedBlockId, setDraggedBlockId] = useState<string | null>(null);
     const [removedCount, setRemovedCount] = useState(0);
     const [stability, setStability] = useState(100); // 0-100 stability meter
+    const [gamePhase, setGamePhase] = useState<'build' | 'play'>('play'); // build or play phase
 
     const sceneRef = useRef<THREE.Scene | null>(null);
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -113,6 +113,8 @@ export default function JengaTowerGame() {
     const collapsingRef = useRef(false);
     const wobbleRef = useRef({ angle: 0, speed: 0 }); // Tower wobble
     const soundRef = useRef<Audio.Sound | null>(null);
+    const shelfWallRef = useRef<THREE.Mesh | null>(null);
+    const sofaWallRef = useRef<THREE.Mesh | null>(null);
 
     const currentPlayer = players[currentPlayerIndex];
 
@@ -129,6 +131,20 @@ export default function JengaTowerGame() {
             cameraRef.current.position.y = 4 + radius * Math.sin(phi); // Base height + vertical
             cameraRef.current.position.z = radius * Math.cos(theta) * Math.cos(phi);
             cameraRef.current.lookAt(0, 3, 0); // Look at tower center
+
+            // Fade walls based on camera direction to prevent blocking view
+            // Left wall (shelf) fades when camera looks left (theta > 0)
+            if (shelfWallRef.current) {
+                const leftFace = Math.abs(Math.sin(theta));
+                const leftOpacity = theta > 0.3 ? Math.max(0.1, 1 - leftFace) : 1;
+                (shelfWallRef.current.material as THREE.MeshBasicMaterial).opacity = leftOpacity;
+            }
+            // Right wall (sofa) fades when camera looks right (theta < 0)
+            if (sofaWallRef.current) {
+                const rightFace = Math.abs(Math.sin(theta));
+                const rightOpacity = theta < -0.3 ? Math.max(0.1, 1 - rightFace) : 1;
+                (sofaWallRef.current.material as THREE.MeshBasicMaterial).opacity = rightOpacity;
+            }
         }
     };
 
@@ -148,11 +164,13 @@ export default function JengaTowerGame() {
         camera.lookAt(0, 4, 0); // Look at upper tower
         cameraRef.current = camera;
 
-        // Lighting - warm cafe feel
-        scene.add(new THREE.AmbientLight(0xfff8f0, 0.55));
+        // === MODERN SOPHISTICATED LIGHTING ===
+        // Warm ambient for base illumination
+        scene.add(new THREE.AmbientLight(0xfff5e6, 0.45));
 
-        const sunLight = new THREE.DirectionalLight(0xfffaf0, 0.9);
-        sunLight.position.set(8, 15, 10);
+        // Main sunlight with soft shadows
+        const sunLight = new THREE.DirectionalLight(0xfffaf5, 0.85);
+        sunLight.position.set(8, 18, 12);
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 2048;
         sunLight.shadow.mapSize.height = 2048;
@@ -162,11 +180,24 @@ export default function JengaTowerGame() {
         sunLight.shadow.camera.right = 15;
         sunLight.shadow.camera.top = 15;
         sunLight.shadow.camera.bottom = -15;
+        sunLight.shadow.bias = -0.001;
+        sunLight.shadow.radius = 3; // Soft shadow edges
         scene.add(sunLight);
 
-        const warmLight = new THREE.PointLight(0xff9955, 0.4, 20);
-        warmLight.position.set(-4, 5, 4);
-        scene.add(warmLight);
+        // Warm fill light from side
+        const warmFill = new THREE.PointLight(0xffaa66, 0.5, 25);
+        warmFill.position.set(-5, 6, 5);
+        scene.add(warmFill);
+
+        // Rim light for depth
+        const rimLight = new THREE.PointLight(0x88ccff, 0.3, 20);
+        rimLight.position.set(6, 8, -4);
+        scene.add(rimLight);
+
+        // Subtle ground bounce light
+        const bounceLight = new THREE.PointLight(0xffd8b0, 0.2, 15);
+        bounceLight.position.set(0, -2, 3);
+        scene.add(bounceLight);
 
         // === GRADIENT SKY BACKGROUND ===
         // Create a large sphere for gradient sky
@@ -235,23 +266,36 @@ export default function JengaTowerGame() {
         addBuilding(13, 2.5, 13);
         addBuilding(18, 3, 10);
 
-        // === COFFEE SHOP ENVIRONMENT (Enhanced) ===
+        // === PREMIUM TABLE SETUP ===
         const tableTexture = createWoodTexture(true);
 
-        // Large wooden table (polished)
+        // Polished mahogany table top with subtle reflections
         const tableTop = new THREE.Mesh(
-            new THREE.BoxGeometry(12, 0.4, 8),
-            new THREE.MeshStandardMaterial({ map: tableTexture, color: 0x8b5a2b, roughness: 0.4, metalness: 0.1 })
+            new THREE.BoxGeometry(12, 0.5, 8),
+            new THREE.MeshStandardMaterial({
+                map: tableTexture,
+                color: 0x6b3d2e,
+                roughness: 0.25,
+                metalness: 0.08,
+                envMapIntensity: 0.3
+            })
         );
         tableTop.position.set(0, -0.7, 0);
         tableTop.receiveShadow = true;
         tableTop.castShadow = true;
         scene.add(tableTop);
 
-        // Table legs (elegant carved)
-        const legGeo = new THREE.BoxGeometry(0.35, 3.5, 0.35);
-        const legMat = new THREE.MeshStandardMaterial({ map: tableTexture, color: 0x4a2d18, roughness: 0.5 });
-        [[-5.5, -2.6, 3.5], [5.5, -2.6, 3.5], [-5.5, -2.6, -3.5], [5.5, -2.6, -3.5]].forEach(pos => {
+        // Table edge trim (decorative)
+        const trimGeo = new THREE.BoxGeometry(12.1, 0.1, 8.1);
+        const trimMat = new THREE.MeshStandardMaterial({ color: 0x4a2510, roughness: 0.3, metalness: 0.15 });
+        const topTrim = new THREE.Mesh(trimGeo, trimMat);
+        topTrim.position.set(0, -0.42, 0);
+        scene.add(topTrim);
+
+        // Elegant turned legs
+        const legGeo = new THREE.CylinderGeometry(0.18, 0.22, 3.5, 12);
+        const legMat = new THREE.MeshStandardMaterial({ map: tableTexture, color: 0x4a2d18, roughness: 0.35, metalness: 0.05 });
+        [[-5.3, -2.6, 3.3], [5.3, -2.6, 3.3], [-5.3, -2.6, -3.3], [5.3, -2.6, -3.3]].forEach(pos => {
             const leg = new THREE.Mesh(legGeo, legMat);
             leg.position.set(pos[0], pos[1], pos[2]);
             leg.castShadow = true;
@@ -318,6 +362,60 @@ export default function JengaTowerGame() {
             scene.add(book);
         });
 
+        // === PREMIUM DECORATIONS ===
+        // Wine glass (crystal)
+        const wineGlassMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.02,
+            metalness: 0.1,
+            transparent: true,
+            opacity: 0.4
+        });
+        const glassStem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 12), wineGlassMat);
+        glassStem.position.set(-4.8, -0.2, -2);
+        scene.add(glassStem);
+        const glassBase = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.03, 16), wineGlassMat);
+        glassBase.position.set(-4.8, -0.45, -2);
+        scene.add(glassBase);
+        const glassBowl = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), wineGlassMat);
+        glassBowl.position.set(-4.8, 0.05, -2);
+        scene.add(glassBowl);
+        // Wine inside
+        const wine = new THREE.Mesh(
+            new THREE.SphereGeometry(0.18, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2.5),
+            new THREE.MeshStandardMaterial({ color: 0x6b1126, roughness: 0.3, transparent: true, opacity: 0.85 })
+        );
+        wine.position.set(-4.8, 0.02, -2);
+        scene.add(wine);
+
+        // Candle with flame
+        const candleBody = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12, 0.12, 0.6, 12),
+            new THREE.MeshStandardMaterial({ color: 0xfff5e6, roughness: 0.8 })
+        );
+        candleBody.position.set(-3.5, -0.15, -2.5);
+        scene.add(candleBody);
+        // Flame
+        const flame = new THREE.Mesh(
+            new THREE.ConeGeometry(0.05, 0.15, 8),
+            new THREE.MeshBasicMaterial({ color: 0xffaa33 })
+        );
+        flame.position.set(-3.5, 0.22, -2.5);
+        scene.add(flame);
+        // Candle glow
+        const candleGlow = new THREE.PointLight(0xffaa55, 0.4, 4);
+        candleGlow.position.set(-3.5, 0.3, -2.5);
+        scene.add(candleGlow);
+
+        // Folded cloth napkin
+        const napkin = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5, 0.08, 0.3),
+            new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.9 })
+        );
+        napkin.position.set(4.8, -0.42, -1.5);
+        napkin.rotation.y = 0.3;
+        scene.add(napkin);
+
         // Floor - rich hardwood
         const floor = new THREE.Mesh(
             new THREE.PlaneGeometry(40, 40),
@@ -334,7 +432,9 @@ export default function JengaTowerGame() {
         wall.position.set(0, 5, -12);
         scene.add(wall);
 
-        // Window frames (two large arched windows)
+        // Side walls removed - replaced with texture images below
+
+        // Window frame (single large arched window on left)
         const windowFrame = (x: number) => {
             // Window glass (gradient reflection)
             const glass = new THREE.Mesh(
@@ -359,10 +459,117 @@ export default function JengaTowerGame() {
             fRight.position.set(x + 2.7, 5.6, -11.85);
             scene.add(fRight);
         };
-        windowFrame(-5);
-        windowFrame(5);
+        windowFrame(-5); // Left window
+        windowFrame(5);  // Right window
 
-        // Elegant potted palm plant
+        // === BOOKSHELF WALL TEXTURE (left side wall) ===
+        const shelfAsset = Asset.fromModule(require('../assets/images/shelf.png'));
+        await shelfAsset.downloadAsync();
+        const shelfTexture = await loadTextureAsync({ asset: shelfAsset });
+        const shelfWallGeometry = new THREE.PlaneGeometry(30, 20);
+        const shelfWallMaterial = new THREE.MeshBasicMaterial({
+            map: shelfTexture,
+            transparent: true,
+            side: THREE.DoubleSide,
+        });
+        const shelfWall = new THREE.Mesh(shelfWallGeometry, shelfWallMaterial);
+        shelfWall.position.set(-12, 5, 0);
+        shelfWall.rotation.y = Math.PI / 2;
+        shelfWallRef.current = shelfWall;
+        scene.add(shelfWall);
+
+        // === SOFA WALL TEXTURE (right side wall) ===
+        const sofaAsset = Asset.fromModule(require('../assets/images/sofa.png'));
+        await sofaAsset.downloadAsync();
+        const sofaTexture = await loadTextureAsync({ asset: sofaAsset });
+        const sofaWallGeometry = new THREE.PlaneGeometry(30, 20);
+        const sofaWallMaterial = new THREE.MeshBasicMaterial({
+            map: sofaTexture,
+            transparent: true,
+            side: THREE.DoubleSide,
+        });
+        const sofaWall = new THREE.Mesh(sofaWallGeometry, sofaWallMaterial);
+        sofaWall.position.set(12, 5, 0);
+        sofaWall.rotation.y = -Math.PI / 2;
+        sofaWallRef.current = sofaWall;
+        scene.add(sofaWall);
+
+        // === ENHANCED TABLE ITEMS ===
+        // Realistic coffee cup with handle
+        const cupMat = new THREE.MeshStandardMaterial({ color: 0xfffef8, roughness: 0.15, metalness: 0.05 });
+
+        // Cup handle using torus
+        const handleGeo = new THREE.TorusGeometry(0.12, 0.03, 8, 16, Math.PI);
+        const handle = new THREE.Mesh(handleGeo, cupMat);
+        handle.position.set(4.78, -0.2, 2.5);
+        handle.rotation.z = Math.PI / 2;
+        handle.rotation.y = Math.PI / 2;
+        scene.add(handle);
+
+        // Napkin under cup
+        const cupNapkin = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 0.02, 0.8),
+            new THREE.MeshStandardMaterial({ color: 0xf5f5dc, roughness: 0.95 })
+        );
+        cupNapkin.position.set(4.5, -0.49, 2.5);
+        cupNapkin.rotation.y = 0.3;
+        scene.add(cupNapkin);
+
+        // Small spoon on saucer
+        const spoonHandle = new THREE.Mesh(
+            new THREE.BoxGeometry(0.04, 0.02, 0.4),
+            new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.2, metalness: 0.8 })
+        );
+        spoonHandle.position.set(4.8, -0.44, 2.5);
+        spoonHandle.rotation.y = 0.5;
+        scene.add(spoonHandle);
+
+        // Wine/water glass nearby
+        const glassBody = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12, 0.08, 0.5, 12),
+            new THREE.MeshStandardMaterial({ color: 0xeeffff, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.6 })
+        );
+        glassBody.position.set(5.2, -0.25, 1.5);
+        scene.add(glassBody);
+        const waterGlassStem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.25, 8),
+            new THREE.MeshStandardMaterial({ color: 0xeeffff, roughness: 0.05, transparent: true, opacity: 0.7 })
+        );
+        waterGlassStem.position.set(5.2, -0.62, 1.5);
+        scene.add(waterGlassStem);
+        const waterGlassBase = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1, 0.1, 0.03, 12),
+            new THREE.MeshStandardMaterial({ color: 0xeeffff, roughness: 0.05, transparent: true, opacity: 0.7 })
+        );
+        waterGlassBase.position.set(5.2, -0.76, 1.5);
+        scene.add(waterGlassBase);
+
+        // Small vase with flowers
+        const vase = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12, 0.18, 0.5, 12),
+            new THREE.MeshStandardMaterial({ color: 0x4a7c59, roughness: 0.3 })
+        );
+        vase.position.set(-4.8, -0.25, -1);
+        scene.add(vase);
+        // Simple flower stems
+        for (let i = 0; i < 3; i++) {
+            const stem = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.015, 0.015, 0.6, 6),
+                new THREE.MeshStandardMaterial({ color: 0x228b22 })
+            );
+            stem.position.set(-4.8 + (i - 1) * 0.06, 0.25, -1);
+            stem.rotation.z = (i - 1) * 0.15;
+            scene.add(stem);
+            // Flower head
+            const flower = new THREE.Mesh(
+                new THREE.SphereGeometry(0.08, 8, 8),
+                new THREE.MeshStandardMaterial({ color: [0xff6b6b, 0xffd93d, 0xff8fab][i] })
+            );
+            flower.position.set(-4.8 + (i - 1) * 0.08, 0.55 + i * 0.05, -1);
+            scene.add(flower);
+        }
+
+        // Elegant potted palm plant (moved and enhanced)
         const pot = new THREE.Mesh(
             new THREE.CylinderGeometry(0.35, 0.28, 0.5, 12),
             new THREE.MeshStandardMaterial({ color: 0x654321, roughness: 0.6 })
@@ -713,7 +920,7 @@ export default function JengaTowerGame() {
                     block.mesh.position.copy(intersection.add(dragOffsetRef.current));
                 }
             }
-        } else if (!draggedBlockId && gameStarted && !gameOver) {
+        } else if (!draggedBlockId && !gameOver) {
             // Check for pinch-to-zoom (two fingers)
             const touches = (e.nativeEvent as any).touches;
             if (touches && touches.length === 2) {
@@ -752,7 +959,24 @@ export default function JengaTowerGame() {
             const block = blocks.find(b => b.id === draggedBlockId);
             if (block?.mesh && towerGroupRef.current && sceneRef.current) {
 
-                sceneRef.current.remove(block.mesh);
+                // In build mode, just place the block without collapse check
+                if (gamePhase === 'build') {
+                    // Clear highlighting
+                    const mat = block.mesh.material as THREE.MeshStandardMaterial;
+                    mat.emissive = new THREE.Color(0x000000);
+                    mat.emissiveIntensity = 0;
+
+                    // Update block state
+                    setBlocks(prev => prev.map(b =>
+                        b.id === draggedBlockId ? { ...b, isBeingDragged: false } : b
+                    ));
+                    setDraggedBlockId(null);
+                    playSound('place');
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    return;
+                }
+
+                towerGroupRef.current.remove(block.mesh);
 
                 // Update blocksRef for the collapse check
                 blocksRef.current = blocks.map(b =>
@@ -827,6 +1051,135 @@ export default function JengaTowerGame() {
         }
     };
 
+    // Build mode: Spawn a new block above the tower
+    const spawnBlock = () => {
+        if (!towerGroupRef.current || !sceneRef.current) return;
+
+        const highestY = blocks.reduce((max, b) => {
+            if (b.mesh) {
+                return Math.max(max, b.mesh.position.y);
+            }
+            return max;
+        }, 0);
+
+        const newBlockId = `build-${Date.now()}`;
+        const isHorizontal = Math.random() > 0.5;
+
+        const geometry = new THREE.BoxGeometry(BLOCK_LENGTH, BLOCK_HEIGHT, BLOCK_WIDTH);
+        const woodTexture = createWoodTexture();
+        const material = new THREE.MeshStandardMaterial({
+            map: woodTexture, color: 0xd4b896, roughness: 0.65,
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.userData = { blockId: newBlockId };
+
+        // Add edges
+        const edges = new THREE.EdgesGeometry(geometry);
+        mesh.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x3a2510 })));
+
+        // Position above tower
+        mesh.position.set(0, highestY + 2, 0);
+        if (!isHorizontal) mesh.rotation.y = Math.PI / 2;
+
+        towerGroupRef.current.add(mesh);
+
+        const newBlock: Block = {
+            id: newBlockId,
+            level: -1, // Build mode block
+            position: 0,
+            isHorizontal,
+            mesh,
+            originalLevel: -1,
+            isBeingDragged: true,
+            falling: false,
+            velocity: new THREE.Vector3(0, 0, 0),
+        };
+
+        setBlocks(prev => [...prev, newBlock]);
+        setDraggedBlockId(newBlockId);
+
+        // Highlight
+        material.emissive = new THREE.Color(0xFFD700);
+        material.emissiveIntensity = 0.35;
+
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        playSound('pickup');
+    };
+
+    // Build mode: Clear tower and start with 3 base blocks
+    const startBuildMode = () => {
+        if (!towerGroupRef.current) return;
+
+        // Remove all existing blocks from scene
+        blocks.forEach(block => {
+            if (block.mesh) {
+                towerGroupRef.current?.remove(block.mesh);
+            }
+        });
+
+        // Create 3 base blocks
+        const woodTexture = createWoodTexture();
+        const baseBlocks: Block[] = [];
+
+        for (let pos = 0; pos < 3; pos++) {
+            const geometry = new THREE.BoxGeometry(BLOCK_LENGTH, BLOCK_HEIGHT, BLOCK_WIDTH);
+            const material = new THREE.MeshStandardMaterial({
+                map: woodTexture, color: 0xd4b896, roughness: 0.65,
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData = { blockId: `base-${pos}` };
+
+            const edges = new THREE.EdgesGeometry(geometry);
+            mesh.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x3a2510 })));
+
+            const offset = (pos - 1) * BLOCK_WIDTH;
+            mesh.position.set(0, BLOCK_HEIGHT / 2, offset);
+
+            towerGroupRef.current.add(mesh);
+            baseBlocks.push({
+                id: `base-${pos}`,
+                level: 0,
+                position: pos,
+                isHorizontal: true,
+                mesh,
+                originalLevel: 0,
+                isBeingDragged: false,
+                falling: false,
+                velocity: new THREE.Vector3(0, 0, 0),
+            });
+        }
+
+        setBlocks(baseBlocks);
+        blocksRef.current = baseBlocks;
+        setGamePhase('build');
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    };
+
+    // Build mode: Switch to play phase
+    const handleFinishBuilding = () => {
+        // Recalculate block levels based on their Y positions
+        const updatedBlocks = blocks.map(block => {
+            if (block.mesh) {
+                const y = block.mesh.position.y;
+                const calculatedLevel = Math.round((y - BLOCK_HEIGHT / 2) / BLOCK_HEIGHT);
+                return { ...block, level: calculatedLevel, originalLevel: calculatedLevel };
+            }
+            return block;
+        });
+
+        setBlocks(updatedBlocks);
+        blocksRef.current = updatedBlocks;
+        setGamePhase('play');
+        setGameStarted(true);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    };
+
     const handleStartGame = () => {
         setGameStarted(true);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -834,36 +1187,14 @@ export default function JengaTowerGame() {
 
     return (
         <View style={styles.container}>
-            <SafeAreaView style={styles.safeArea}>
+            <View style={styles.safeArea}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color="#FFE0B2" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>Jenga</Text>
-                    <View style={{ width: 40 }} />
-                </View>
-
-                <View style={styles.canvasContainer}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}>
-                    <GLView style={styles.canvas} onContextCreate={onContextCreate} />
-                </View>
-
-                {!gameStarted && !gameOver && (
-                    <View style={styles.startOverlay}>
-                        <Text style={styles.titleLarge}>🏗️ JENGA</Text>
-                        <Text style={styles.subtitle}>Remove & stack blocks carefully!</Text>
-                        <TouchableOpacity style={styles.startButton} onPress={handleStartGame}>
-                            <Text style={styles.startButtonText}>START GAME</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
-                {gameStarted && !gameOver && (
-                    <View style={styles.gameUI}>
-                        {/* Stability Meter */}
-                        <View style={styles.stabilityContainer}>
+                    {/* Stability Meter in Header */}
+                    {gameStarted && !gameOver && (
+                        <View style={styles.headerStability}>
                             <Text style={styles.stabilityLabel}>STABILITY</Text>
                             <View style={styles.stabilityBar}>
                                 <View style={[
@@ -874,13 +1205,61 @@ export default function JengaTowerGame() {
                                     }
                                 ]} />
                             </View>
-                            <Text style={[
-                                styles.stabilityText,
-                                { color: stability > 60 ? '#27AE60' : stability > 30 ? '#F39C12' : '#E74C3C' }
-                            ]}>
-                                {stability > 60 ? '✓ STABLE' : stability > 30 ? '⚠️ SHAKY' : '💀 DANGER'}
-                            </Text>
                         </View>
+                    )}
+                    <View style={{ width: 40 }} />
+                </View>
+
+                <View style={styles.canvasContainer}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}>
+                    <GLView style={styles.canvas} onContextCreate={onContextCreate} />
+                </View>
+
+                {!gameStarted && !gameOver && gamePhase === 'play' && (
+                    <View style={styles.startOverlay}>
+                        <Text style={styles.titleLarge}>🏗️ JENGA</Text>
+                        <Text style={styles.subtitle}>Remove & stack blocks carefully!</Text>
+                        <TouchableOpacity style={styles.startButton} onPress={handleStartGame}>
+                            <Text style={styles.startButtonText}>CLASSIC MODE</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.startButton, { backgroundColor: '#27AE60', marginTop: 12 }]}
+                            onPress={startBuildMode}
+                        >
+                            <Text style={styles.startButtonText}>🔨 BUILD MODE</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Build Mode UI */}
+                {gamePhase === 'build' && !gameOver && (
+                    <View style={styles.buildModeUI}>
+                        <Text style={styles.buildTitle}>🔨 BUILD YOUR TOWER</Text>
+                        <Text style={styles.buildSubtitle}>Blocks: {blocks.length}</Text>
+                        <View style={styles.buildButtonRow}>
+                            <TouchableOpacity style={styles.buildButton} onPress={spawnBlock}>
+                                <Ionicons name="add-circle" size={24} color="#FFF" />
+                                <Text style={styles.buildButtonText}>ADD BLOCK</Text>
+                            </TouchableOpacity>
+                            {blocks.length > 3 && (
+                                <TouchableOpacity
+                                    style={[styles.buildButton, { backgroundColor: '#27AE60' }]}
+                                    onPress={handleFinishBuilding}
+                                >
+                                    <Ionicons name="checkmark-circle" size={24} color="#FFF" />
+                                    <Text style={styles.buildButtonText}>DONE</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                        <Text style={styles.buildHint}>Drag to position • Release to drop</Text>
+                    </View>
+                )}
+
+                {gameStarted && !gameOver && (
+                    <View style={styles.gameUI}>
+                        {/* Status indicator moved to header */}
 
                         <View style={styles.playerInfo}>
                             <Text style={styles.playerName}>{currentPlayer?.name}'s Turn</Text>
@@ -902,15 +1281,16 @@ export default function JengaTowerGame() {
                         </TouchableOpacity>
                     </View>
                 )}
-            </SafeAreaView>
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#87CEEB' },
+    container: { flex: 1, backgroundColor: '#1a0f0a' },
     safeArea: { flex: 1 },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 10, backgroundColor: 'rgba(61,37,24,0.8)' },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10, backgroundColor: 'rgba(61,37,24,0.95)' },
+    headerStability: { alignItems: 'center' },
     backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 20 },
     title: { fontSize: 28, fontWeight: 'bold', color: '#FFE0B2' },
     canvasContainer: { flex: 1 },
@@ -931,10 +1311,18 @@ const styles = StyleSheet.create({
     restartButton: { backgroundColor: '#8B4513', borderRadius: 25, paddingHorizontal: 35, paddingVertical: 14, borderWidth: 1, borderColor: '#D2B48C' },
     restartButtonText: { fontSize: 16, fontWeight: 'bold', color: '#FFE0B2' },
     // Stability meter styles
-    stabilityContainer: { position: 'absolute', top: 80, right: 20, alignItems: 'center', backgroundColor: 'rgba(61,37,24,0.9)', padding: 12, borderRadius: 15, borderWidth: 1, borderColor: 'rgba(210,180,140,0.4)' },
+    stabilityContainer: { position: 'absolute', top: 50, right: 20, alignItems: 'center', backgroundColor: 'rgba(61,37,24,0.9)', padding: 12, borderRadius: 15, borderWidth: 1, borderColor: 'rgba(210,180,140,0.4)' },
     stabilityLabel: { fontSize: 11, fontWeight: 'bold', color: '#D2B48C', marginBottom: 5 },
     stabilityBar: { width: 80, height: 10, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 5, overflow: 'hidden' },
     stabilityFill: { height: '100%', borderRadius: 5 },
     stabilityText: { fontSize: 11, fontWeight: 'bold', marginTop: 4 },
     blockCounter: { fontSize: 14, color: '#F39C12', fontWeight: 'bold', marginTop: 2 },
+    // Build mode styles
+    buildModeUI: { position: 'absolute', bottom: 25, left: 0, right: 0, alignItems: 'center' },
+    buildTitle: { fontSize: 24, fontWeight: 'bold', color: '#27AE60', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
+    buildSubtitle: { fontSize: 16, color: '#FFE0B2', marginTop: 5, marginBottom: 15 },
+    buildButtonRow: { flexDirection: 'row', gap: 15 },
+    buildButton: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8B4513', paddingHorizontal: 20, paddingVertical: 14, borderRadius: 25, borderWidth: 2, borderColor: '#D2B48C' },
+    buildButtonText: { fontSize: 16, fontWeight: 'bold', color: '#FFF' },
+    buildHint: { fontSize: 12, color: '#D2B48C', marginTop: 12 },
 });

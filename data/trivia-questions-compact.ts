@@ -87,8 +87,14 @@ export const QUESTIONS: TriviaQuestion[] = [
     { id: '50', category: 'mixed', difficulty: 'hard', question: 'How many bones in the adult body?', answers: ['206', '208', '210', '212'], correctIndex: 0 },
 ];
 
+// Import extended questions
+import { ADDITIONAL_QUESTIONS } from './trivia-questions-extended';
+
+// Merge all questions
+const ALL_QUESTIONS = [...QUESTIONS, ...ADDITIONAL_QUESTIONS];
+
 export function getQuestionsByCategory(category: Category, difficulty: Difficulty): TriviaQuestion[] {
-    return QUESTIONS.filter(q => q.category === category && q.difficulty === difficulty);
+    return ALL_QUESTIONS.filter(q => q.category === category && q.difficulty === difficulty);
 }
 
 export function getRandomQuestions(category: Category, difficulty: Difficulty, count: number): TriviaQuestion[] {

@@ -6,6 +6,7 @@ import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
 import { isGameLocked } from '../utils/devMode';
+import { playSound } from '../utils/SoundManager';
 
 type SpicyGame = {
   title: string;
@@ -94,7 +95,7 @@ export default function SpicyGamesScreen() {
                 key={game.title}
                 {...game}
                 locked={isGameLocked(game.id)}
-                onPress={() => router.push(game.path as any)}
+                onPress={() => { playSound('ui.buttonClick'); router.push(game.path as any); }}
               />
             ))}
           </View>

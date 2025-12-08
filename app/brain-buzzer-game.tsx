@@ -1,3 +1,4 @@
+import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
@@ -43,8 +44,19 @@ export default function BrainBuzzerGame() {
         }
     }, [gamePhase, currentQuestionIndex]);
 
-    const handleBuzzerPress = (player: 1 | 2) => {
+    const handleBuzzerPress = async (player: 1 | 2) => {
         if (buzzerPressed || gamePhase !== 'question') return;
+
+        // Play buzzer sound
+        try {
+            const { sound } = await Audio.Sound.createAsync(
+                require('../assets/sounds/game/buzzer.mp3'),
+                { shouldPlay: true, volume: 0.8 }
+            );
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (status.isLoaded && status.didJustFinish) sound.unloadAsync();
+            });
+        } catch (e) { console.log('Buzzer sound error:', e); }
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         setBuzzerPressed(player);
@@ -57,10 +69,21 @@ export default function BrainBuzzerGame() {
         ]).start();
     };
 
-    const handleAnswer = (answerIndex: number) => {
+    const handleAnswer = async (answerIndex: number) => {
         if (!buzzerPressed || !questions[currentQuestionIndex]) return;
 
         const correct = answerIndex === questions[currentQuestionIndex].correctIndex;
+
+        // Play correct or wrong sound
+        try {
+            const soundFile = correct
+                ? require('../assets/sounds/game/correct.mp3')
+                : require('../assets/sounds/game/wrong.mp3');
+            const { sound } = await Audio.Sound.createAsync(soundFile, { shouldPlay: true, volume: 0.8 });
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (status.isLoaded && status.didJustFinish) sound.unloadAsync();
+            });
+        } catch (e) { console.log('Answer sound error:', e); }
 
         if (correct) {
             if (buzzerPressed === 1) setPlayer1Score(s => s + 1);

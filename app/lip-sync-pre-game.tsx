@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { PulsingButton } from '../components/PulsingButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 export default function LipSyncPreGame() {
     const router = useRouter();
@@ -79,27 +79,32 @@ export default function LipSyncPreGame() {
                 </View>
             </View>
 
-            {/* Rules Modal */}
-            <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>How to Play</Text>
-                            <TouchableOpacity onPress={() => setShowRules(false)}>
-                                <Ionicons name="close" size={24} color="#1ABC9C" />
-                            </TouchableOpacity>
-                        </View>
-                        <ScrollView style={styles.modalScroll}>
-                            <Text style={styles.sectionTitle}>🎯 Objective</Text>
-                            <Text style={styles.ruleText}>Lip sync to the song while others try to guess!</Text>
-                            <Text style={styles.sectionTitle}>🎧 Requirements</Text>
-                            <Text style={styles.ruleText}>• One player wears headphones{'\n'}• Music plays only for them{'\n'}• They lip sync the lyrics</Text>
-                            <Text style={styles.sectionTitle}>🎮 How It Works</Text>
-                            <Text style={styles.ruleText}>• Others watch and laugh{'\n'}• Try to guess the song{'\n'}• Points for correct guesses!</Text>
-                        </ScrollView>
-                    </View>
-                </View>
-            </Modal>
+            <RulesModal
+                visible={showRules}
+                onClose={() => setShowRules(false)}
+                title="How to Play"
+                accentColor="#1ABC9C"
+            >
+                <RuleSection title="🎯 Objective">
+                    Read lips to guess the phrase while wearing headphones with loud music!
+                </RuleSection>
+                <RuleSection title="🎧 Setup">
+                    • One player puts on headphones{'\n'}
+                    • Loud music plays so they can't hear{'\n'}
+                    • The other player holds the phone
+                </RuleSection>
+                <RuleSection title="🎮 How It Works">
+                    • A phrase appears on screen{'\n'}
+                    • Player without headphones reads it aloud{'\n'}
+                    • Player with headphones tries to guess by reading lips{'\n'}
+                    • Points for correct guesses!
+                </RuleSection>
+                <RuleSection title="💡 Tips">
+                    • Speak clearly and slowly{'\n'}
+                    • Exaggerate your mouth movements{'\n'}
+                    • Music should be loud enough to block hearing
+                </RuleSection>
+            </RulesModal>
         </ImageBackground>
     );
 }
@@ -114,27 +119,26 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         height: '100%',
-        // No background color so the image is fully visible
         alignItems: "center",
-        justifyContent: "space-between", // Distribute space
+        justifyContent: "space-between",
         paddingVertical: 60,
         paddingHorizontal: 24,
     },
     titleText: {
         fontSize: 48,
         fontWeight: '900',
-        color: '#FFE0B2', // Cream
+        color: '#FFE0B2',
         textAlign: 'center',
         marginTop: 20,
         fontFamily: Platform.select({ ios: 'Avenir-Black', android: 'sans-serif-black' }),
-        textShadowColor: 'rgba(0, 0, 0, 0.75)', // Stronger shadow for readability over image
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
         textShadowOffset: { width: 2, height: 2 },
         textShadowRadius: 8,
     },
     noticeContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(26, 188, 156, 0.9)', // Turquoise with transparency
+        backgroundColor: 'rgba(26, 188, 156, 0.9)',
         paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 25,
@@ -175,12 +179,12 @@ const styles = StyleSheet.create({
         marginHorizontal: 8,
         backgroundColor: '#fff',
         borderWidth: 2,
-        borderColor: '#1ABC9C', // Turquoise border
+        borderColor: '#1ABC9C',
     },
     playerCountPill: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#004D40', // Dark Teal/Turquoise background
+        backgroundColor: '#004D40',
         borderRadius: 32,
         paddingHorizontal: 24,
         paddingVertical: 10,
@@ -199,7 +203,7 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: '#1ABC9C', // Turquoise
+        backgroundColor: '#1ABC9C',
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
@@ -220,7 +224,7 @@ const styles = StyleSheet.create({
     playerCountText: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#FFE0B2', // Cream
+        color: '#FFE0B2',
         textAlign: 'center',
         minWidth: 120,
         ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
@@ -230,11 +234,4 @@ const styles = StyleSheet.create({
     startButtonText: { fontSize: 24, fontWeight: 'bold', color: '#1ABC9C', letterSpacing: 1, ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }) },
     infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#1ABC9C', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },
     infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#004D40' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
-    modalContent: { backgroundColor: '#004D40', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#1ABC9C' },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(26,188,156,0.3)' },
-    modalTitle: { color: '#1ABC9C', fontSize: 22, fontWeight: 'bold' },
-    modalScroll: { padding: 20 },
-    sectionTitle: { color: '#1ABC9C', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
-    ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

@@ -1,8 +1,11 @@
 
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
+import { playSound } from '../utils/SoundManager';
 
 function shuffleArray(array: any[]) {
 	for (let i = array.length - 1; i > 0; i--) {
@@ -78,6 +81,8 @@ const TruthOrBluffScreen = () => {
 	const handleAnswer = (isRight: boolean) => {
 		setAnswerSelected(isRight ? 'right' : 'wrong');
 		setIsTimerActive(false);
+		// Play sound based on answer
+		playSound(isRight ? 'game.correct' : 'game.wrong');
 		setTimeout(() => {
 			if (isRight) {
 				setScores((prev) => {
@@ -169,26 +174,21 @@ const TruthOrBluffScreen = () => {
 				</View>
 
 				{/* Rules Modal */}
-				<Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
-					<View style={styles.modalOverlay}>
-						<View style={styles.modalContent}>
-							<View style={styles.modalHeader}>
-								<Text style={styles.modalTitle}>How to Play</Text>
-								<TouchableOpacity onPress={() => setShowRules(false)}>
-									<Ionicons name="close" size={24} color="#6c5ce7" />
-								</TouchableOpacity>
-							</View>
-							<ScrollView style={styles.modalScroll}>
-								<Text style={styles.sectionTitle}>🎯 Objective</Text>
-								<Text style={styles.ruleText}>Read statements and guess if they're TRUTH or BLUFF!</Text>
-								<Text style={styles.sectionTitle}>🎮 How It Works</Text>
-								<Text style={styles.ruleText}>• One player reads a statement{'\n'}• Others vote Truth or Bluff{'\n'}• Reveal the answer{'\n'}• Points for correct guesses!</Text>
-								<Text style={styles.sectionTitle}>🏆 Strategy</Text>
-								<Text style={styles.ruleText}>Keep a poker face when it's your turn to fool others!</Text>
-							</ScrollView>
-						</View>
-					</View>
-				</Modal>
+				<RulesModal
+					visible={showRules}
+					onClose={() => setShowRules(false)}
+					accentColor="#6c5ce7"
+				>
+					<RuleSection title="🎯 Objective">
+						Read statements and guess if they're TRUTH or BLUFF!
+					</RuleSection>
+					<RuleSection title="🎮 How It Works">
+						• One player reads a statement{"\n"}• Others vote Truth or Bluff{"\n"}• Reveal the answer{"\n"}• Points for correct guesses!
+					</RuleSection>
+					<RuleSection title="🏆 Strategy">
+						Keep a poker face when it's your turn to fool others!
+					</RuleSection>
+				</RulesModal>
 			</View>
 		);
 	}
@@ -196,6 +196,11 @@ const TruthOrBluffScreen = () => {
 	// Actual game screen
 	return (
 		<View style={styles.mockupContainer}>
+			<SafeAreaView edges={['top']} style={styles.safeArea}>
+				<View style={styles.gameHeader}>
+					<BackButton color="white" />
+				</View>
+			</SafeAreaView>
 			<Text style={styles.turnText}>Player {currentPlayer + 1}'s Turn</Text>
 			<Text style={styles.roundText}>Round {currentRound} / {TOTAL_ROUNDS}</Text>
 			<View style={styles.mockupPhoneFrame}>
@@ -479,13 +484,17 @@ const styles = StyleSheet.create({
 	},
 	infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#6c5ce7', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8, borderBottomWidth: 3, borderBottomColor: '#1a1f23' },
 	infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#fff' },
-	modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
-	modalContent: { backgroundColor: '#e6d8f7', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#6c5ce7' },
-	modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(108,92,231,0.2)' },
-	modalTitle: { color: '#6c5ce7', fontSize: 22, fontWeight: 'bold' },
-	modalScroll: { padding: 20 },
-	sectionTitle: { color: '#6c5ce7', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
-	ruleText: { color: '#3d348b', fontSize: 15, lineHeight: 21, marginBottom: 6 },
+	safeArea: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
+		zIndex: 10,
+	},
+	gameHeader: {
+		paddingHorizontal: 15,
+		paddingTop: 10,
+	},
 });
 
 export default TruthOrBluffScreen;

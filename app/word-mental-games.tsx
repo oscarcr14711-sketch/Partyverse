@@ -5,6 +5,7 @@ import React from 'react';
 import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
+import { playSound } from '../utils/SoundManager';
 
 const games = [
   { title: 'Brain Buzzer', description: 'The app gives you a quick trick question. Answer fast — but think twice before you speak!', emoji: '🧩', color: '#ff6b6b', path: '/brain-buzzer-pre-game' },
@@ -108,7 +109,7 @@ export default function WordMentalGamesScreen() {
         </View>
         <ScrollView style={styles.grid}>
           {games.map((game) => (
-            <GameItem key={game.title} {...game} onPress={() => router.push(game.path as any)} />
+            <GameItem key={game.title} {...game} onPress={() => { playSound('ui.buttonClick'); router.push(game.path as any); }} />
           ))}
         </ScrollView>
       </SafeAreaView>

@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 export default function DontLetItPicYouPreGame() {
     const router = useRouter();
@@ -12,9 +13,7 @@ export default function DontLetItPicYouPreGame() {
         <View style={styles.container}>
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="#1a3a5c" />
-                    </TouchableOpacity>
+                    <BackButton color="#1a3a5c" />
                 </View>
 
                 <View style={styles.content}>
@@ -51,47 +50,29 @@ export default function DontLetItPicYouPreGame() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Rules Modal */}
-                <Modal
+                <RulesModal
                     visible={showRules}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setShowRules(false)}
+                    onClose={() => setShowRules(false)}
+                    title="How to Play"
+                    accentColor="#1a3a5c"
                 >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>How to Play</Text>
-                                <TouchableOpacity onPress={() => setShowRules(false)}>
-                                    <Ionicons name="close" size={24} color="#1a3a5c" />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView style={styles.modalScroll}>
-                                <Text style={styles.sectionTitle}>🎯 Objective</Text>
-                                <Text style={styles.ruleText}>
-                                    Avoid being caught in photos! One player is the photographer,
-                                    others must hide or dodge before the picture is taken.
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>📱 Game Flow</Text>
-                                <Text style={styles.ruleText}>
-                                    1. One player becomes the photographer{'\n'}
-                                    2. Other players must hide or cover their faces{'\n'}
-                                    3. Photographer counts down and takes a photo{'\n'}
-                                    4. Anyone caught in the photo gets a point{'\n'}
-                                    5. Player with least points wins!
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>⚡ Tips</Text>
-                                <Text style={styles.ruleText}>
-                                    • Move quickly when the countdown starts{'\n'}
-                                    • Find creative ways to hide{'\n'}
-                                    • Watch out for surprise photos!
-                                </Text>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
+                    <RuleSection title="🎯 Objective">
+                        Avoid being caught in photos! One player is the photographer,
+                        others must hide or dodge before the picture is taken.
+                    </RuleSection>
+                    <RuleSection title="📱 Game Flow">
+                        1. One player becomes the photographer{'\n'}
+                        2. Other players must hide or cover their faces{'\n'}
+                        3. Photographer counts down and takes a photo{'\n'}
+                        4. Anyone caught in the photo gets a point{'\n'}
+                        5. Player with least points wins!
+                    </RuleSection>
+                    <RuleSection title="⚡ Tips">
+                        • Move quickly when the countdown starts{'\n'}
+                        • Find creative ways to hide{'\n'}
+                        • Watch out for surprise photos!
+                    </RuleSection>
+                </RulesModal>
             </SafeAreaView>
         </View>
     );
@@ -108,14 +89,6 @@ const styles = StyleSheet.create({
     header: {
         paddingHorizontal: 20,
         paddingTop: 10,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.5)',
-        borderRadius: 20,
     },
     content: {
         flex: 1,
@@ -216,47 +189,5 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#fff',
         fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#b8d935',
-        borderRadius: 20,
-        maxHeight: '75%',
-        borderWidth: 3,
-        borderColor: '#1a3a5c',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 2,
-        borderBottomColor: 'rgba(26,58,92,0.2)',
-    },
-    modalTitle: {
-        color: '#1a3a5c',
-        fontSize: 22,
-        fontWeight: 'bold',
-    },
-    modalScroll: {
-        padding: 20,
-    },
-    sectionTitle: {
-        color: '#1a3a5c',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 10,
-        marginBottom: 6,
-    },
-    ruleText: {
-        color: '#1a3a5c',
-        fontSize: 15,
-        lineHeight: 22,
-        marginBottom: 8,
     },
 });

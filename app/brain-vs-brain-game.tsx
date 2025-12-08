@@ -1,3 +1,4 @@
+import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -33,13 +34,25 @@ export default function BrainVsBrainGame() {
     const totalQuestions = questionCounts[difficulty];
 
     useEffect(() => {
-        // Initialize questions
+        // Initialize questions with progressive difficulty
         const allCategories: Category[] = ['pop_culture', 'geography', 'science', 'art_literature', 'history', 'sports', 'music', 'mixed'];
         const gameQuestions: TriviaQuestion[] = [];
 
+        // Progressive difficulty: first 1/3 easy, middle 1/3 medium, last 1/3 hard
+        const easyCount = Math.ceil(totalQuestions / 3);
+        const mediumCount = Math.ceil(totalQuestions / 3);
+        const hardCount = totalQuestions - easyCount - mediumCount;
+
+        const difficulties: Difficulty[] = [
+            ...Array(easyCount).fill('easy'),
+            ...Array(mediumCount).fill('medium'),
+            ...Array(hardCount).fill('hard'),
+        ];
+
         for (let i = 0; i < totalQuestions; i++) {
             const randomCategory = allCategories[Math.floor(Math.random() * allCategories.length)];
-            const categoryQuestions = getRandomQuestions(randomCategory, difficulty, 1);
+            const questionDifficulty = difficulties[i];
+            const categoryQuestions = getRandomQuestions(randomCategory, questionDifficulty, 1);
             if (categoryQuestions.length > 0) {
                 gameQuestions.push(categoryQuestions[0]);
             }
@@ -49,9 +62,15 @@ export default function BrainVsBrainGame() {
         startRoulette();
     }, []);
 
-    const startRoulette = () => {
+    const startRoulette = (questionIndex?: number) => {
         setShowingRoulette(true);
         setGamePhase('roulette');
+
+        // Reset animation value to 0 before starting
+        rouletteAnim.setValue(0);
+
+        // Use provided index or current index
+        const idx = questionIndex ?? currentQuestionIndex;
 
         // Spin animation
         Animated.timing(rouletteAnim, {
@@ -59,9 +78,16 @@ export default function BrainVsBrainGame() {
             duration: 3000,
             useNativeDriver: true,
         }).start(() => {
-            const categories: Category[] = ['pop_culture', 'geography', 'science', 'art_literature', 'history', 'sports', 'music', 'mixed'];
-            const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
-            setCurrentCategory(selectedCategory);
+            // Use the actual category from the question
+            const question = questions[idx];
+            if (question) {
+                setCurrentCategory(question.category as Category);
+            } else {
+                // Fallback if question not loaded yet
+                const categories: Category[] = ['pop_culture', 'geography', 'science', 'art_literature', 'history', 'sports', 'music', 'mixed'];
+                const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+                setCurrentCategory(selectedCategory);
+            }
 
             setTimeout(() => {
                 setShowingRoulette(false);
@@ -80,8 +106,19 @@ export default function BrainVsBrainGame() {
         }
     }, [timeLeft, gamePhase]);
 
-    const handleBuzzerPress = (player: 1 | 2) => {
+    const handleBuzzerPress = async (player: 1 | 2) => {
         if (buzzerPressed || gamePhase !== 'question') return;
+
+        // Play buzzer sound
+        try {
+            const { sound } = await Audio.Sound.createAsync(
+                require('../assets/sounds/game/buzzer.mp3'),
+                { shouldPlay: true, volume: 0.8 }
+            );
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (status.isLoaded && status.didJustFinish) sound.unloadAsync();
+            });
+        } catch (e) { console.log('Buzzer sound error:', e); }
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         setBuzzerPressed(player);
@@ -94,10 +131,21 @@ export default function BrainVsBrainGame() {
         ]).start();
     };
 
-    const handleAnswer = (answerIndex: number) => {
+    const handleAnswer = async (answerIndex: number) => {
         if (!buzzerPressed || !questions[currentQuestionIndex]) return;
 
         const correct = answerIndex === questions[currentQuestionIndex].correctIndex;
+
+        // Play correct or wrong sound
+        try {
+            const soundFile = correct
+                ? require('../assets/sounds/game/correct.mp3')
+                : require('../assets/sounds/game/wrong.mp3');
+            const { sound } = await Audio.Sound.createAsync(soundFile, { shouldPlay: true, volume: 0.8 });
+            sound.setOnPlaybackStatusUpdate((status) => {
+                if (status.isLoaded && status.didJustFinish) sound.unloadAsync();
+            });
+        } catch (e) { console.log('Answer sound error:', e); }
 
         if (correct) {
             if (buzzerPressed === 1) setPlayer1Score(s => s + 1);
@@ -129,10 +177,11 @@ export default function BrainVsBrainGame() {
                 }
             });
         } else {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
+            const nextIndex = currentQuestionIndex + 1;
+            setCurrentQuestionIndex(nextIndex);
             setBuzzerPressed(null);
             setShowingAnswer(false);
-            startRoulette();
+            startRoulette(nextIndex);
         }
     };
 

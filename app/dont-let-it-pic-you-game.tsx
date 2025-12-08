@@ -34,8 +34,8 @@ export default function DontLetItPicYouGame() {
         strikes: 0,
         caughtInRounds: [],
     }));
-    const numRounds = parseInt(params.numRounds as string) || 3;
-    const cameraType: CameraType = (params.cameraType as string) === 'back' ? 'back' : 'front';
+    const numRounds = parseInt(params.numRounds as string) || 5;
+    const cameraType: CameraType = (params.cameraType as string) === 'front' ? 'front' : 'back';
 
     const [permission, requestPermission] = useCameraPermissions();
     const [currentPhase, setCurrentPhase] = useState<GamePhase>('instructions');

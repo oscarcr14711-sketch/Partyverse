@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 export default function JengaPreGame() {
     const router = useRouter();
@@ -16,9 +17,7 @@ export default function JengaPreGame() {
         >
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="#FFE0B2" />
-                    </TouchableOpacity>
+                    <BackButton color="#FFE0B2" />
                 </View>
 
                 <View style={styles.spacer} />
@@ -37,42 +36,21 @@ export default function JengaPreGame() {
                 </View>
 
                 {/* Rules Modal */}
-                <Modal
+                <RulesModal
                     visible={showRules}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setShowRules(false)}
+                    onClose={() => setShowRules(false)}
+                    accentColor="#D2B48C"
                 >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>How to Play</Text>
-                                <TouchableOpacity onPress={() => setShowRules(false)}>
-                                    <Ionicons name="close" size={24} color="#FFE0B2" />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView style={styles.modalScroll}>
-                                <Text style={styles.sectionTitle}>🎯 Objective</Text>
-                                <Text style={styles.ruleText}>
-                                    Remove blocks and stack them on top without letting the tower fall!
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>🎮 Controls</Text>
-                                <Text style={styles.ruleText}>
-                                    • Swipe to rotate camera{'\n'}
-                                    • Tap a block to grab it{'\n'}
-                                    • Drag to move the block{'\n'}
-                                    • Release to place on top
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>⚠️ Warning</Text>
-                                <Text style={styles.ruleText}>
-                                    Removing bottom blocks is risky! The tower collapses when unstable.
-                                </Text>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
+                    <RuleSection title="🎯 Objective">
+                        Remove blocks and stack them on top without letting the tower fall!
+                    </RuleSection>
+                    <RuleSection title="🎮 Controls">
+                        • Swipe to rotate camera{"\n"}• Tap a block to grab it{"\n"}• Drag to move the block{"\n"}• Release to place on top
+                    </RuleSection>
+                    <RuleSection title="⚠️ Warning">
+                        Removing bottom blocks is risky! The tower collapses when unstable.
+                    </RuleSection>
+                </RulesModal>
             </SafeAreaView>
         </ImageBackground>
     );
@@ -150,47 +128,5 @@ const styles = StyleSheet.create({
         fontSize: 26,
         fontWeight: 'bold',
         color: '#FFE0B2',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.85)',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#3d2518',
-        borderRadius: 20,
-        maxHeight: '65%',
-        borderWidth: 2,
-        borderColor: '#8B4513',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(139,69,19,0.5)',
-    },
-    modalTitle: {
-        color: '#FFE0B2',
-        fontSize: 22,
-        fontWeight: 'bold',
-    },
-    modalScroll: {
-        padding: 20,
-    },
-    sectionTitle: {
-        color: '#D2B48C',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 8,
-        marginBottom: 5,
-    },
-    ruleText: {
-        color: '#FFE0B2',
-        fontSize: 15,
-        lineHeight: 21,
-        marginBottom: 6,
     },
 });

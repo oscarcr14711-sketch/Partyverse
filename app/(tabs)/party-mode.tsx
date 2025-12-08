@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { CategoryCard } from '../../components/CategoryCard';
+import { playSound } from '../../utils/SoundManager';
 
 const categories = [
     {
@@ -79,7 +80,10 @@ const PartyMode = () => {
             subtitle={item.subtitle}
             icon={item.icon}
             color={item.color}
-            onPress={() => item.path && router.push(item.path as any)}
+            onPress={() => {
+                playSound('ui.buttonClick');
+                if (item.path) router.push(item.path as any);
+            }}
         />
     );
 

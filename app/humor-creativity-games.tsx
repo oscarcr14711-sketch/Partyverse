@@ -6,6 +6,7 @@ import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import JoyLaughIcon from '../components/JoyLaughIcon';
 import { PulsingButton } from '../components/PulsingButton';
+import { playSound } from '../utils/SoundManager';
 
 const games = [
   {
@@ -140,6 +141,7 @@ export default function HumorCreativityGamesScreen() {
                 key={game.title}
                 {...game}
                 onPress={() => {
+                  playSound('ui.buttonClick');
                   if (game.title === 'If you Laugh you lose') {
                     router.push('/if-you-laugh-you-lose');
                   } else if (game.path === '/mic-madness') {

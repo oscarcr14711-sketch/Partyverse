@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 export default function BrainVsBrainPreGame() {
     const router = useRouter();
@@ -16,9 +17,7 @@ export default function BrainVsBrainPreGame() {
         >
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
+                    <BackButton />
                 </View>
 
                 <View style={styles.content}>
@@ -41,52 +40,32 @@ export default function BrainVsBrainPreGame() {
                     </View>
                 </View>
 
-                {/* Rules Modal */}
-                <Modal
+                <RulesModal
                     visible={showRules}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setShowRules(false)}
+                    onClose={() => setShowRules(false)}
+                    title="How to Play"
+                    accentColor="#FFD700"
                 >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>How to Play</Text>
-                                <TouchableOpacity onPress={() => setShowRules(false)}>
-                                    <Ionicons name="close" size={24} color="white" />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView style={styles.modalScroll}>
-                                <Text style={styles.sectionTitle}>Objective</Text>
-                                <Text style={styles.ruleText}>
-                                    Two players compete head-to-head in a battle of wits! Answer trivia questions correctly and faster than your opponent to win.
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>Game Flow</Text>
-                                <Text style={styles.ruleText}>
-                                    1. Both players see the same question
-                                    {'\n'}2. First to answer correctly gets the point
-                                    {'\n'}3. Wrong answer? Your opponent gets a chance!
-                                    {'\n'}4. First to reach the target score wins
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>Difficulty Levels</Text>
-                                <Text style={styles.ruleText}>
-                                    • Easy: Simple questions, more time
-                                    {'\n'}• Medium: Moderate challenge
-                                    {'\n'}• Hard: Tough questions, less time
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>Tips</Text>
-                                <Text style={styles.ruleText}>
-                                    • Speed matters - be quick but accurate!
-                                    {'\n'}• Wrong answers give your opponent an advantage
-                                    {'\n'}• Stay focused and think fast!
-                                </Text>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
+                    <RuleSection title="Objective">
+                        Two players compete head-to-head in a battle of wits! Answer trivia questions correctly and faster than your opponent to win.
+                    </RuleSection>
+                    <RuleSection title="Game Flow">
+                        1. Both players see the same question{'\n'}
+                        2. First to answer correctly gets the point{'\n'}
+                        3. Wrong answer? Your opponent gets a chance!{'\n'}
+                        4. First to reach the target score wins
+                    </RuleSection>
+                    <RuleSection title="Difficulty Levels">
+                        • Easy: Simple questions, more time{'\n'}
+                        • Medium: Moderate challenge{'\n'}
+                        • Hard: Tough questions, less time
+                    </RuleSection>
+                    <RuleSection title="Tips">
+                        • Speed matters - be quick but accurate!{'\n'}
+                        • Wrong answers give your opponent an advantage{'\n'}
+                        • Stay focused and think fast!
+                    </RuleSection>
+                </RulesModal>
             </SafeAreaView>
         </ImageBackground>
     );
@@ -104,14 +83,6 @@ const styles = StyleSheet.create({
     header: {
         paddingHorizontal: 20,
         paddingTop: 10,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 20,
     },
     content: {
         flex: 1,
@@ -167,47 +138,5 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFE0B2',
         fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.9)',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#1a1a1a',
-        borderRadius: 20,
-        maxHeight: '80%',
-        borderWidth: 1,
-        borderColor: '#FFD700',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.1)',
-    },
-    modalTitle: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    modalScroll: {
-        padding: 20,
-    },
-    sectionTitle: {
-        color: '#FFD700',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginTop: 15,
-        marginBottom: 8,
-    },
-    ruleText: {
-        color: '#ccc',
-        fontSize: 14,
-        lineHeight: 22,
-        marginBottom: 10,
     },
 });

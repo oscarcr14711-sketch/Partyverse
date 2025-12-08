@@ -2,8 +2,9 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PulsingButton } from '../../components/PulsingButton';
+import { playSound } from '../../utils/SoundManager';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -29,6 +30,17 @@ export default function HomeScreen() {
             <Text style={styles.btnText}>Spicy Mode 18+</Text>
           </LinearGradient>
         </PulsingButton>
+
+        {/* TEST SOUND BUTTON */}
+        <TouchableOpacity
+          style={styles.testButton}
+          onPress={() => {
+            playSound('ui.buttonClick');
+            Alert.alert('Sound Test', 'Did you hear a click sound?');
+          }}
+        >
+          <Text style={styles.testButtonText}>🔊 TEST SOUND</Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );
@@ -43,4 +55,6 @@ const styles = StyleSheet.create({
   spicy: {},
   icon: { marginRight: 10 },
   btnText: { color: '#fff', fontSize: 20, fontWeight: '700', letterSpacing: 0.5 },
+  testButton: { marginTop: 20, backgroundColor: '#fbbf24', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 },
+  testButtonText: { color: '#000', fontSize: 16, fontWeight: 'bold' },
 });

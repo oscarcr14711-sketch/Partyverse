@@ -6,15 +6,18 @@ import LottieView from 'lottie-react-native';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { PulsingButton } from '../components/PulsingButton';
+import { playSound } from '../utils/SoundManager';
 
 export default function Index() {
   const router = useRouter();
 
   const goPlay = () => {
+    playSound('ui.buttonClick');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(tabs)/games');
   };
   const goSpicy = () => {
+    playSound('ui.buttonClick');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     router.push('/spicy-games');
   };

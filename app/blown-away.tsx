@@ -5,12 +5,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 const MAX_BALLOON_SIZE = 500; // Size at which balloon pops
 const MIN_BALLOON_SIZE = 100;
-const BLOW_THRESHOLD = -40; // Audio level threshold (more sensitive)
+const BLOW_THRESHOLD = -60; // Audio level threshold (very sensitive for air blowing)
 
 export default function BlownAwayScreen() {
   const router = useRouter();
@@ -355,27 +356,22 @@ export default function BlownAwayScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Rules Modal */}
-          <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>How to Play</Text>
-                  <TouchableOpacity onPress={() => setShowRules(false)}>
-                    <Ionicons name="close" size={24} color="#5DADE2" />
-                  </TouchableOpacity>
-                </View>
-                <ScrollView style={styles.modalScroll}>
-                  <Text style={styles.sectionTitle}>🎯 Objective</Text>
-                  <Text style={styles.ruleText}>Blow up balloons as much as you can without popping!</Text>
-                  <Text style={styles.sectionTitle}>🎈 How It Works</Text>
-                  <Text style={styles.ruleText}>• Blow into the microphone{'\n'}• Bigger balloon = more points{'\n'}• Press "Stop Blowing" to lock in points{'\n'}• If it pops, you lose those points!</Text>
-                  <Text style={styles.sectionTitle}>🏆 Tips</Text>
-                  <Text style={styles.ruleText}>Risk vs reward - know when to stop!</Text>
-                </ScrollView>
-              </View>
-            </View>
-          </Modal>
+          <RulesModal
+            visible={showRules}
+            onClose={() => setShowRules(false)}
+            title="How to Play"
+            accentColor="#5DADE2"
+          >
+            <RuleSection title="🎯 Objective">
+              Blow up balloons as much as you can without popping!
+            </RuleSection>
+            <RuleSection title="🎈 How It Works">
+              • Blow into the microphone{'\n'}• Bigger balloon = more points{'\n'}• Press "Stop Blowing" to lock in points{'\n'}• If it pops, you lose those points!
+            </RuleSection>
+            <RuleSection title="🏆 Tips">
+              Risk vs reward - know when to stop!
+            </RuleSection>
+          </RulesModal>
         </SafeAreaView>
       </LinearGradient>
     );

@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { PulsingButton } from '../components/PulsingButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 export default function BrainBuzzerPreGame() {
     const router = useRouter();
@@ -74,36 +74,25 @@ export default function BrainBuzzerPreGame() {
                     </View>
                 </View>
 
-                {/* Rules Modal */}
-                <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>How to Play</Text>
-                                <TouchableOpacity onPress={() => setShowRules(false)}>
-                                    <Ionicons name="close" size={24} color="#FFC107" />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView style={styles.modalScroll}>
-                                <Text style={styles.sectionTitle}>🎯 Objective</Text>
-                                <Text style={styles.ruleText}>
-                                    Answer trivia questions correctly before time runs out!
-                                </Text>
-                                <Text style={styles.sectionTitle}>🎮 How It Works</Text>
-                                <Text style={styles.ruleText}>
-                                    • Choose your difficulty level{'\n'}
-                                    • Each player takes turns{'\n'}
-                                    • Tap the correct answer{'\n'}
-                                    • Faster answers = more points
-                                </Text>
-                                <Text style={styles.sectionTitle}>🏆 Scoring</Text>
-                                <Text style={styles.ruleText}>
-                                    Correct answers earn points. Build streaks for bonus points!
-                                </Text>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
+                <RulesModal
+                    visible={showRules}
+                    onClose={() => setShowRules(false)}
+                    title="How to Play"
+                    accentColor="#FFC107"
+                >
+                    <RuleSection title="🎯 Objective">
+                        Answer trivia questions correctly before time runs out!
+                    </RuleSection>
+                    <RuleSection title="🎮 How It Works">
+                        • Choose your difficulty level{'\n'}
+                        • Each player takes turns{'\n'}
+                        • Tap the correct answer{'\n'}
+                        • Faster answers = more points
+                    </RuleSection>
+                    <RuleSection title="🏆 Scoring">
+                        Correct answers earn points. Build streaks for bonus points!
+                    </RuleSection>
+                </RulesModal>
             </ImageBackground>
         </View>
     );
@@ -240,11 +229,4 @@ const styles = StyleSheet.create({
         borderBottomColor: '#FFA000',
     },
     infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#18304A' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
-    modalContent: { backgroundColor: '#18304A', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#FFC107' },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(255,193,7,0.3)' },
-    modalTitle: { color: '#FFC107', fontSize: 22, fontWeight: 'bold' },
-    modalScroll: { padding: 20 },
-    sectionTitle: { color: '#FFC107', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
-    ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

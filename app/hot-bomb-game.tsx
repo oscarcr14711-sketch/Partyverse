@@ -1,3 +1,5 @@
+import Bomb3D from '@/components/Bomb3D';
+import { RuleSection, RulesModal } from '@/components/RulesModal';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
@@ -5,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Animated, Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
+import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Optional: remote audio URLs (set to valid URLs or keep null to disable)
 const FUSE_SOUND_URL: string | null = null; // e.g., 'https://example.com/fuse-sizzle.mp3'
@@ -363,27 +365,22 @@ export default function HotBombGameScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Rules Modal */}
-          <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>How to Play</Text>
-                  <TouchableOpacity onPress={() => setShowRules(false)}>
-                    <Ionicons name="close" size={24} color="#FFB300" />
-                  </TouchableOpacity>
-                </View>
-                <ScrollView style={styles.modalScroll}>
-                  <Text style={styles.sectionTitle}>🎯 Objective</Text>
-                  <Text style={styles.ruleText}>Pass the bomb before it explodes!</Text>
-                  <Text style={styles.sectionTitle}>🎮 How It Works</Text>
-                  <Text style={styles.ruleText}>• The bomb has a random timer{'\n'}• Pass the phone to another player{'\n'}• Whoever is holding it when it explodes loses!{'\n'}• Stay calm under pressure!</Text>
-                  <Text style={styles.sectionTitle}>💣 Tips</Text>
-                  <Text style={styles.ruleText}>Watch the intensity - the bomb shakes as time runs out!</Text>
-                </ScrollView>
-              </View>
-            </View>
-          </Modal>
+          <RulesModal
+            visible={showRules}
+            onClose={() => setShowRules(false)}
+            title="How to Play"
+            accentColor="#FFB300"
+          >
+            <RuleSection title="🎯 Objective">
+              Pass the bomb before it explodes!
+            </RuleSection>
+            <RuleSection title="🎮 How It Works">
+              • The bomb has a random timer{' \n'}• Pass the phone to another player{' \n'}• Whoever is holding it when it explodes loses!{' \n'}• Stay calm under pressure!
+            </RuleSection>
+            <RuleSection title="💣 Tips">
+              Watch the intensity - the bomb shakes as time runs out!
+            </RuleSection>
+          </RulesModal>
         </SafeAreaView>
       ) : (
         // GAME SCREEN
@@ -403,21 +400,12 @@ export default function HotBombGameScreen() {
             <View style={styles.content}>
               <View style={styles.bombContainer}>
                 <Animated.View style={[styles.bombWrapper, { transform: [{ translateX: shakeX }, { scale: breathScale }] }]}>
-                  {isLottieAvailable ? (
-                    <LottieView
-                      source={require('../assets/animations/Bomb1.json')}
-                      style={{ width: 300, height: 300 }}
-                      autoPlay
-                      loop
-                      speed={1.0}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Image
-                      source={require('../assets/images/bomb1.png')}
-                      style={{ width: 300, height: 300, resizeMode: 'contain' }}
-                    />
-                  )}
+                  <Bomb3D
+                    timeLeft={timeLeft}
+                    totalTime={totalTime}
+                    shakeIntensity={timeLeft <= 5 ? (5 - timeLeft) / 5 : 0}
+                    size={300}
+                  />
                 </Animated.View>
               </View>
               <View style={styles.buttonContainer}>

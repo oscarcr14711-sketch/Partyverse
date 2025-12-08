@@ -1,10 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 const clashImage = require('../assets/images/clash.png');
 
@@ -84,71 +84,33 @@ export default function ColorClashPreGame() {
 
                     {/* Info Icon */}
                     <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
-                        <Ionicons name="information-circle" size={32} color="#00F5FF" />
+                        <Text style={styles.infoButtonText}>i</Text>
                     </TouchableOpacity>
                 </View>
 
-                {/* Rules Modal */}
-                <Modal
+                <RulesModal
                     visible={showRules}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setShowRules(false)}
+                    onClose={() => setShowRules(false)}
+                    title="🎯 HOW TO PLAY"
+                    accentColor="#00F5FF"
                 >
-                    <TouchableOpacity
-                        style={styles.modalOverlay}
-                        activeOpacity={1}
-                        onPress={() => setShowRules(false)}
-                    >
-                        <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-                            <ScrollView showsVerticalScrollIndicator={false}>
-                                <Text style={styles.modalTitle}>🎯 HOW TO PLAY</Text>
-
-                                <View style={styles.ruleCard}>
-                                    <Text style={styles.ruleNumber}>1</Text>
-                                    <View style={styles.ruleContent}>
-                                        <Text style={styles.ruleText}>Pick RED ♥️ or BLACK ♠️</Text>
-                                        <Text style={styles.ruleSubtext}>Guess the color of the next card</Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.ruleCard}>
-                                    <Text style={styles.ruleNumber}>2</Text>
-                                    <View style={styles.ruleContent}>
-                                        <Text style={styles.ruleText}>Tap a Card to Reveal</Text>
-                                        <Text style={styles.ruleSubtext}>Flip all cards to complete the round</Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.ruleCard}>
-                                    <Text style={styles.ruleNumber}>3</Text>
-                                    <View style={styles.ruleContent}>
-                                        <Text style={styles.ruleText}>Correct? Choose Who Drinks!</Text>
-                                        <Text style={styles.ruleSubtext}>Wrong? You drink!</Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.ruleCard}>
-                                    <Text style={styles.ruleNumber}>4</Text>
-                                    <View style={styles.ruleContent}>
-                                        <Text style={styles.ruleText}>Card Values</Text>
-                                        <Text style={styles.ruleSubtext}>A=1s, 2-10=face value, J=11s, Q=12s, K=13s</Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.multiplierSection}>
-                                    <Text style={styles.multiplierTitle}>⚡ ROUND MULTIPLIERS</Text>
-                                    <Text style={styles.multiplierText}>Round 1: ×1  •  Round 2: ×2</Text>
-                                    <Text style={styles.multiplierText}>Round 3: ×3  •  Round 4: ×4</Text>
-                                </View>
-
-                                <TouchableOpacity style={styles.closeButton} onPress={() => setShowRules(false)}>
-                                    <Text style={styles.closeButtonText}>GOT IT!</Text>
-                                </TouchableOpacity>
-                            </ScrollView>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
+                    <RuleSection title="1. Pick RED ♥️ or BLACK ♠️">
+                        Guess the color of the next card
+                    </RuleSection>
+                    <RuleSection title="2. Tap a Card to Reveal">
+                        Flip all cards to complete the round
+                    </RuleSection>
+                    <RuleSection title="3. Correct? Choose Who Drinks!">
+                        Wrong? You drink!
+                    </RuleSection>
+                    <RuleSection title="4. Card Values">
+                        A=1s, 2-10=face value, J=11s, Q=12s, K=13s
+                    </RuleSection>
+                    <RuleSection title="⚡ ROUND MULTIPLIERS">
+                        Round 1: ×1  •  Round 2: ×2{'\n'}
+                        Round 3: ×3  •  Round 4: ×4
+                    </RuleSection>
+                </RulesModal>
             </SafeAreaView>
         </LinearGradient>
     );
@@ -270,104 +232,19 @@ const styles = StyleSheet.create({
         ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
     },
     infoButton: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#00F5FF',
+        alignItems: 'center',
+        justifyContent: 'center',
         position: 'absolute',
         right: -50,
-        top: 12,
+        top: 4,
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#2B0B3F',
-        borderRadius: 20,
-        padding: 25,
-        maxHeight: '80%',
-        width: '100%',
-        maxWidth: 400,
-        borderWidth: 2,
-        borderColor: '#00F5FF',
-    },
-    modalTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#00F5FF',
-        textAlign: 'center',
-        marginBottom: 20,
-        letterSpacing: 1,
-        ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
-    },
-    ruleCard: {
-        flexDirection: 'row',
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-        borderRadius: 15,
-        padding: 15,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.15)',
-        alignItems: 'center',
-    },
-    ruleNumber: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#00F5FF',
-        color: '#18061F',
-        fontSize: 20,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        lineHeight: 40,
-        marginRight: 15,
-    },
-    ruleContent: {
-        flex: 1,
-    },
-    ruleText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 4,
-    },
-    ruleSubtext: {
-        fontSize: 13,
-        color: 'rgba(255, 255, 255, 0.7)',
-    },
-    multiplierSection: {
-        backgroundColor: 'rgba(0, 245, 255, 0.1)',
-        borderRadius: 15,
-        padding: 15,
-        marginTop: 10,
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(0, 245, 255, 0.3)',
-    },
-    multiplierTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#00F5FF',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    multiplierText: {
-        fontSize: 14,
-        color: '#fff',
-        textAlign: 'center',
-        marginBottom: 4,
-    },
-    closeButton: {
-        backgroundColor: '#00F5FF',
-        borderRadius: 15,
-        paddingVertical: 14,
-        alignItems: 'center',
-    },
-    closeButtonText: {
-        fontSize: 18,
+    infoButtonText: {
+        fontSize: 26,
         fontWeight: 'bold',
         color: '#18061F',
-        letterSpacing: 1,
-        ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
     },
 });

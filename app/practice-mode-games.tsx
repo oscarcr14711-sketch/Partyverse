@@ -1,6 +1,7 @@
-import React from 'react';
-import { StyleSheet, View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { playSound } from '../utils/SoundManager';
 
 const categories = [
     {
@@ -40,8 +41,8 @@ const categories = [
 const PracticeModeGamesScreen = () => {
     const router = useRouter();
 
-    const renderCategory = ({ item }) => (
-        <TouchableOpacity style={[styles.card, { backgroundColor: item.color }]} onPress={() => item.path && router.push(item.path)}>
+    const renderCategory = ({ item }: { item: typeof categories[0] }) => (
+        <TouchableOpacity style={[styles.card, { backgroundColor: item.color }]} onPress={() => { playSound('ui.buttonClick'); if (item.path) router.push(item.path as any); }}>
             <Text style={styles.cardIcon}>{item.icon}</Text>
             <Text style={styles.cardTitle}>{item.title}</Text>
             <Text style={styles.cardSubtitle}>{item.subtitle}</Text>

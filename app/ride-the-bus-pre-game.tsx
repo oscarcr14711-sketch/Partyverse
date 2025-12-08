@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 export default function RideTheBusPreGame() {
     const router = useRouter();
@@ -16,9 +17,7 @@ export default function RideTheBusPreGame() {
         >
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
+                    <BackButton />
                 </View>
 
                 <View style={styles.content}>
@@ -41,50 +40,32 @@ export default function RideTheBusPreGame() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Rules Modal */}
-                <Modal
+                <RulesModal
                     visible={showRules}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setShowRules(false)}
+                    onClose={() => setShowRules(false)}
+                    title="Game Rules"
+                    accentColor="#3CB371"
                 >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>Game Rules</Text>
-                                <TouchableOpacity onPress={() => setShowRules(false)}>
-                                    <Ionicons name="close" size={24} color="white" />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView style={styles.modalScroll}>
-                                <Text style={styles.sectionTitle}>Phase 1: Collection</Text>
-                                <Text style={styles.ruleText}>
-                                    You will be dealt 4 cards. Before each card, you must guess:
-                                    {'\n'}1. Red or Black?
-                                    {'\n'}2. Higher or Lower?
-                                    {'\n'}3. Inside or Outside?
-                                    {'\n'}4. Guess the Suit
-                                    {'\n'}Wrong guess = Drink!
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>Phase 2: The Pyramid</Text>
-                                <Text style={styles.ruleText}>
-                                    Cards are flipped in a pyramid. If you have a matching card, place it to make someone drink!
-                                    {'\n'}Row 1 = 1 Drink
-                                    {'\n'}Row 5 = 5 Drinks
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>Phase 3: Ride The Bus</Text>
-                                <Text style={styles.ruleText}>
-                                    The player with the most cards left must Ride the Bus.
-                                    {'\n'}Flip cards one by one.
-                                    {'\n'}Number card = Safe.
-                                    {'\n'}Face card (J,Q,K,A) = Drink & Restart!
-                                </Text>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
+                    <RuleSection title="Phase 1: Collection">
+                        You will be dealt 4 cards. Before each card, you must guess:{'\n'}
+                        1. Red or Black?{'\n'}
+                        2. Higher or Lower?{'\n'}
+                        3. Inside or Outside?{'\n'}
+                        4. Guess the Suit{'\n'}
+                        Wrong guess = Drink!
+                    </RuleSection>
+                    <RuleSection title="Phase 2: The Pyramid">
+                        Cards are flipped in a pyramid. If you have a matching card, place it to make someone drink!{'\n'}
+                        Row 1 = 1 Drink{'\n'}
+                        Row 5 = 5 Drinks
+                    </RuleSection>
+                    <RuleSection title="Phase 3: Ride The Bus">
+                        The player with the most cards left must Ride the Bus.{'\n'}
+                        Flip cards one by one.{'\n'}
+                        Number card = Safe.{'\n'}
+                        Face card (J,Q,K,A) = Drink & Restart!
+                    </RuleSection>
+                </RulesModal>
             </SafeAreaView>
         </ImageBackground>
     );
@@ -103,19 +84,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 10,
     },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 20,
-    },
     content: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-end',
-        paddingBottom: 100, // Space for the start button
+        paddingBottom: 100,
     },
     spacer: {
         flex: 1,
@@ -166,47 +139,5 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFE0B2',
         fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.9)',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#1a1a1a',
-        borderRadius: 20,
-        maxHeight: '80%',
-        borderWidth: 1,
-        borderColor: '#3CB371',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.1)',
-    },
-    modalTitle: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    modalScroll: {
-        padding: 20,
-    },
-    sectionTitle: {
-        color: '#3CB371',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginTop: 15,
-        marginBottom: 8,
-    },
-    ruleText: {
-        color: '#ccc',
-        fontSize: 14,
-        lineHeight: 22,
-        marginBottom: 10,
     },
 });

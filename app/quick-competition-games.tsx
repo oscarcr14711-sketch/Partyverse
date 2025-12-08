@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { playSound } from '../utils/SoundManager';
 
 const games = [
   { title: 'Last Spoon Standing', description: 'Collect four of the same digital cards as fast as you can.\nWhen you’re ready — grab a spoon before anyone else!\nThe last one without a spoon… is out.', emoji: '🥄', color: '#5390d9', path: '/last-spoon-standing' },
@@ -42,7 +43,7 @@ export default function QuickCompetitionGamesScreen() {
           </View>
           <View style={styles.grid}>
             {games.map((game) => (
-              <GameItem key={game.title} {...game} onPress={() => router.push(game.path)} />
+              <GameItem key={game.title} {...game} onPress={() => { playSound('ui.buttonClick'); router.push(game.path as any); }} />
             ))}
           </View>
         </ScrollView>

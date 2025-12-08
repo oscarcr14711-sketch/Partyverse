@@ -1,9 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { PulsingButton } from '../components/PulsingButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 const micMadnessImage = require("../assets/images/micmadness.png");
 
@@ -20,7 +20,6 @@ export default function MicMadnessPreGame() {
     })();
   }, []);
 
-  // Start with 3 players and show 3 avatars
   const [numPlayers, setNumPlayers] = useState(3);
   const avatarImages = [
     require('../assets/images/avatars/avatar1.png'),
@@ -35,7 +34,6 @@ export default function MicMadnessPreGame() {
     <View style={styles.container}>
       <Image source={require('../assets/images/mictitle.png')} style={styles.titleImage} resizeMode="contain" />
       <Image source={micMadnessImage} style={styles.image} resizeMode="contain" />
-      {/* Avatars above player count */}
       <View style={styles.avatarsRow}>
         {[...Array(numPlayers)].map((_, i) => (
           <Image
@@ -69,27 +67,25 @@ export default function MicMadnessPreGame() {
         </TouchableOpacity>
       </View>
 
-      {/* Rules Modal */}
-      <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>How to Play</Text>
-              <TouchableOpacity onPress={() => setShowRules(false)}>
-                <Ionicons name="close" size={24} color="#FFE0B2" />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalScroll}>
-              <Text style={styles.sectionTitle}>🎯 Objective</Text>
-              <Text style={styles.ruleText}>Use your voice to complete silly challenges!</Text>
-              <Text style={styles.sectionTitle}>🎤 How It Works</Text>
-              <Text style={styles.ruleText}>• You'll get voice challenges{'\n'}• Speak into the mic{'\n'}• Volume & timing matter{'\n'}• Get creative with your voice!</Text>
-              <Text style={styles.sectionTitle}>🏆 Tips</Text>
-              <Text style={styles.ruleText}>Be loud, be silly, have fun!</Text>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      <RulesModal
+        visible={showRules}
+        onClose={() => setShowRules(false)}
+        title="How to Play"
+        accentColor="#FFE0B2"
+      >
+        <RuleSection title="🎯 Objective">
+          Use your voice to complete silly challenges!
+        </RuleSection>
+        <RuleSection title="🎤 How It Works">
+          • You'll get voice challenges{'\n'}
+          • Speak into the mic{'\n'}
+          • Volume & timing matter{'\n'}
+          • Get creative with your voice!
+        </RuleSection>
+        <RuleSection title="🏆 Tips">
+          Be loud, be silly, have fun!
+        </RuleSection>
+      </RulesModal>
     </View>
   );
 }
@@ -97,7 +93,7 @@ export default function MicMadnessPreGame() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#114D2D", // dark green
+    backgroundColor: "#114D2D",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
@@ -153,7 +149,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#114D2D', // match dark green background
+    backgroundColor: '#114D2D',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -184,11 +180,4 @@ const styles = StyleSheet.create({
   startButtonText: { fontSize: 24, fontWeight: 'bold', color: '#FFE0B2', letterSpacing: 1, ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }) },
   infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#263238', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },
   infoButtonText: { fontSize: 26, fontWeight: 'bold', color: '#FFE0B2' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#114D2D', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#263238' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(255,224,178,0.2)' },
-  modalTitle: { color: '#FFE0B2', fontSize: 22, fontWeight: 'bold' },
-  modalScroll: { padding: 20 },
-  sectionTitle: { color: '#FFE0B2', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
-  ruleText: { color: '#fff', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

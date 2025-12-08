@@ -5,6 +5,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isCategoryLocked } from '../utils/devMode';
+import { playSound } from '../utils/SoundManager';
 
 const categories = [
   { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', path: '/action-adrenaline-games', id: 'action-adrenaline' },
@@ -44,7 +45,7 @@ export default function PartyModeGamesScreen() {
                 key={category.title}
                 {...category}
                 locked={isCategoryLocked(category.id)}
-                onPress={() => category.path && router.push(category.path as any)}
+                onPress={() => { playSound('ui.buttonClick'); if (category.path) router.push(category.path as any); }}
               />
             ))}
           </View>

@@ -1,8 +1,9 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { playSound } from '../utils/SoundManager';
 
 const games = [
   { title: 'Most Likely To…', description: 'Everyone votes who’s most likely to X.', emoji: '🤔', color: '#8e44ad', path: '/most-likely-to' },
@@ -34,7 +35,7 @@ export default function SocialTruthGamesScreen() {
           </View>
           <View style={styles.grid}>
             {games.map((game) => (
-              <GameItem key={game.title} {...game} onPress={() => router.push(game.path)} />
+              <GameItem key={game.title} {...game} onPress={() => { playSound('ui.buttonClick'); router.push(game.path as any); }} />
             ))}
           </View>
         </ScrollView>

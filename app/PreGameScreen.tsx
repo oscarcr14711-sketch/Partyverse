@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PulsingButton } from '../components/PulsingButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 const avatarImages = [
   require('../assets/images/avatars/avatar1.png'),
@@ -66,27 +66,22 @@ export default function PreGameScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Rules Modal */}
-      <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>How to Play</Text>
-              <TouchableOpacity onPress={() => setShowRules(false)}>
-                <Ionicons name="close" size={24} color="#3B1A5A" />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalScroll}>
-              <Text style={styles.sectionTitle}>🎯 Objective</Text>
-              <Text style={styles.ruleText}>Spin and complete crazy challenges!</Text>
-              <Text style={styles.sectionTitle}>🎰 How It Works</Text>
-              <Text style={styles.ruleText}>• Press the button to spin{'\n'}• The wheel picks a random challenge{'\n'}• Complete the challenge shown{'\n'}• Tap to dismiss and spin again!</Text>
-              <Text style={styles.sectionTitle}>💡 Tips</Text>
-              <Text style={styles.ruleText}>Be brave! Some challenges are extreme!</Text>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      <RulesModal
+        visible={showRules}
+        onClose={() => setShowRules(false)}
+        title="How to Play"
+        accentColor="#3B1A5A"
+      >
+        <RuleSection title="🎯 Objective">
+          Spin and complete crazy challenges!
+        </RuleSection>
+        <RuleSection title="🎰 How It Works">
+          • Press the button to spin{'\n'}• The wheel picks a random challenge{'\n'}• Complete the challenge shown{'\n'}• Tap to dismiss and spin again!
+        </RuleSection>
+        <RuleSection title="💡 Tips">
+          Be brave! Some challenges are extreme!
+        </RuleSection>
+      </RulesModal>
     </View>
   );
 }

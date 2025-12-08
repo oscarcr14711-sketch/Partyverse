@@ -38,7 +38,7 @@ export default function DontLetItPicYouGameOver() {
 
     // Sort players by strikes (fewest wins)
     const sortedPlayers = [...players].sort((a, b) => a.strikes - b.strikes);
-    const winner = sortedPlayers[0];
+    const winner = sortedPlayers[0] || { name: 'No Winner', strikes: 0, avatarIndex: 0, id: 0, caughtInRounds: [] };
 
     // Calculate awards
     const calculateAwards = (): Award[] => {
@@ -79,13 +79,15 @@ export default function DontLetItPicYouGameOver() {
         }
 
         // Funniest Capture (random for now - could be voted in future)
-        const randomPlayer = players[Math.floor(Math.random() * players.length)];
-        awards.push({
-            title: 'Funniest Capture',
-            emoji: '😂',
-            player: randomPlayer.name,
-            description: 'Most hilarious photo',
-        });
+        if (players.length > 0) {
+            const randomPlayer = players[Math.floor(Math.random() * players.length)];
+            awards.push({
+                title: 'Funniest Capture',
+                emoji: '😂',
+                player: randomPlayer.name,
+                description: 'Most hilarious photo',
+            });
+        }
 
         return awards;
     };

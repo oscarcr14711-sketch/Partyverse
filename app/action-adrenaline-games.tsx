@@ -8,11 +8,12 @@ import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LightningIcon from '../components/LightningIcon';
 import { PulsingButton } from '../components/PulsingButton';
+import { playSound } from '../utils/SoundManager';
 
 const games = [
   { title: 'Hot Bomb', description: 'Pass the bomb before it explodes!', emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
   { title: 'Stack Tower', description: 'Stack blocks as high as you can without falling!', emoji: '📦', color: '#f8961e', path: '/jenga-pre-game' },
-  { title: 'SpinFreeze', description: 'Music plays; when it stops, freeze.', emoji: '🥶', color: '#f9c74f', path: '/spin-freeze' },
+  { title: 'Lightning Rounds', description: 'Race to complete physical challenges - last one gets a strike!', emoji: '⚡', color: '#f9c74f', path: '/lightning-rounds-pre-game' },
   { title: 'Don\'t Let It PIC You', description: 'Avoid being caught in surprise photos!', emoji: '📸', color: '#90be6d', path: '/dont-let-it-pic-you-pre-game' },
   { title: 'Blown Away', description: 'Players blow into the phone mic and whoever blows the bigger balloon without popping it, wins', emoji: '🎈', color: '#43aa8b', path: '/blown-away' },
 ];
@@ -142,7 +143,7 @@ function ActionAdrenalineGamesScreen() {
           </View>
           <ScrollView style={styles.grid}>
             {games.map((game) => (
-              <GameItem key={game.title} {...game} onPress={() => router.push(game.path as any)} />
+              <GameItem key={game.title} {...game} onPress={() => { playSound('ui.buttonClick'); router.push(game.path as any); }} />
             ))}
           </ScrollView>
         </SafeAreaView>

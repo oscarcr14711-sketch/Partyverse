@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { PulsingButton } from '../../components/PulsingButton';
+import { playSound } from '../../utils/SoundManager';
 
 const gameModes = [
   {
@@ -93,6 +94,7 @@ export default function MainScreen() {
     const navigate = () => { if (item.route) router.push(item.route as any); };
     const onPress = () => {
       if (!item.disabled) {
+        playSound('ui.buttonClick');
         navigate();
       }
     };

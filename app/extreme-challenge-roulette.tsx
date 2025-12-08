@@ -61,6 +61,7 @@ export default function ExtremeChallengeRouletteScreen() {
 	const [showSafe, setShowSafe] = useState(false);
 	const flipSafeAnim = useRef(new Animated.Value(0)).current;
 	const [hasSpun, setHasSpun] = useState(false);
+	const [showRules, setShowRules] = useState(false);
 
 	useEffect(() => {
 		// Pop-out logic for each index

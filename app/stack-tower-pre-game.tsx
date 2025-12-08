@@ -1,8 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 export default function StackTowerPreGame() {
     const router = useRouter();
@@ -26,9 +27,7 @@ export default function StackTowerPreGame() {
         <View style={styles.container}>
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="#FFE0B2" />
-                    </TouchableOpacity>
+                    <BackButton color="#FFE0B2" />
                 </View>
 
                 <View style={styles.content}>
@@ -66,53 +65,33 @@ export default function StackTowerPreGame() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Rules Modal */}
-                <Modal
+                <RulesModal
                     visible={showRules}
-                    transparent={true}
-                    animationType="slide"
-                    onRequestClose={() => setShowRules(false)}
+                    onClose={() => setShowRules(false)}
+                    title="How to Play Jenga"
+                    accentColor="#D2B48C"
                 >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>How to Play Jenga</Text>
-                                <TouchableOpacity onPress={() => setShowRules(false)}>
-                                    <Ionicons name="close" size={24} color="#FFE0B2" />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView style={styles.modalScroll}>
-                                <Text style={styles.sectionTitle}>🎯 Objective</Text>
-                                <Text style={styles.ruleText}>
-                                    Remove blocks from the tower and stack them on top without
-                                    making the tower collapse! The player who knocks it down loses.
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>🎮 How to Play</Text>
-                                <Text style={styles.ruleText}>
-                                    1. Swipe to rotate the camera view{'\n'}
-                                    2. Tap any block to grab it{'\n'}
-                                    3. Drag the block around{'\n'}
-                                    4. Release to place it on top{'\n'}
-                                    5. Take turns with other players
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>⚠️ Be Careful!</Text>
-                                <Text style={styles.ruleText}>
-                                    • Removing bottom blocks is risky!{'\n'}
-                                    • Tower collapses when unstable{'\n'}
-                                    • Don't remove too many from one level{'\n'}
-                                    • Watch the tower's balance!
-                                </Text>
-
-                                <Text style={styles.sectionTitle}>🏆 Winning</Text>
-                                <Text style={styles.ruleText}>
-                                    The player who causes the tower to collapse loses!
-                                </Text>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
+                    <RuleSection title="🎯 Objective">
+                        Remove blocks from the tower and stack them on top without
+                        making the tower collapse! The player who knocks it down loses.
+                    </RuleSection>
+                    <RuleSection title="🎮 How to Play">
+                        1. Swipe to rotate the camera view{'\n'}
+                        2. Tap any block to grab it{'\n'}
+                        3. Drag the block around{'\n'}
+                        4. Release to place it on top{'\n'}
+                        5. Take turns with other players
+                    </RuleSection>
+                    <RuleSection title="⚠ Be Careful!">
+                        • Removing bottom blocks is risky!{'\n'}
+                        • Tower collapses when unstable{'\n'}
+                        • Don't remove too many from one level{'\n'}
+                        • Watch the tower's balance!
+                    </RuleSection>
+                    <RuleSection title="🏆 Winning">
+                        The player who causes the tower to collapse loses!
+                    </RuleSection>
+                </RulesModal>
             </SafeAreaView>
         </View>
     );
@@ -129,14 +108,6 @@ const styles = StyleSheet.create({
     header: {
         paddingHorizontal: 20,
         paddingTop: 10,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        borderRadius: 20,
     },
     content: {
         flex: 1,
@@ -231,47 +202,5 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFE0B2',
         fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.85)',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    modalContent: {
-        backgroundColor: '#3d2518',
-        borderRadius: 20,
-        maxHeight: '80%',
-        borderWidth: 2,
-        borderColor: '#8B4513',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(139,69,19,0.5)',
-    },
-    modalTitle: {
-        color: '#FFE0B2',
-        fontSize: 22,
-        fontWeight: 'bold',
-    },
-    modalScroll: {
-        padding: 20,
-    },
-    sectionTitle: {
-        color: '#D2B48C',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 12,
-        marginBottom: 6,
-    },
-    ruleText: {
-        color: '#FFE0B2',
-        fontSize: 15,
-        lineHeight: 22,
-        marginBottom: 8,
     },
 });

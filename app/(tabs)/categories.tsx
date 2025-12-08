@@ -27,7 +27,10 @@ export default function Categories() {
                         style={[styles.buttonOuter, cat.disabled && { opacity: 0.5 }]}
                         activeOpacity={cat.disabled ? 1 : 0.85}
                         disabled={cat.disabled}
-                        onPress={() => cat.path && router.push(cat.path)}
+                        onPress={() => {
+                            playSound('ui.buttonClick');
+                            if (cat.path) router.push(cat.path);
+                        }}
                     >
                         <LinearGradient
                             colors={[cat.color, '#fff']}

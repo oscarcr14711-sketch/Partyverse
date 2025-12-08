@@ -2,9 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
 import { PulsingButton } from '../components/PulsingButton';
+import { RuleSection, RulesModal } from '../components/RulesModal';
 
 const DEFAULT_CATEGORIES = [
     'Food', 'Animal', 'Celebrity', 'Object', 'App',
@@ -20,8 +22,6 @@ export default function StopGamePreGame() {
     const [selectedCategories, setSelectedCategories] = useState<string[]>(
         DEFAULT_CATEGORIES.slice(0, 8)
     );
-    const [customCategory, setCustomCategory] = useState('');
-    const [showCategoryPicker, setShowCategoryPicker] = useState(false);
     const [showRules, setShowRules] = useState(false);
 
     const toggleCategory = (category: string) => {
@@ -56,186 +56,182 @@ export default function StopGamePreGame() {
             end={{ x: 1, y: 1 }}
         >
             <SafeAreaView style={styles.safeArea}>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    {/* Header */}
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                            <Ionicons name="arrow-back" size={28} color="white" />
+                <View style={styles.header}>
+                    <BackButton />
+                    <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+                        <Text style={styles.infoButtonText}>i</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Game Mode Selection */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Game Mode</Text>
+                    <View style={styles.modeContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.modeButton,
+                                gameMode === 'pass-phone' && styles.modeButtonActive
+                            ]}
+                            onPress={() => setGameMode('pass-phone')}
+                        >
+                            <Text style={[
+                                styles.modeIcon,
+                                gameMode === 'pass-phone' && styles.modeIconActive
+                            ]}>📱</Text>
+                            <Text style={[
+                                styles.modeText,
+                                gameMode === 'pass-phone' && styles.modeTextActive
+                            ]}>Pass-the-Phone</Text>
+                            <Text style={styles.modeDescription}>One player at a time</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.modeButton,
+                                gameMode === 'team' && styles.modeButtonActive
+                            ]}
+                            onPress={() => setGameMode('team')}
+                        >
+                            <Text style={[
+                                styles.modeIcon,
+                                gameMode === 'team' && styles.modeIconActive
+                            ]}>👥</Text>
+                            <Text style={[
+                                styles.modeText,
+                                gameMode === 'team' && styles.modeTextActive
+                            ]}>Team Mode</Text>
+                            <Text style={styles.modeDescription}>Teams compete</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Players Counter */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>
+                        {gameMode === 'team' ? 'Number of Teams' : 'Number of Players'}
+                    </Text>
+                    <View style={styles.counterPill}>
+                        <PulsingButton
+                            style={styles.counterButton}
+                            onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
+                        >
+                            <Text style={styles.counterButtonText}>−</Text>
+                        </PulsingButton>
+                        <Text style={styles.counterText}>{numPlayers}</Text>
+                        <PulsingButton
+                            style={styles.counterButton}
+                            onPress={() => setNumPlayers(Math.min(8, numPlayers + 1))}
+                        >
+                            <Text style={styles.counterButtonText}>+</Text>
+                        </PulsingButton>
+                    </View>
+                </View>
+
+                {/* Rounds Counter */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Number of Rounds</Text>
+                    <View style={styles.counterPill}>
+                        <PulsingButton
+                            style={styles.counterButton}
+                            onPress={() => setNumRounds(Math.max(3, numRounds - 1))}
+                        >
+                            <Text style={styles.counterButtonText}>−</Text>
+                        </PulsingButton>
+                        <Text style={styles.counterText}>{numRounds}</Text>
+                        <PulsingButton
+                            style={styles.counterButton}
+                            onPress={() => setNumRounds(Math.min(5, numRounds + 1))}
+                        >
+                            <Text style={styles.counterButtonText}>+</Text>
+                        </PulsingButton>
+                    </View>
+                </View>
+
+                {/* Categories Section */}
+                <View style={styles.section}>
+                    <View style={styles.categoryHeader}>
+                        <Text style={styles.sectionTitle}>
+                            Categories ({selectedCategories.length}/12)
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.autoGenButton}
+                            onPress={() => {
+                                const shuffled = [...DEFAULT_CATEGORIES].sort(() => Math.random() - 0.5);
+                                setSelectedCategories(shuffled.slice(0, 8));
+                            }}
+                        >
+                            <Ionicons name="shuffle" size={18} color="#fff" />
+                            <Text style={styles.autoGenText}>Auto</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Game Mode Selection */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Game Mode</Text>
-                        <View style={styles.modeContainer}>
+                    <View style={styles.categoriesGrid}>
+                        {DEFAULT_CATEGORIES.map((category) => (
                             <TouchableOpacity
+                                key={category}
                                 style={[
-                                    styles.modeButton,
-                                    gameMode === 'pass-phone' && styles.modeButtonActive
+                                    styles.categoryChip,
+                                    selectedCategories.includes(category) && styles.categoryChipActive
                                 ]}
-                                onPress={() => setGameMode('pass-phone')}
+                                onPress={() => toggleCategory(category)}
                             >
                                 <Text style={[
-                                    styles.modeIcon,
-                                    gameMode === 'pass-phone' && styles.modeIconActive
-                                ]}>📱</Text>
-                                <Text style={[
-                                    styles.modeText,
-                                    gameMode === 'pass-phone' && styles.modeTextActive
-                                ]}>Pass-the-Phone</Text>
-                                <Text style={styles.modeDescription}>One player at a time</Text>
+                                    styles.categoryChipText,
+                                    selectedCategories.includes(category) && styles.categoryChipTextActive
+                                ]}>
+                                    {category}
+                                </Text>
+                                {selectedCategories.includes(category) && (
+                                    <Ionicons name="checkmark-circle" size={16} color="#fff" />
+                                )}
                             </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[
-                                    styles.modeButton,
-                                    gameMode === 'team' && styles.modeButtonActive
-                                ]}
-                                onPress={() => setGameMode('team')}
-                            >
-                                <Text style={[
-                                    styles.modeIcon,
-                                    gameMode === 'team' && styles.modeIconActive
-                                ]}>👥</Text>
-                                <Text style={[
-                                    styles.modeText,
-                                    gameMode === 'team' && styles.modeTextActive
-                                ]}>Team Mode</Text>
-                                <Text style={styles.modeDescription}>Teams compete</Text>
-                            </TouchableOpacity>
-                        </View>
+                        ))}
                     </View>
 
-                    {/* Players Counter */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>
-                            {gameMode === 'team' ? 'Number of Teams' : 'Number of Players'}
-                        </Text>
-                        <View style={styles.counterPill}>
-                            <PulsingButton
-                                style={styles.counterButton}
-                                onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
-                            >
-                                <Text style={styles.counterButtonText}>−</Text>
-                            </PulsingButton>
-                            <Text style={styles.counterText}>{numPlayers}</Text>
-                            <PulsingButton
-                                style={styles.counterButton}
-                                onPress={() => setNumPlayers(Math.min(8, numPlayers + 1))}
-                            >
-                                <Text style={styles.counterButtonText}>+</Text>
-                            </PulsingButton>
-                        </View>
-                    </View>
+                    <Text style={styles.categoryHint}>
+                        Select 4-12 categories. Tap to add/remove.
+                    </Text>
+                </View>
 
-                    {/* Rounds Counter */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Number of Rounds</Text>
-                        <View style={styles.counterPill}>
-                            <PulsingButton
-                                style={styles.counterButton}
-                                onPress={() => setNumRounds(Math.max(3, numRounds - 1))}
-                            >
-                                <Text style={styles.counterButtonText}>−</Text>
-                            </PulsingButton>
-                            <Text style={styles.counterText}>{numRounds}</Text>
-                            <PulsingButton
-                                style={styles.counterButton}
-                                onPress={() => setNumRounds(Math.min(5, numRounds + 1))}
-                            >
-                                <Text style={styles.counterButtonText}>+</Text>
-                            </PulsingButton>
-                        </View>
-                    </View>
-
-                    {/* Categories Section */}
-                    <View style={styles.section}>
-                        <View style={styles.categoryHeader}>
-                            <Text style={styles.sectionTitle}>
-                                Categories ({selectedCategories.length}/12)
-                            </Text>
-                            <TouchableOpacity
-                                style={styles.autoGenButton}
-                                onPress={() => {
-                                    const shuffled = [...DEFAULT_CATEGORIES].sort(() => Math.random() - 0.5);
-                                    setSelectedCategories(shuffled.slice(0, 8));
-                                }}
-                            >
-                                <Ionicons name="shuffle" size={18} color="#fff" />
-                                <Text style={styles.autoGenText}>Auto</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.categoriesGrid}>
-                            {DEFAULT_CATEGORIES.map((category) => (
-                                <TouchableOpacity
-                                    key={category}
-                                    style={[
-                                        styles.categoryChip,
-                                        selectedCategories.includes(category) && styles.categoryChipActive
-                                    ]}
-                                    onPress={() => toggleCategory(category)}
-                                >
-                                    <Text style={[
-                                        styles.categoryChipText,
-                                        selectedCategories.includes(category) && styles.categoryChipTextActive
-                                    ]}>
-                                        {category}
-                                    </Text>
-                                    {selectedCategories.includes(category) && (
-                                        <Ionicons name="checkmark-circle" size={16} color="#fff" />
-                                    )}
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-
-                        <Text style={styles.categoryHint}>
-                            Select 4-12 categories. Tap to add/remove.
-                        </Text>
-                    </View>
-
-                    {/* Start Button */}
-                    <TouchableOpacity
-                        style={[
-                            styles.startButton,
-                            selectedCategories.length < 4 && styles.startButtonDisabled
-                        ]}
-                        onPress={handleStart}
-                        disabled={selectedCategories.length < 4}
+                {/* Start Button */}
+                <TouchableOpacity
+                    style={[
+                        styles.startButton,
+                        selectedCategories.length < 4 && styles.startButtonDisabled
+                    ]}
+                    onPress={handleStart}
+                    disabled={selectedCategories.length < 4}
+                >
+                    <LinearGradient
+                        colors={selectedCategories.length >= 4 ? ['#ffd32a', '#ff9f1a'] : ['#999', '#666']}
+                        style={styles.startButtonGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                     >
-                        <LinearGradient
-                            colors={selectedCategories.length >= 4 ? ['#ffd32a', '#ff9f1a'] : ['#999', '#666']}
-                            style={styles.startButtonGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                        >
-                            <Text style={styles.startButtonText}>START GAME</Text>
-                            <Ionicons name="play-circle" size={28} color="#fff" />
-                        </LinearGradient>
-                    </TouchableOpacity>
-                </ScrollView>
+                        <Text style={styles.startButtonText}>START GAME</Text>
+                        <Ionicons name="play-circle" size={28} color="#fff" />
+                    </LinearGradient>
+                </TouchableOpacity>
 
-                {/* Rules Modal */}
-                <Modal visible={showRules} transparent animationType="slide" onRequestClose={() => setShowRules(false)}>
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>How to Play</Text>
-                                <TouchableOpacity onPress={() => setShowRules(false)}>
-                                    <Ionicons name="close" size={24} color="#0abde3" />
-                                </TouchableOpacity>
-                            </View>
-                            <ScrollView style={styles.modalScroll}>
-                                <Text style={styles.ruleSectionTitle}>🎯 Objective</Text>
-                                <Text style={styles.ruleText}>Come up with words for each category that start with a random letter!</Text>
-                                <Text style={styles.ruleSectionTitle}>🎮 How It Works</Text>
-                                <Text style={styles.ruleText}>• Random letter is chosen{'\n'}• Fill each category with a word{'\n'}• Shout "STOP!" when done{'\n'}• Unique answers = points!</Text>
-                                <Text style={styles.ruleSectionTitle}>🏆 Scoring</Text>
-                                <Text style={styles.ruleText}>Unique answers score! Duplicate answers with other players = no points.</Text>
-                            </ScrollView>
-                        </View>
-                    </View>
-                </Modal>
+                <RulesModal
+                    visible={showRules}
+                    onClose={() => setShowRules(false)}
+                    title="How to Play"
+                    accentColor="#0abde3"
+                >
+                    <RuleSection title="🎯 Objective">
+                        Come up with words for each category that start with a random letter!
+                    </RuleSection>
+                    <RuleSection title="🎮 How It Works">
+                        • Random letter is chosen{'\n'}
+                        • Fill each category with a word{'\n'}
+                        • Shout "STOP!" when done{'\n'}
+                        • Unique answers = points!
+                    </RuleSection>
+                    <RuleSection title="🏆 Scoring">
+                        Unique answers score! Duplicate answers with other players = no points.
+                    </RuleSection>
+                </RulesModal>
             </SafeAreaView>
         </LinearGradient>
     );
@@ -247,8 +243,6 @@ const styles = StyleSheet.create({
     },
     safeArea: {
         flex: 1,
-    },
-    scrollContent: {
         padding: 20,
         paddingBottom: 40,
     },
@@ -256,24 +250,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 30,
-        position: 'relative',
-    },
-    backButton: {
-        position: 'absolute',
-        left: 0,
-        zIndex: 10,
-        padding: 8,
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#fff',
-        textAlign: 'center',
-        flex: 1,
-        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-        textShadowOffset: { width: 2, height: 2 },
-        textShadowRadius: 4,
-        ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
+        justifyContent: 'space-between',
     },
     section: {
         marginBottom: 25,
@@ -456,13 +433,6 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
         ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
     },
-    infoButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: 0 },
+    infoButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
     infoButtonText: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
-    modalContent: { backgroundColor: '#fff', borderRadius: 20, maxHeight: '65%', borderWidth: 2, borderColor: '#0abde3' },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(10,189,227,0.2)' },
-    modalTitle: { color: '#0abde3', fontSize: 22, fontWeight: 'bold' },
-    modalScroll: { padding: 20 },
-    ruleSectionTitle: { color: '#0abde3', fontSize: 18, fontWeight: 'bold', marginTop: 8, marginBottom: 5 },
-    ruleText: { color: '#333', fontSize: 15, lineHeight: 21, marginBottom: 6 },
 });

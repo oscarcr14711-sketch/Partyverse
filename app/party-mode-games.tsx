@@ -1,11 +1,14 @@
 import { CategoryCard } from '@/components/CategoryCard';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import LottieView from 'lottie-react-native';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isCategoryLocked } from '../utils/devMode';
 import { playSound } from '../utils/SoundManager';
+import { useTheme } from '../utils/ThemeContext';
 
 const categories = [
   { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', path: '/action-adrenaline-games', id: 'action-adrenaline' },
@@ -26,35 +29,80 @@ const specials = {
 
 export default function PartyModeGamesScreen() {
   const router = useRouter();
+  const { theme, themeId } = useTheme();
 
+  const isChristmasTheme = themeId === 'christmas';
+
+  const screenContent = (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={26} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Party Mode</Text>
+        <View style={{ width: 26 }} />
+      </View>
+      <ScrollView>
+        <Text style={styles.title}>What kind of fun are you in the mood for?</Text>
+        <View style={styles.grid}>
+          {categories.map((category) => (
+            <CategoryCard
+              key={category.title}
+              {...category}
+              locked={isCategoryLocked(category.id)}
+              onPress={() => { playSound('ui.buttonClick'); if (category.path) router.push(category.path as any); }}
+            />
+          ))}
+        </View>
+        <View style={styles.fullWidth}>
+          <CategoryCard {...specials} locked={isCategoryLocked(specials.id)} onPress={() => { }} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+
+  // Christmas theme: red to green gradient background with snow overlay
+  if (isChristmasTheme) {
+    return (
+      <LinearGradient
+        colors={['#c0392b', '#27ae60']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.background}
+      >
+        {screenContent}
+        {/* Snow animation covers entire screen - stacked top, middle, bottom */}
+        {theme.overlayAnimation && (
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'column' }} pointerEvents="none">
+            <LottieView
+              source={theme.overlayAnimation}
+              autoPlay
+              loop
+              style={{ flex: 1, width: '100%' }}
+            />
+            <LottieView
+              source={theme.overlayAnimation}
+              autoPlay
+              loop
+              style={{ flex: 1, width: '100%' }}
+            />
+            <LottieView
+              source={theme.overlayAnimation}
+              autoPlay
+              loop
+              style={{ flex: 1, width: '100%' }}
+            />
+          </View>
+        )}
+      </LinearGradient>
+    );
+  }
+
+  // Default background
   return (
     <View style={styles.background}>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={26} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Party Mode</Text>
-          <View style={{ width: 26 }} />
-        </View>
-        <ScrollView>
-          <Text style={styles.title}>What kind of fun are you in the mood for?</Text>
-          <View style={styles.grid}>
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.title}
-                {...category}
-                locked={isCategoryLocked(category.id)}
-                onPress={() => { playSound('ui.buttonClick'); if (category.path) router.push(category.path as any); }}
-              />
-            ))}
-          </View>
-          <View style={styles.fullWidth}>
-            <CategoryCard {...specials} locked={isCategoryLocked(specials.id)} onPress={() => { }} />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </View >
+      {screenContent}
+    </View>
   );
 }
 

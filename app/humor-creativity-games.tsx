@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import JoyLaughIcon from '../components/JoyLaughIcon';
 import { PulsingButton } from '../components/PulsingButton';
 import { playSound } from '../utils/SoundManager';
+import { useTheme } from '../utils/ThemeContext';
 
 const games = [
   {
@@ -119,9 +120,13 @@ const GameItem = ({ title, description, emoji, color, onPress }) => {
 
 export default function HumorCreativityGamesScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+
+  // Use Christmas background if theme has one, otherwise default
+  const backgroundSource = theme.categoryBackgrounds?.humorCreativity || require('../assets/images/HumorBg.png');
 
   return (
-    <ImageBackground source={require('../assets/images/HumorBg.png')} style={{ flex: 1 }} resizeMode="cover">
+    <ImageBackground source={backgroundSource} style={{ flex: 1 }} resizeMode="cover">
       <SafeAreaView style={styles.container}>
         <ScrollView>
           <View style={styles.header}>

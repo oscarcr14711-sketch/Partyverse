@@ -75,12 +75,12 @@ export default function Bomb3D({ timeLeft, totalTime, shakeIntensity = 0, size =
         const bombGroup = new THREE.Group();
         bombGroupRef.current = bombGroup;
 
-        // === BOMB BODY with enhanced materials ===
-        const bombBodyGeometry = new THREE.SphereGeometry(1, 64, 64);
+        // === BOMB BODY - rounder and more realistic ===
+        const bombBodyGeometry = new THREE.SphereGeometry(1.1, 64, 64);
         const bombBodyMaterial = new THREE.MeshStandardMaterial({
-            color: 0x1a1a1a,
-            roughness: 0.25,
-            metalness: 0.8,
+            color: 0x0d0d0d,
+            roughness: 0.15,
+            metalness: 0.7,
             emissive: 0x000000,
             emissiveIntensity: 0,
         });
@@ -88,8 +88,25 @@ export default function Bomb3D({ timeLeft, totalTime, shakeIntensity = 0, size =
         bombBodyRef.current = bombBody;
         bombGroup.add(bombBody);
 
+        // === HIGHLIGHT SPHERE for 3D depth (shiny reflection) ===
+        const highlightGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+        const highlightMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.35,
+        });
+        const highlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+        highlight.position.set(-0.55, 0.55, 0.7);
+        bombGroup.add(highlight);
+
+        // Second smaller highlight
+        const highlight2Geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const highlight2 = new THREE.Mesh(highlight2Geometry, highlightMaterial);
+        highlight2.position.set(-0.35, 0.35, 0.85);
+        bombGroup.add(highlight2);
+
         // === BOMB GLOW LAYER (outer shell for danger glow) ===
-        const bombGlowGeometry = new THREE.SphereGeometry(1.08, 32, 32);
+        const bombGlowGeometry = new THREE.SphereGeometry(1.18, 32, 32);
         const bombGlowMaterial = new THREE.MeshBasicMaterial({
             color: 0xff2200,
             transparent: true,
@@ -100,89 +117,95 @@ export default function Bomb3D({ timeLeft, totalTime, shakeIntensity = 0, size =
         bombGlowRef.current = bombGlow;
         bombGroup.add(bombGlow);
 
-        // Decorative rivets around bomb
-        const rivetGeometry = new THREE.SphereGeometry(0.06, 8, 8);
-        const rivetMaterial = new THREE.MeshStandardMaterial({
-            color: 0x444444,
-            roughness: 0.3,
-            metalness: 0.9,
-        });
-        for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            const rivet = new THREE.Mesh(rivetGeometry, rivetMaterial);
-            rivet.position.set(Math.cos(angle) * 0.95, 0, Math.sin(angle) * 0.95);
-            bombGroup.add(rivet);
-        }
-
-        // Decorative band
-        const bandGeometry = new THREE.TorusGeometry(1.02, 0.05, 8, 48);
-        const bandMaterial = new THREE.MeshStandardMaterial({
-            color: 0x2a2a2a,
+        // === METAL NOZZLE on top ===
+        const nozzleBaseGeometry = new THREE.CylinderGeometry(0.32, 0.38, 0.25, 24);
+        const nozzleMaterial = new THREE.MeshStandardMaterial({
+            color: 0x4a4a4a,
             roughness: 0.2,
             metalness: 0.95,
         });
-        const band = new THREE.Mesh(bandGeometry, bandMaterial);
-        band.rotation.x = Math.PI / 2;
-        bombGroup.add(band);
+        const nozzleBase = new THREE.Mesh(nozzleBaseGeometry, nozzleMaterial);
+        nozzleBase.position.set(0, 1.05, 0);
+        bombGroup.add(nozzleBase);
 
-        // === FUSE HOLE ===
-        const fuseHoleGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.2, 16);
-        const fuseHoleMaterial = new THREE.MeshStandardMaterial({
-            color: 0x0a0a0a,
-            roughness: 0.9,
-        });
-        const fuseHole = new THREE.Mesh(fuseHoleGeometry, fuseHoleMaterial);
-        fuseHole.position.set(0, 1.0, 0);
-        bombGroup.add(fuseHole);
+        // Nozzle top ring
+        const nozzleTopGeometry = new THREE.CylinderGeometry(0.28, 0.32, 0.12, 24);
+        const nozzleTop = new THREE.Mesh(nozzleTopGeometry, nozzleMaterial);
+        nozzleTop.position.set(0, 1.2, 0);
+        bombGroup.add(nozzleTop);
 
-        // Metal collar
-        const collarGeometry = new THREE.TorusGeometry(0.22, 0.05, 8, 24);
+        // Metal collar ring
+        const collarGeometry = new THREE.TorusGeometry(0.35, 0.06, 12, 32);
         const collarMaterial = new THREE.MeshStandardMaterial({
             color: 0x555555,
-            roughness: 0.2,
-            metalness: 0.9,
+            roughness: 0.15,
+            metalness: 0.95,
         });
         const collar = new THREE.Mesh(collarGeometry, collarMaterial);
-        collar.position.set(0, 1.08, 0);
+        collar.position.set(0, 1.0, 0);
         collar.rotation.x = Math.PI / 2;
         bombGroup.add(collar);
 
-        // === BRAIDED FUSE ===
-        const fuseGeometry = new THREE.CylinderGeometry(0.07, 0.07, 1.4, 16);
+        // === FUSE HOLE ===
+        const fuseHoleGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.3, 16);
+        const fuseHoleMaterial = new THREE.MeshStandardMaterial({
+            color: 0x050505,
+            roughness: 0.9,
+        });
+        const fuseHole = new THREE.Mesh(fuseHoleGeometry, fuseHoleMaterial);
+        fuseHole.position.set(0, 1.18, 0);
+        bombGroup.add(fuseHole);
+
+        // === THICKER BRAIDED FUSE with curve ===
+        const fuseGeometry = new THREE.CylinderGeometry(0.09, 0.09, 1.4, 16);
         const fuseMaterial = new THREE.MeshStandardMaterial({
-            color: 0x6b4423,
+            color: 0x5c4033,
             roughness: 0.95,
         });
         const fuse = new THREE.Mesh(fuseGeometry, fuseMaterial);
-        fuse.position.set(0, 1.75, 0);
-        fuse.rotation.z = 0.2;
-        fuse.rotation.x = 0.15;
+        fuse.position.set(0.08, 1.9, 0);
+        fuse.rotation.z = 0.15;
+        fuse.rotation.x = 0.1;
         fuseRef.current = fuse;
         bombGroup.add(fuse);
 
+        // Fuse braid rings for texture
+        const braidMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3d2817,
+            roughness: 0.9,
+        });
+        for (let i = 0; i < 7; i++) {
+            const braidRingGeometry = new THREE.TorusGeometry(0.1, 0.02, 6, 12);
+            const braidRing = new THREE.Mesh(braidRingGeometry, braidMaterial);
+            braidRing.position.set(0.08 + i * 0.012, 1.35 + i * 0.16, i * 0.01);
+            braidRing.rotation.x = Math.PI / 2;
+            braidRing.rotation.z = 0.15;
+            bombGroup.add(braidRing);
+        }
+
         // === EMBER at fuse tip ===
-        const emberGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+        const emberGeometry = new THREE.SphereGeometry(0.18, 16, 16);
         const emberMaterial = new THREE.MeshStandardMaterial({
             color: 0xff6600,
             emissive: 0xff4400,
             emissiveIntensity: 3,
         });
         const ember = new THREE.Mesh(emberGeometry, emberMaterial);
-        ember.position.set(0.15, 2.4, 0.12);
+        ember.position.set(0.2, 2.5, 0.12);
         emberRef.current = ember;
         bombGroup.add(ember);
 
         // Core glow inside ember (brighter center)
-        const emberCoreGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+        const emberCoreGeometry = new THREE.SphereGeometry(0.1, 8, 8);
         const emberCoreMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffaa,
+            color: 0xffffcc,
         });
         const emberCore = new THREE.Mesh(emberCoreGeometry, emberCoreMaterial);
         emberCore.position.copy(ember.position);
         bombGroup.add(emberCore);
 
         // Ember light
-        const emberLight = new THREE.PointLight(0xff4400, 3, 4);
+        const emberLight = new THREE.PointLight(0xff4400, 4, 5);
         emberLight.position.copy(ember.position);
         emberLightRef.current = emberLight;
         bombGroup.add(emberLight);

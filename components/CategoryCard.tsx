@@ -44,11 +44,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, colo
     <PulsingButton onPress={onPress} style={[styles.cardWrapper, locked && styles.cardWrapperLocked]}>
       <View style={[styles.cardInner, { backgroundColor: color }]}>
         {locked && <View style={styles.grayOverlay} />}
-        {locked && (
-          <View style={styles.comingSoonBadge}>
-            <Text style={styles.comingSoonText}>COMING SOON</Text>
-          </View>
-        )}
         <View style={[styles.iconCircle, locked && styles.iconCircleLocked]}>
           {renderIcon()}
         </View>

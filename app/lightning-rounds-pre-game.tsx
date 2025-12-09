@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RuleSection, RulesModal } from '../components/RulesModal';
 
@@ -26,26 +26,27 @@ export default function LightningRoundsPreGame() {
 
     return (
         <View style={styles.container}>
-            <SafeAreaView style={styles.safeArea}>
-                {/* Main Image - Full Width, Proper Fit */}
-                <View style={styles.imageContainer}>
-                    <Image
-                        source={require('../assets/images/rounds.png')}
-                        style={styles.mainImage}
-                        resizeMode="contain"
-                    />
-                </View>
+            <ImageBackground
+                source={require('../assets/images/rounds.png')}
+                style={styles.backgroundImage}
+                resizeMode="contain"
+                imageStyle={{ alignSelf: 'center' }}
+            >
+                <SafeAreaView style={styles.safeArea}>
+                    {/* Spacer to push buttons to bottom */}
+                    <View style={styles.spacer} />
 
-                {/* Buttons Container */}
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.startButton} onPress={startGame}>
-                        <Text style={styles.startButtonText}>START GAME</Text>
-                    </TouchableOpacity>
+                    {/* Buttons Container */}
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity style={styles.startButton} onPress={startGame}>
+                            <Text style={styles.startButtonText}>START GAME</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
-                        <Text style={styles.infoButtonText}>i</Text>
-                    </TouchableOpacity>
-                </View>
+                        <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+                            <Text style={styles.infoButtonText}>i</Text>
+                        </TouchableOpacity>
+                    </View>
+                </SafeAreaView>
 
                 {/* Rules Modal */}
                 <RulesModal
@@ -74,7 +75,7 @@ export default function LightningRoundsPreGame() {
                         • Be honest - no cheating!
                     </RuleSection>
                 </RulesModal>
-            </SafeAreaView>
+            </ImageBackground>
         </View>
     );
 }
@@ -82,45 +83,57 @@ export default function LightningRoundsPreGame() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9c74f', // Fallback yellow bg matching lightning theme
+        backgroundColor: '#b99e66', // Darker sand to match rounds.png background
+    },
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
     },
     safeArea: {
         flex: 1,
-    },
-    imageContainer: {
-        flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 0,
+        justifyContent: 'space-between',
     },
-    mainImage: {
-        width: width,
-        height: height * 0.75,
+    emojiContainer: {
+        paddingTop: 40,
+        alignItems: 'center',
+    },
+    lightningEmoji: {
+        fontSize: 80,
+        textShadowColor: 'rgba(0, 0, 0, 0.3)',
+        textShadowOffset: { width: 2, height: 2 },
+        textShadowRadius: 10,
+    },
+    spacer: {
+        flex: 1,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingBottom: 30,
+        paddingBottom: 40,
         gap: 15,
     },
     startButton: {
         flex: 1,
         backgroundColor: '#f8961e',
-        paddingVertical: 20,
         borderRadius: 30,
+        paddingVertical: 18,
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
         shadowRadius: 8,
-        elevation: 8,
-        borderWidth: 3,
-        borderColor: '#fff',
+        elevation: 10,
+        borderBottomWidth: 4,
+        borderBottomColor: '#d97706',
+        borderWidth: 1,
+        borderColor: '#fbbf24',
     },
     startButtonText: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: 'bold',
         color: '#fff',
         letterSpacing: 2,
@@ -130,24 +143,25 @@ const styles = StyleSheet.create({
         ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
     },
     infoButton: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         backgroundColor: '#f8961e',
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 3,
-        borderColor: '#fff',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowRadius: 5,
         elevation: 8,
+        borderBottomWidth: 3,
+        borderBottomColor: '#d97706',
     },
     infoButtonText: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
         ...Platform.select({ ios: { fontFamily: 'Georgia' }, android: { fontFamily: 'serif' } }),
     },
 });
+

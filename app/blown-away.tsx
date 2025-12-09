@@ -338,22 +338,22 @@ export default function BlownAwayScreen() {
                   <Text style={styles.playerCounterButtonText}>+</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.setupStartButton}
-                onPress={() => {
-                  setCurrentPlayer(1);
-                  setPlayerScores({});
-                  setShowSetup(false);
-                }}
-              >
-                <Text style={styles.setupStartButtonText}>Start</Text>
-              </TouchableOpacity>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.setupStartButton}
+                  onPress={() => {
+                    setCurrentPlayer(1);
+                    setPlayerScores({});
+                    setShowSetup(false);
+                  }}
+                >
+                  <Text style={styles.setupStartButtonText}>Start</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+                  <Text style={styles.infoButtonText}>i</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-          <View style={styles.infoButtonWrapper}>
-            <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
-              <Text style={styles.infoButtonText}>i</Text>
-            </TouchableOpacity>
           </View>
 
           <RulesModal
@@ -676,11 +676,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
-  infoButtonWrapper: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    zIndex: 100,
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 15,
+    marginTop: 20,
   },
   infoButton: {
     width: 50,

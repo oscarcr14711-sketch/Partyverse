@@ -2,11 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ImageBackground, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
 import { isGameLocked } from '../utils/devMode';
 import { playSound } from '../utils/SoundManager';
+import { useTheme } from '../utils/ThemeContext';
 
 type SpicyGame = {
   title: string;
@@ -41,11 +42,6 @@ const GameItem = ({ title, emoji, gradient, darkGradient, onPress, locked = fals
       style={[styles.gameButtonOuter, { shadowColor: gradient[0] }]}
     >
       {locked && <View style={styles.grayOverlay} />}
-      {locked && (
-        <View style={styles.comingSoonBadge}>
-          <Text style={styles.comingSoonText}>COMING SOON</Text>
-        </View>
-      )}
       <LinearGradient
         colors={[darkGradient[1], darkGradient[0]]}
         start={{ x: 0.5, y: 0 }}
@@ -68,39 +64,53 @@ const GameItem = ({ title, emoji, gradient, darkGradient, onPress, locked = fals
 
 export default function SpicyGamesScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+
+  // Use Christmas background if theme has one
+  const hasChristmasBackground = theme.categoryBackgrounds?.spicy;
+
+  const content = (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <View style={{ width: 24 }} />
+      </View>
+      <ScrollView>
+        {/* Spicy Image */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={require('../assets/images/spicy.png')}
+            style={styles.spicyImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.grid}>
+          {games.map((game) => (
+            <GameItem
+              key={game.title}
+              {...game}
+              locked={isGameLocked(game.id)}
+              onPress={() => { playSound('ui.buttonClick'); router.push(game.path as any); }}
+            />
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+
+  if (hasChristmasBackground) {
+    return (
+      <ImageBackground source={theme.categoryBackgrounds.spicy} style={styles.background} resizeMode="cover">
+        {content}
+      </ImageBackground>
+    );
+  }
 
   return (
     <View style={styles.background}>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <View style={styles.titleContainer}>
-            <View>
-              <Text style={[styles.title, styles.cursive, styles.titleShadow]}>Spicy </Text>
-              <Text style={[styles.title, styles.cursive, styles.titlePink]}>Spicy </Text>
-            </View>
-            <View>
-              <Text style={[styles.title, styles.blocky, styles.titleBlueOutline]}>Mode 18+</Text>
-              <Text style={[styles.title, styles.blocky, styles.titleBlueFill]}>Mode 18+</Text>
-            </View>
-          </View>
-          <View style={{ width: 24 }} />
-        </View>
-        <ScrollView>
-          <View style={styles.grid}>
-            {games.map((game) => (
-              <GameItem
-                key={game.title}
-                {...game}
-                locked={isGameLocked(game.id)}
-                onPress={() => { playSound('ui.buttonClick'); router.push(game.path as any); }}
-              />
-            ))}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+      {content}
     </View>
   );
 }
@@ -166,8 +176,18 @@ const styles = StyleSheet.create({
     top: 0,
     color: '#121212',
   },
+  imageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  spicyImage: {
+    width: 280,
+    height: 150,
+  },
   grid: {
-    marginTop: 150,
+    marginTop: 20,
     paddingHorizontal: 10,
     paddingTop: 10,
   },

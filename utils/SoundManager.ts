@@ -17,8 +17,15 @@ const SOUNDS = {
 
 class SoundManager {
     private sounds: { [key: string]: Audio.Sound } = {};
-    private isMuted: boolean = false;
-    private volume: number = 0.5; // Default 50%
+
+    // Volume controls (0-1 scale)
+    private masterVolume: number = 0.75;
+    private effectsVolume: number = 1.0;
+    private musicVolume: number = 0.75;
+
+    // Mute states
+    private isEffectsMuted: boolean = false;
+    private isMusicMuted: boolean = false;
 
     async initialize() {
         try {
@@ -54,7 +61,7 @@ class SoundManager {
             try {
                 console.log(`  Loading ${key}...`);
                 const { sound } = await Audio.Sound.createAsync(source);
-                await sound.setVolumeAsync(this.volume);
+                await sound.setVolumeAsync(this.getEffectiveVolume());
                 this.sounds[key] = sound;
                 console.log(`  ✅ ${key} loaded`);
             } catch (error) {
@@ -63,8 +70,13 @@ class SoundManager {
         }
     }
 
+    // Calculate effective volume for sound effects (master × effects)
+    private getEffectiveVolume(): number {
+        return this.masterVolume * this.effectsVolume;
+    }
+
     async play(soundKey: string) {
-        if (this.isMuted) {
+        if (this.isEffectsMuted) {
             console.log(`🔇 Sound ${soundKey} not played (muted)`);
             return;
         }
@@ -72,7 +84,8 @@ class SoundManager {
         try {
             const sound = this.sounds[soundKey];
             if (sound) {
-                console.log(`🎵 Playing sound: ${soundKey}`);
+                console.log(`🎵 Playing sound: ${soundKey} at volume ${this.getEffectiveVolume()}`);
+                await sound.setVolumeAsync(this.getEffectiveVolume());
                 await sound.setPositionAsync(0); // Reset to start
                 await sound.playAsync();
             } else {
@@ -83,27 +96,65 @@ class SoundManager {
         }
     }
 
-    async setVolume(volume: number) {
-        this.volume = Math.max(0, Math.min(1, volume)); // Clamp 0-1
+    // Master volume affects all sounds
+    async setMasterVolume(volume: number) {
+        this.masterVolume = Math.max(0, Math.min(1, volume));
+        console.log(`🔊 Master volume set to ${Math.round(this.masterVolume * 100)}%`);
+        await this.updateAllSoundVolumes();
+    }
 
-        // Update all loaded sounds
+    // Effects volume (for UI and game sounds)
+    async setEffectsVolume(volume: number) {
+        this.effectsVolume = Math.max(0, Math.min(1, volume));
+        console.log(`🎮 Effects volume set to ${Math.round(this.effectsVolume * 100)}%`);
+        await this.updateAllSoundVolumes();
+    }
+
+    // Music volume (for background music - future use)
+    setMusicVolume(volume: number) {
+        this.musicVolume = Math.max(0, Math.min(1, volume));
+        console.log(`🎵 Music volume set to ${Math.round(this.musicVolume * 100)}%`);
+        // Will be used when background music is implemented
+    }
+
+    private async updateAllSoundVolumes() {
+        const effectiveVolume = this.getEffectiveVolume();
         for (const sound of Object.values(this.sounds)) {
             try {
-                await sound.setVolumeAsync(this.volume);
+                await sound.setVolumeAsync(effectiveVolume);
             } catch (error) {
                 console.error('Failed to set volume:', error);
             }
         }
     }
 
+    // Mute/unmute sound effects
     setMuted(muted: boolean) {
-        this.isMuted = muted;
+        this.isEffectsMuted = muted;
+        console.log(`🔊 Sound effects ${muted ? 'muted' : 'unmuted'}`);
+    }
+
+    // Mute/unmute music (for future use)
+    setMusicMuted(muted: boolean) {
+        this.isMusicMuted = muted;
+        console.log(`🎵 Music ${muted ? 'muted' : 'unmuted'}`);
+    }
+
+    // Legacy method for backward compatibility
+    async setVolume(volume: number) {
+        await this.setMasterVolume(volume);
     }
 
     toggleMute() {
-        this.isMuted = !this.isMuted;
-        return this.isMuted;
+        this.isEffectsMuted = !this.isEffectsMuted;
+        return this.isEffectsMuted;
     }
+
+    // Getters for current values
+    getMasterVolume(): number { return this.masterVolume; }
+    getEffectsVolume(): number { return this.effectsVolume; }
+    getMusicVolume(): number { return this.musicVolume; }
+    isMuted(): boolean { return this.isEffectsMuted; }
 
     async cleanup() {
         for (const sound of Object.values(this.sounds)) {
@@ -124,5 +175,10 @@ export const soundManager = new SoundManager();
 export const playSound = (soundKey: string) => soundManager.play(soundKey);
 export const initializeSounds = () => soundManager.initialize();
 export const setVolume = (volume: number) => soundManager.setVolume(volume);
+export const setMasterVolume = (volume: number) => soundManager.setMasterVolume(volume);
+export const setEffectsVolume = (volume: number) => soundManager.setEffectsVolume(volume);
+export const setMusicVolume = (volume: number) => soundManager.setMusicVolume(volume);
 export const toggleMute = () => soundManager.toggleMute();
 export const setMuted = (muted: boolean) => soundManager.setMuted(muted);
+export const setMusicMuted = (muted: boolean) => soundManager.setMusicMuted(muted);
+

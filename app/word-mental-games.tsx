@@ -6,6 +6,7 @@ import { ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
 import { playSound } from '../utils/SoundManager';
+import { useTheme } from '../utils/ThemeContext';
 
 const games = [
   { title: 'Brain Buzzer', description: 'The app gives you a quick trick question. Answer fast — but think twice before you speak!', emoji: '🧩', color: '#ff6b6b', path: '/brain-buzzer-pre-game' },
@@ -73,7 +74,6 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
             end={{ x: 0.5, y: 1 }}
             style={styles.buttonInnerShadow}
           />
-
           <Text style={styles.gameEmoji}>{emoji}</Text>
           <View style={styles.gameTextContainer}>
             <Text style={styles.gameTitle}>{title}</Text>
@@ -87,10 +87,14 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
 
 export default function WordMentalGamesScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+
+  // Use Christmas background if theme has one, otherwise default
+  const backgroundSource = theme.categoryBackgrounds?.wordMental || require('../assets/images/wordbg.png');
 
   return (
     <ImageBackground
-      source={require('../assets/images/wordbg.png')}
+      source={backgroundSource}
       style={styles.background}
       resizeMode="cover"
     >
@@ -192,7 +196,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: 'transparent',
-    textShadowColor: '#8b5cf6',
+    textShadowColor: '#ffffff',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
     letterSpacing: 8,
@@ -202,10 +206,10 @@ const styles = StyleSheet.create({
   subtitleMain: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#8b5cf6',
+    color: '#ffffff',
     letterSpacing: 8,
     marginTop: 8,
-    textShadowColor: 'rgba(139,92,246,0.5)',
+    textShadowColor: 'rgba(255,255,255,0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 8,
   },

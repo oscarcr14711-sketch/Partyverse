@@ -1,7 +1,7 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DrinkDominoScreen() {
@@ -18,7 +18,7 @@ export default function DrinkDominoScreen() {
             <Text style={styles.title}>🔥🍻 Drink Domino</Text>
           </View>
           <View style={styles.content}>
-            <Text style={styles.text}>Coming Soon!</Text>
+            <Text style={styles.text}>🔒 This game is locked</Text>
           </View>
         </ScrollView>
       </SafeAreaView>

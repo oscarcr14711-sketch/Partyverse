@@ -26,6 +26,8 @@ export default function BrainVsBrainGame() {
     const [timeLeft, setTimeLeft] = useState(15);
     const [gamePhase, setGamePhase] = useState<'roulette' | 'question' | 'buzzer' | 'answer'>('roulette');
 
+    const [questionsLoaded, setQuestionsLoaded] = useState<TriviaQuestion[]>([]);
+
     const rouletteAnim = useRef(new Animated.Value(0)).current;
     const buzzer1Anim = useRef(new Animated.Value(1)).current;
     const buzzer2Anim = useRef(new Animated.Value(1)).current;
@@ -59,10 +61,12 @@ export default function BrainVsBrainGame() {
         }
 
         setQuestions(gameQuestions);
-        startRoulette();
+        setQuestionsLoaded(gameQuestions);
+        // Start roulette with the loaded questions directly
+        startRoulette(0, gameQuestions);
     }, []);
 
-    const startRoulette = (questionIndex?: number) => {
+    const startRoulette = (questionIndex?: number, preloadedQuestions?: TriviaQuestion[]) => {
         setShowingRoulette(true);
         setGamePhase('roulette');
 
@@ -72,6 +76,9 @@ export default function BrainVsBrainGame() {
         // Use provided index or current index
         const idx = questionIndex ?? currentQuestionIndex;
 
+        // Use preloaded questions if provided, otherwise use state
+        const questionsList = preloadedQuestions || questions;
+
         // Spin animation
         Animated.timing(rouletteAnim, {
             toValue: 8,
@@ -79,7 +86,7 @@ export default function BrainVsBrainGame() {
             useNativeDriver: true,
         }).start(() => {
             // Use the actual category from the question
-            const question = questions[idx];
+            const question = questionsList[idx];
             if (question) {
                 setCurrentCategory(question.category as Category);
             } else {
@@ -181,7 +188,7 @@ export default function BrainVsBrainGame() {
             setCurrentQuestionIndex(nextIndex);
             setBuzzerPressed(null);
             setShowingAnswer(false);
-            startRoulette(nextIndex);
+            startRoulette(nextIndex, questionsLoaded);
         }
     };
 

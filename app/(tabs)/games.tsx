@@ -1,9 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { FlatList, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { PulsingButton } from '../../components/PulsingButton';
 import { playSound } from '../../utils/SoundManager';
+import { useTheme } from '../../utils/ThemeContext';
 
 const gameModes = [
   {
@@ -17,7 +18,7 @@ const gameModes = [
   {
     id: '2',
     title: 'Online Mode',
-    subtitle: 'Coming Soon',
+    subtitle: 'Play with friends online',
     route: null,
     disabled: true,
     gradient: ['#90be6d', '#43aa8b', '#4d908e'],
@@ -89,6 +90,7 @@ interface GameModeData extends Omit<GameModeItemProps, 'onPress'> {
 
 export default function MainScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
 
   const renderGameMode = ({ item }: { item: GameModeData }) => {
     const navigate = () => { if (item.route) router.push(item.route as any); };
@@ -102,23 +104,38 @@ export default function MainScreen() {
     return <GameModeItem {...item} onPress={onPress} />;
   };
 
+  // Use Christmas background if theme has one
+  const hasChristmasBackground = theme.categoryBackgrounds?.gamesMenu;
+
+  const content = (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>Let the Games</Text>
+        <Text style={[styles.title, styles.titleBegin]}>Begin! 🎮</Text>
+        <Text style={styles.subtitle}>Choose your adventure</Text>
+      </View>
+
+      <FlatList<GameModeData>
+        data={gameModes as unknown as GameModeData[]}
+        renderItem={renderGameMode}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
+  );
+
+  if (hasChristmasBackground) {
+    return (
+      <ImageBackground source={theme.categoryBackgrounds.gamesMenu} style={styles.background} resizeMode="cover">
+        {content}
+      </ImageBackground>
+    );
+  }
+
   return (
     <View style={styles.background}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Let the Games</Text>
-          <Text style={[styles.title, styles.titleBegin]}>Begin! 🎮</Text>
-          <Text style={styles.subtitle}>Choose your adventure</Text>
-        </View>
-
-        <FlatList<GameModeData>
-          data={gameModes as unknown as GameModeData[]}
-          renderItem={renderGameMode}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-        />
-      </SafeAreaView>
+      {content}
     </View>
   );
 }

@@ -352,17 +352,15 @@ export default function HotBombGameScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Start button */}
-            <TouchableOpacity style={styles.setupStartButton} onPress={handleStartGame}>
-              <Text style={styles.setupStartButtonText}>Start</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Info button - positioned in bottom-right corner */}
-          <View style={styles.infoButtonWrapper}>
-            <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
-              <Text style={styles.infoButtonText}>i</Text>
-            </TouchableOpacity>
+            {/* Start button and Info button together */}
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.setupStartButton} onPress={handleStartGame}>
+                <Text style={styles.setupStartButtonText}>Start</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
+                <Text style={styles.infoButtonText}>i</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <RulesModal
@@ -837,11 +835,12 @@ const styles = StyleSheet.create({
     color: '#FFE0B2',
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
   },
-  infoButtonWrapper: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    zIndex: 100,
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 15,
+    marginTop: 20,
   },
   infoButton: {
     width: 50,

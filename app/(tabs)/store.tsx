@@ -1,13 +1,29 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../../utils/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 const STORE_ITEMS = {
   themes: [
+    {
+      id: 0,
+      name: '🎄 Christmas Theme',
+      emoji: '🎅',
+      price: 'FREE',
+      colors: ['#c0392b', '#27ae60'],
+      owned: false,
+      isPackage: true,
+      packageContents: [
+        '🖼️ 3 Christmas category backgrounds',
+        '🎨 Red & green themed buttons',
+        '📱 Festive tab bar colors',
+        '❄️ Falling snow animation'
+      ]
+    },
     { id: 1, name: 'Ocean Breeze', emoji: '🌊', price: '$1.99', colors: ['#667eea', '#764ba2'], owned: false },
     { id: 2, name: 'Sunset Vibes', emoji: '🌅', price: '$1.99', colors: ['#f093fb', '#f5576c'], owned: false },
     { id: 3, name: 'Forest Dream', emoji: '🌲', price: '$1.99', colors: ['#2ecc71', '#27ae60'], owned: false },
@@ -30,10 +46,44 @@ const STORE_ITEMS = {
   ],
 };
 
+// Type for store items
+interface StoreItem {
+  id: number;
+  name: string;
+  emoji: string;
+  price: string;
+  colors?: [string, string];
+  count?: string;
+  owned: boolean;
+  isPackage?: boolean;
+  packageContents?: string[];
+}
+
 export default function StoreScreen() {
+  const { addOwnedTheme, ownedThemes } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('themes');
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  // Handle getting free items (like Christmas theme)
+  const handleGetFree = (item: StoreItem) => {
+    if (item.name.includes('Christmas')) {
+      addOwnedTheme('christmas');
+      Alert.alert(
+        '🎄 Theme Acquired!',
+        'Christmas theme has been added to your collection! Go to Settings → Theme to activate it.',
+        [{ text: 'Great!', onPress: () => setSelectedItem(null) }]
+      );
+    }
+  };
+
+  // Check if theme is owned via context
+  const isThemeOwned = (item: StoreItem) => {
+    if (item.name.includes('Christmas')) {
+      return ownedThemes.includes('christmas');
+    }
+    return item.owned;
+  };
 
   const categories = [
     { id: 'themes', name: 'Themes', icon: 'color-palette' },
@@ -163,12 +213,30 @@ export default function StoreScreen() {
                   />
                 </View>
               )}
-              <Text style={styles.modalPrice}>{selectedItem.price}</Text>
+              {/* Package contents for themes like Christmas */}
+              {selectedItem.packageContents && (
+                <View style={styles.packageContentsList}>
+                  {selectedItem.packageContents.map((item: string, index: number) => (
+                    <Text key={index} style={styles.packageContentItem}>{item}</Text>
+                  ))}
+                </View>
+              )}
+              <Text style={[styles.modalPrice, selectedItem.price === 'FREE' && { color: '#2ecc71' }]}>
+                {selectedItem.price}
+              </Text>
 
-              {selectedItem.owned ? (
+              {isThemeOwned(selectedItem) ? (
                 <TouchableOpacity style={[styles.modalButton, styles.modalButtonOwned]}>
                   <Ionicons name="checkmark-circle" size={24} color="white" />
                   <Text style={styles.modalButtonText}>Owned</Text>
+                </TouchableOpacity>
+              ) : selectedItem.price === 'FREE' ? (
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: '#2ecc71' }]}
+                  onPress={() => handleGetFree(selectedItem)}
+                >
+                  <Ionicons name="gift" size={24} color="white" />
+                  <Text style={styles.modalButtonText}>Get Free</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity style={styles.modalButton}>
@@ -505,5 +573,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2ecc71',
     fontWeight: '600',
+  },
+  packageContentsList: {
+    width: '100%',
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderRadius: 12,
+    padding: 15,
+    marginVertical: 10,
+  },
+  packageContentItem: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 8,
+    lineHeight: 20,
   },
 });

@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Alert, Dimensions, Image, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { soundManager } from '../../utils/SoundManager';
+import { THEMES, useTheme } from '../../utils/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -40,8 +42,12 @@ export default function ProfileScreen() {
   // Settings states
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
+  const [hapticsEnabled, setHapticsEnabled] = useState(true);
+  const [masterVolume, setMasterVolume] = useState(75);
+  const [soundEffectsVolume, setSoundEffectsVolume] = useState(100);
+  const [musicVolume, setMusicVolume] = useState(75);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [selectedTheme, setSelectedTheme] = useState('default');
+  const { theme, themeId, setTheme, ownedThemes } = useTheme();
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [showThemeSettings, setShowThemeSettings] = useState(false);
@@ -49,9 +55,43 @@ export default function ProfileScreen() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
+  // Volume change handlers that update SoundManager
+  const handleMasterVolumeChange = (value: number) => {
+    setMasterVolume(value);
+    soundManager.setMasterVolume(value / 100); // Convert 0-100 to 0-1
+  };
+
+  const handleEffectsVolumeChange = (value: number) => {
+    setSoundEffectsVolume(value);
+    soundManager.setEffectsVolume(value / 100);
+  };
+
+  const handleMusicVolumeChange = (value: number) => {
+    setMusicVolume(value);
+    soundManager.setMusicVolume(value / 100);
+  };
+
   const handleSoundToggle = (value: boolean) => {
     setSoundEnabled(value);
     soundManager.setMuted(!value);
+    if (hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handleMusicToggle = (value: boolean) => {
+    setMusicEnabled(value);
+    soundManager.setMusicMuted(!value);
+    if (hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handleHapticsToggle = (value: boolean) => {
+    setHapticsEnabled(value);
+    if (value) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
   };
 
   return (
@@ -194,7 +234,7 @@ export default function ProfileScreen() {
           <View style={[styles.modalContent, { maxHeight: '80%' }]}>
             <Text style={styles.modalTitle}>Settings</Text>
             <ScrollView>
-              <TouchableOpacity style={styles.settingItem} onPress={() => setShowSoundSettings(true)}>
+              <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowSoundSettings(true), 300); }}>
                 <Ionicons name="volume-high" size={24} color="#667eea" />
                 <Text style={styles.settingText}>Sound & Music</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
@@ -211,14 +251,14 @@ export default function ProfileScreen() {
                 />
               </View>
 
-              <TouchableOpacity style={styles.settingItem} onPress={() => setShowThemeSettings(true)}>
+              <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowThemeSettings(true), 300); }}>
                 <Ionicons name="color-palette" size={24} color="#667eea" />
                 <Text style={styles.settingText}>Theme</Text>
-                <Text style={styles.settingValue}>{selectedTheme === 'default' ? 'Default' : selectedTheme === 'dark' ? 'Dark' : 'Light'}</Text>
+                <Text style={styles.settingValue}>{THEMES[themeId]?.name || 'Default'}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.settingItem} onPress={() => setShowLanguageSettings(true)}>
+              <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowLanguageSettings(true), 300); }}>
                 <Ionicons name="language" size={24} color="#667eea" />
                 <Text style={styles.settingText}>Language</Text>
                 <Text style={styles.settingValue}>{selectedLanguage}</Text>
@@ -255,33 +295,109 @@ export default function ProfileScreen() {
       {/* Sound & Music Settings Modal */}
       <Modal visible={showSoundSettings} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Sound & Music</Text>
-            <View style={styles.settingItem}>
-              <Ionicons name="volume-high" size={24} color="#667eea" />
-              <Text style={styles.settingText}>Sound Effects</Text>
-              <Switch
-                value={soundEnabled}
-                onValueChange={handleSoundToggle}
-                trackColor={{ false: '#ccc', true: '#667eea' }}
-                thumbColor={soundEnabled ? '#fff' : '#f4f3f4'}
-              />
-            </View>
-            <View style={styles.settingItem}>
-              <Ionicons name="musical-notes" size={24} color="#667eea" />
-              <Text style={styles.settingText}>Background Music</Text>
-              <Switch
-                value={musicEnabled}
-                onValueChange={setMusicEnabled}
-                trackColor={{ false: '#ccc', true: '#667eea' }}
-                thumbColor={musicEnabled ? '#fff' : '#f4f3f4'}
-              />
-            </View>
-            <View style={[styles.settingItem, { borderBottomWidth: 0 }]}>
-              <Ionicons name="volume-medium" size={24} color="#667eea" />
-              <Text style={styles.settingText}>Master Volume</Text>
-              <Text style={styles.settingValue}>70%</Text>
-            </View>
+          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+            <Text style={styles.modalTitle}>🔊 Sound & Music</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Master Volume */}
+              <View style={styles.settingItem}>
+                <Ionicons name="volume-high" size={22} color="#667eea" />
+                <Text style={styles.settingText}>Master Volume</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity
+                    onPress={() => handleMasterVolumeChange(Math.max(0, masterVolume - 25))}
+                    style={{ padding: 8, backgroundColor: '#f0f0f0', borderRadius: 8, marginRight: 8 }}
+                  >
+                    <Ionicons name="remove" size={16} color="#667eea" />
+                  </TouchableOpacity>
+                  <Text style={{ fontWeight: 'bold', color: '#667eea', minWidth: 40, textAlign: 'center' }}>{masterVolume}%</Text>
+                  <TouchableOpacity
+                    onPress={() => handleMasterVolumeChange(Math.min(100, masterVolume + 25))}
+                    style={{ padding: 8, backgroundColor: '#f0f0f0', borderRadius: 8, marginLeft: 8 }}
+                  >
+                    <Ionicons name="add" size={16} color="#667eea" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Sound Effects Toggle & Volume */}
+              <View style={styles.settingItem}>
+                <Ionicons name="volume-medium" size={22} color="#f39c12" />
+                <Text style={styles.settingText}>Sound Effects</Text>
+                <Switch
+                  value={soundEnabled}
+                  onValueChange={handleSoundToggle}
+                  trackColor={{ false: '#ccc', true: '#f39c12' }}
+                  thumbColor={soundEnabled ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+              {soundEnabled && (
+                <View style={[styles.settingItem, { paddingLeft: 37 }]}>
+                  <Text style={styles.settingText}>Effects Volume</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity
+                      onPress={() => handleEffectsVolumeChange(Math.max(0, soundEffectsVolume - 25))}
+                      style={{ padding: 8, backgroundColor: '#f0f0f0', borderRadius: 8, marginRight: 8 }}
+                    >
+                      <Ionicons name="remove" size={16} color="#f39c12" />
+                    </TouchableOpacity>
+                    <Text style={{ fontWeight: 'bold', color: '#f39c12', minWidth: 40, textAlign: 'center' }}>{soundEffectsVolume}%</Text>
+                    <TouchableOpacity
+                      onPress={() => handleEffectsVolumeChange(Math.min(100, soundEffectsVolume + 25))}
+                      style={{ padding: 8, backgroundColor: '#f0f0f0', borderRadius: 8, marginLeft: 8 }}
+                    >
+                      <Ionicons name="add" size={16} color="#f39c12" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* Background Music Toggle & Volume */}
+              <View style={styles.settingItem}>
+                <Ionicons name="musical-notes" size={22} color="#e74c3c" />
+                <Text style={styles.settingText}>Background Music</Text>
+                <Switch
+                  value={musicEnabled}
+                  onValueChange={handleMusicToggle}
+                  trackColor={{ false: '#ccc', true: '#e74c3c' }}
+                  thumbColor={musicEnabled ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+              {musicEnabled && (
+                <View style={[styles.settingItem, { paddingLeft: 37 }]}>
+                  <Text style={styles.settingText}>Music Volume</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity
+                      onPress={() => handleMusicVolumeChange(Math.max(0, musicVolume - 25))}
+                      style={{ padding: 8, backgroundColor: '#f0f0f0', borderRadius: 8, marginRight: 8 }}
+                    >
+                      <Ionicons name="remove" size={16} color="#e74c3c" />
+                    </TouchableOpacity>
+                    <Text style={{ fontWeight: 'bold', color: '#e74c3c', minWidth: 40, textAlign: 'center' }}>{musicVolume}%</Text>
+                    <TouchableOpacity
+                      onPress={() => handleMusicVolumeChange(Math.min(100, musicVolume + 25))}
+                      style={{ padding: 8, backgroundColor: '#f0f0f0', borderRadius: 8, marginLeft: 8 }}
+                    >
+                      <Ionicons name="add" size={16} color="#e74c3c" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* Haptic Feedback Toggle */}
+              <View style={[styles.settingItem, { marginTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15 }]}>
+                <Ionicons name="phone-portrait-outline" size={22} color="#9b59b6" />
+                <Text style={styles.settingText}>Haptic Feedback</Text>
+                <Switch
+                  value={hapticsEnabled}
+                  onValueChange={handleHapticsToggle}
+                  trackColor={{ false: '#ccc', true: '#9b59b6' }}
+                  thumbColor={hapticsEnabled ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+              <Text style={styles.settingHint}>
+                Vibration feedback when pressing buttons
+              </Text>
+            </ScrollView>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowSoundSettings(false)}
@@ -297,21 +413,32 @@ export default function ProfileScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Choose Theme</Text>
-            {['default', 'light', 'dark'].map((theme) => (
-              <TouchableOpacity
-                key={theme}
-                style={[styles.optionItem, selectedTheme === theme && styles.optionSelected]}
-                onPress={() => {
-                  setSelectedTheme(theme);
-                  setShowThemeSettings(false);
-                }}
-              >
-                <Text style={styles.optionText}>
-                  {theme === 'default' ? '🎨 Default' : theme === 'light' ? '☀️ Light' : '🌙 Dark'}
-                </Text>
-                {selectedTheme === theme && <Ionicons name="checkmark" size={24} color="#667eea" />}
-              </TouchableOpacity>
-            ))}
+            <Text style={{ color: '#666', textAlign: 'center', marginBottom: 15, fontSize: 14 }}>
+              Only owned themes are shown. Get more themes from the Store!
+            </Text>
+            {ownedThemes.map((ownedThemeId) => {
+              const themeData = THEMES[ownedThemeId];
+              if (!themeData) return null;
+              return (
+                <TouchableOpacity
+                  key={ownedThemeId}
+                  style={[styles.optionItem, themeId === ownedThemeId && styles.optionSelected]}
+                  onPress={() => {
+                    setTheme(ownedThemeId);
+                    setShowThemeSettings(false);
+                    if (hapticsEnabled) {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    }
+                  }}
+                >
+                  <Text style={styles.optionText}>
+                    {ownedThemeId === 'default' ? '🎨 ' : ownedThemeId === 'christmas' ? '🎄 ' : ''}
+                    {themeData.name}
+                  </Text>
+                  {themeId === ownedThemeId && <Ionicons name="checkmark" size={24} color="#667eea" />}
+                </TouchableOpacity>
+              );
+            })}
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowThemeSettings(false)}
@@ -436,11 +563,11 @@ export default function ProfileScreen() {
                     onPress={() => {
                       const storeUrl = Platform.select({
                         ios: 'https://apps.apple.com/app/partyverse',
-                        android: 'https://play.google.com/store/apps/details?id=com.partyverse',
-                        default: 'https://partyverse.app'
+                        android: 'https://play.google.com/store/apps/details?id=com.oscarcr.partyverse',
+                        default: 'https://oscarcr14711-sketch.github.io/Partyverse/'
                       });
                       Linking.openURL(storeUrl).catch(() => {
-                        Alert.alert('Coming Soon', 'App Store link will be available when published!');
+                        Alert.alert('Rate Us', 'Thanks for your support!');
                       });
                     }}
                   >
@@ -453,7 +580,7 @@ export default function ProfileScreen() {
                   <TouchableOpacity
                     style={[styles.aboutLinkButton, { backgroundColor: '#e74c3c' }]}
                     onPress={() => {
-                      Linking.openURL('mailto:support@partyverse.app?subject=Partyverse%20Support');
+                      Linking.openURL('mailto:partyverseappp@gmail.com?subject=Partyverse%20Support');
                     }}
                   >
                     <Ionicons name="mail" size={24} color="#fff" />
@@ -758,6 +885,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     marginRight: 8,
+  },
+  settingHint: {
+    fontSize: 12,
+    color: '#999',
+    marginLeft: 37,
+    marginTop: -8,
+    marginBottom: 10,
+    fontStyle: 'italic',
   },
   optionItem: {
     flexDirection: 'row',

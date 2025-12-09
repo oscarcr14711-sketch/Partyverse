@@ -23,21 +23,22 @@ export default function RideTheBusPreGame() {
                 <View style={styles.content}>
                     <View style={styles.spacer} />
 
-                    <TouchableOpacity
-                        style={styles.startButton}
-                        onPress={() => router.push('/ride-the-bus-game')}
-                    >
-                        <Text style={styles.startButtonText}>START GAME</Text>
-                    </TouchableOpacity>
-                </View>
+                    {/* Buttons Container - Start and Info together */}
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity
+                            style={styles.startButton}
+                            onPress={() => router.push('/ride-the-bus-game')}
+                        >
+                            <Text style={styles.startButtonText}>START GAME</Text>
+                        </TouchableOpacity>
 
-                <View style={styles.infoButtonWrapper}>
-                    <TouchableOpacity
-                        style={styles.infoButton}
-                        onPress={() => setShowRules(true)}
-                    >
-                        <Text style={styles.infoButtonText}>i</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.infoButton}
+                            onPress={() => setShowRules(true)}
+                        >
+                            <Text style={styles.infoButtonText}>i</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <RulesModal
@@ -88,17 +89,23 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-end',
-        paddingBottom: 100,
+        paddingBottom: 50,
     },
     spacer: {
         flex: 1,
     },
+    buttonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 15,
+        marginBottom: 30,
+    },
     startButton: {
         backgroundColor: '#263238',
         borderRadius: 30,
-        paddingHorizontal: 80,
+        paddingHorizontal: 60,
         paddingVertical: 16,
-        marginBottom: 40,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.4,
@@ -108,16 +115,10 @@ const styles = StyleSheet.create({
         borderBottomColor: '#1a1f23',
     },
     startButtonText: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#FFE0B2',
         fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    infoButtonWrapper: {
-        position: 'absolute',
-        bottom: 30,
-        right: 20,
-        zIndex: 100,
     },
     infoButton: {
         width: 50,

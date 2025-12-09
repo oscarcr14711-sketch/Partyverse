@@ -6,9 +6,9 @@ import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LightningIcon from '../components/LightningIcon';
 import { PulsingButton } from '../components/PulsingButton';
 import { playSound } from '../utils/SoundManager';
+import { useTheme } from '../utils/ThemeContext';
 
 const games = [
   { title: 'Hot Bomb', description: 'Pass the bomb before it explodes!', emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
@@ -76,11 +76,7 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
             style={styles.buttonInnerShadow}
           />
 
-          {title === 'Action / Adrenaline' || emoji === '⚡' ? (
-            <LightningIcon />
-          ) : (
-            <Text style={styles.gameEmoji}>{emoji}</Text>
-          )}
+          <Text style={styles.gameEmoji}>{emoji}</Text>
           <View style={styles.gameTextContainer}>
             <Text style={styles.gameTitle}>{title}</Text>
           </View>
@@ -93,6 +89,7 @@ const GameItem = ({ title, description, emoji, color, onPress }: any) => {
 
 function ActionAdrenalineGamesScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
 
   // Preload Hot Bomb assets to reduce perceived load time when navigating
   useEffect(() => {
@@ -114,10 +111,13 @@ function ActionAdrenalineGamesScreen() {
 
   const { width, height } = Dimensions.get('window');
 
+  // Use Christmas background if theme has one, otherwise default
+  const backgroundSource = theme.categoryBackgrounds?.actionAdrenaline || require('../assets/images/Actionbg.png');
+
   return (
     <View style={styles.container}>
       <Image
-        source={require('../assets/images/Actionbg.png')}
+        source={backgroundSource}
         style={{
           position: 'absolute',
           top: 0,

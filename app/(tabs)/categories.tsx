@@ -12,7 +12,7 @@ const categories = [
     { id: '4', title: 'Quick Competition', icon: '🏁', color: '#4CAF50', path: '/quick-competition-games' },
     { id: '5', title: 'Social / Truth', icon: '💬', color: '#000000', path: '/social-truth-games' },
     { id: '6', title: 'Spicy / 18+ / Alcohol', icon: '🔥', color: '#9C27B0', path: '/spicy-games' },
-    { id: '7', title: 'Specials (Weekly / Festive) (Coming Soon)', icon: '🎁', color: '#FF9800', path: null, disabled: true },
+    { id: '7', title: 'Specials (Weekly / Festive)', icon: '🎁', color: '#FF9800', path: null, disabled: true },
 ];
 
 export default function Categories() {

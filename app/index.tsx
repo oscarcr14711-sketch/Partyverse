@@ -29,12 +29,24 @@ export default function Index() {
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }} pointerEvents="none">
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, flexDirection: 'column' }} pointerEvents="none">
         <LottieView
           source={require('../assets/animations/Confetti - Full Screen.json')}
           autoPlay
           loop
-          style={{ width: '100%', height: '100%' }}
+          style={{ flex: 1, width: '100%' }}
+        />
+        <LottieView
+          source={require('../assets/animations/Confetti - Full Screen.json')}
+          autoPlay
+          loop
+          style={{ flex: 1, width: '100%' }}
+        />
+        <LottieView
+          source={require('../assets/animations/Confetti - Full Screen.json')}
+          autoPlay
+          loop
+          style={{ flex: 1, width: '100%' }}
         />
       </View>
       <View style={[styles.center, { zIndex: 2 }]}>

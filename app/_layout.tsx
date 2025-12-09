@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import React, { useEffect } from 'react';
 import { InteractionManager } from 'react-native';
 import { initializeSounds } from '../utils/SoundManager';
+import { ThemeProvider } from '../utils/ThemeContext';
 
 // Centralized asset list for eager preloading (Hot Bomb + commonly used)
 const PRELOAD_ASSETS = [
@@ -35,12 +36,15 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="party-mode-games" />
-      <Stack.Screen name="start" />
-      <Stack.Screen name="mic-madness-card-reveal" />
-    </Stack>
+    <ThemeProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="party-mode-games" />
+        <Stack.Screen name="start" />
+        <Stack.Screen name="mic-madness-card-reveal" />
+      </Stack>
+    </ThemeProvider>
   );
 }
+

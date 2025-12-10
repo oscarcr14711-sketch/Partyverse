@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Alert, Dimensions, Image, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CARD_BACKS, getCardBackById } from '../../data/card-backs';
 import { soundManager } from '../../utils/SoundManager';
 import { THEMES, useTheme } from '../../utils/ThemeContext';
 
@@ -54,6 +55,8 @@ export default function ProfileScreen() {
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showCardBackSettings, setShowCardBackSettings] = useState(false);
+  const [selectedCardBack, setSelectedCardBack] = useState('default');
 
   // Volume change handlers that update SoundManager
   const handleMasterVolumeChange = (value: number) => {
@@ -262,6 +265,13 @@ export default function ProfileScreen() {
                 <Ionicons name="language" size={24} color="#667eea" />
                 <Text style={styles.settingText}>Language</Text>
                 <Text style={styles.settingValue}>{selectedLanguage}</Text>
+                <Ionicons name="chevron-forward" size={24} color="#999" />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowCardBackSettings(true), 300); }}>
+                <Ionicons name="albums" size={24} color="#667eea" />
+                <Text style={styles.settingText}>Card Back Design</Text>
+                <Text style={styles.settingValue}>{getCardBackById(selectedCardBack).name}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
@@ -479,6 +489,76 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
+      {/* Card Back Settings Modal */}
+      <Modal visible={showCardBackSettings} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '85%' }]}>
+            <Text style={styles.modalTitle}>🃏 Card Back Design</Text>
+            <Text style={{ color: '#666', textAlign: 'center', marginBottom: 15, fontSize: 14 }}>
+              Choose your card back for all card games
+            </Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.avatarGrid}>
+                {CARD_BACKS.map((cardBack) => {
+                  const isOwned = !cardBack.isPremium; // Default is free, others require purchase
+                  const isSelected = selectedCardBack === cardBack.id;
+                  return (
+                    <TouchableOpacity
+                      key={cardBack.id}
+                      onPress={() => {
+                        if (isOwned) {
+                          setSelectedCardBack(cardBack.id);
+                          if (hapticsEnabled) {
+                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                          }
+                        } else {
+                          Alert.alert(
+                            '🔒 Premium Card Back',
+                            'Purchase the Card Backs Pack from the Store to unlock this design!',
+                            [{ text: 'OK' }]
+                          );
+                        }
+                      }}
+                      style={[
+                        styles.avatarOption,
+                        { width: 90, height: 130 },
+                        isSelected && styles.avatarSelected,
+                        !isOwned && { opacity: 0.5 }
+                      ]}
+                    >
+                      <Image
+                        source={cardBack.image}
+                        style={{ width: 70, height: 100, borderRadius: 8 }}
+                        resizeMode="cover"
+                      />
+                      <Text style={{ fontSize: 10, color: '#333', marginTop: 4, textAlign: 'center' }}>
+                        {cardBack.name}
+                      </Text>
+                      {!isOwned && (
+                        <View style={{ position: 'absolute', top: 5, right: 5 }}>
+                          <Ionicons name="lock-closed" size={16} color="#999" />
+                        </View>
+                      )}
+                      {isSelected && isOwned && (
+                        <View style={{ position: 'absolute', top: 5, right: 5 }}>
+                          <Ionicons name="checkmark-circle" size={20} color="#2ecc71" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowCardBackSettings(false)}
+            >
+              <Text style={styles.closeButtonText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Privacy Modal */}
       <Modal visible={showPrivacy} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -590,8 +670,8 @@ export default function ProfileScreen() {
                   <TouchableOpacity
                     style={[styles.aboutLinkButton, { backgroundColor: '#9b59b6' }]}
                     onPress={() => {
-                      Linking.openURL('https://instagram.com/partyverseapp').catch(() => {
-                        Alert.alert('Follow Us!', 'Find us on Instagram @partyverseapp');
+                      Linking.openURL('https://instagram.com/partyverseappp').catch(() => {
+                        Alert.alert('Follow Us!', 'Find us on Instagram @partyverseappp');
                       });
                     }}
                   >

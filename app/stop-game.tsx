@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, Vibration, View } from 'react-native';
+import { Animated, Dimensions, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Vibration, View } from 'react-native';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const WRITING_TIME = 10; // seconds per player
@@ -192,6 +192,7 @@ export default function StopGame() {
             setReviewPlayerIndex(0);
             setCurrentAnswers({});
             setFunnyVotes(new Set());
+            setCurrentLetter(''); // Reset letter so wheel spins again
             // Reset answers for new round
             const resetPlayers = players.map(p => ({ ...p, answers: {} }));
             setPlayers(resetPlayers);
@@ -256,45 +257,54 @@ export default function StopGame() {
         const currentPlayer = players[currentPlayerIndex];
 
         return (
-            <View style={styles.phaseContainer}>
-                <View style={styles.writingHeader}>
-                    <View style={styles.playerBadge}>
-                        <Text style={styles.playerBadgeText}>{currentPlayer.name}</Text>
-                    </View>
-                    <View style={styles.letterBadge}>
-                        <Text style={styles.letterBadgeText}>Letter: {currentLetter}</Text>
-                    </View>
-                </View>
-
-                <Animated.View style={[styles.timerContainer, { transform: [{ scale: pulseAnim }] }]}>
-                    <Text style={[
-                        styles.timerText,
-                        timeLeft <= 3 && styles.timerTextUrgent
-                    ]}>
-                        {timeLeft}s
-                    </Text>
-                </Animated.View>
-
-                <ScrollView style={styles.categoriesScroll} contentContainerStyle={styles.categoriesContent}>
-                    {categories.map((category: string, index: number) => (
-                        <View key={index} style={styles.categoryInput}>
-                            <Text style={styles.categoryLabel}>{category}</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder={`Word starting with ${currentLetter}...`}
-                                placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                                value={currentAnswers[category] || ''}
-                                onChangeText={(text) => handleAnswerChange(category, text)}
-                                autoCapitalize="words"
-                            />
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.phaseContainer}>
+                    <View style={styles.writingHeader}>
+                        <View style={styles.playerBadge}>
+                            <Text style={styles.playerBadgeText}>{currentPlayer.name}</Text>
                         </View>
-                    ))}
-                </ScrollView>
+                        <View style={styles.letterBadge}>
+                            <Text style={styles.letterBadgeText}>Letter: {currentLetter}</Text>
+                        </View>
+                    </View>
 
-                <TouchableOpacity style={styles.submitButton} onPress={handleTimeUp}>
-                    <Text style={styles.submitButtonText}>Submit Early</Text>
-                </TouchableOpacity>
-            </View>
+                    <Animated.View style={[styles.timerContainer, { transform: [{ scale: pulseAnim }] }]}>
+                        <Text style={[
+                            styles.timerText,
+                            timeLeft <= 3 && styles.timerTextUrgent
+                        ]}>
+                            {timeLeft}s
+                        </Text>
+                    </Animated.View>
+
+                    <ScrollView
+                        style={styles.categoriesScroll}
+                        contentContainerStyle={styles.categoriesContent}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        {categories.map((category: string, index: number) => (
+                            <View key={index} style={styles.categoryInput}>
+                                <Text style={styles.categoryLabel}>{category}</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder={`Word starting with ${currentLetter}...`}
+                                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                                    value={currentAnswers[category] || ''}
+                                    onChangeText={(text) => handleAnswerChange(category, text)}
+                                    autoCapitalize="words"
+                                    returnKeyType="done"
+                                    onSubmitEditing={Keyboard.dismiss}
+                                    blurOnSubmit={true}
+                                />
+                            </View>
+                        ))}
+                    </ScrollView>
+
+                    <TouchableOpacity style={styles.submitButton} onPress={() => { Keyboard.dismiss(); handleTimeUp(); }}>
+                        <Text style={styles.submitButtonText}>Submit Answers</Text>
+                    </TouchableOpacity>
+                </View>
+            </TouchableWithoutFeedback>
         );
     };
 

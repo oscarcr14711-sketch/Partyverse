@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { getSelectedCardBack } from '../../data/card-backs';
 
 export default function StartScreen() {
   const router = useRouter();
@@ -286,7 +287,7 @@ export default function StartScreen() {
             {/* FRONT (Deck) */}
             <Animated.View style={[styles.cardFace, frontAnimatedStyle]}>
               <Image
-                source={require("../../assets/images/deck1.png")}
+                source={getSelectedCardBack().image}
                 style={styles.deckImage}
                 resizeMode="contain"
               />

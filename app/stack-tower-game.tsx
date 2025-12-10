@@ -136,13 +136,13 @@ export default function JengaTowerGame() {
             // Left wall (shelf) fades when camera looks left (theta > 0)
             if (shelfWallRef.current) {
                 const leftFace = Math.abs(Math.sin(theta));
-                const leftOpacity = theta > 0.3 ? Math.max(0.1, 1 - leftFace) : 1;
+                const leftOpacity = theta > 0.3 ? Math.max(0.05, 0.5 - leftFace * 0.5) : 0.5;
                 (shelfWallRef.current.material as THREE.MeshBasicMaterial).opacity = leftOpacity;
             }
             // Right wall (sofa) fades when camera looks right (theta < 0)
             if (sofaWallRef.current) {
                 const rightFace = Math.abs(Math.sin(theta));
-                const rightOpacity = theta < -0.3 ? Math.max(0.1, 1 - rightFace) : 1;
+                const rightOpacity = theta < -0.3 ? Math.max(0.05, 0.5 - rightFace * 0.5) : 0.5;
                 (sofaWallRef.current.material as THREE.MeshBasicMaterial).opacity = rightOpacity;
             }
         }
@@ -189,8 +189,8 @@ export default function JengaTowerGame() {
         warmFill.position.set(-5, 6, 5);
         scene.add(warmFill);
 
-        // Rim light for depth
-        const rimLight = new THREE.PointLight(0x88ccff, 0.3, 20);
+        // Rim light for depth (warm, not blue to avoid tinting)
+        const rimLight = new THREE.PointLight(0xffcc88, 0.25, 20);
         rimLight.position.set(6, 8, -4);
         scene.add(rimLight);
 
@@ -466,14 +466,15 @@ export default function JengaTowerGame() {
         const shelfAsset = Asset.fromModule(require('../assets/images/shelf.png'));
         await shelfAsset.downloadAsync();
         const shelfTexture = await loadTextureAsync({ asset: shelfAsset });
-        const shelfWallGeometry = new THREE.PlaneGeometry(30, 20);
+        const shelfWallGeometry = new THREE.PlaneGeometry(40, 25);
         const shelfWallMaterial = new THREE.MeshBasicMaterial({
             map: shelfTexture,
             transparent: true,
+            opacity: 0.5,
             side: THREE.DoubleSide,
         });
         const shelfWall = new THREE.Mesh(shelfWallGeometry, shelfWallMaterial);
-        shelfWall.position.set(-12, 5, 0);
+        shelfWall.position.set(-20, 5, 0);
         shelfWall.rotation.y = Math.PI / 2;
         shelfWallRef.current = shelfWall;
         scene.add(shelfWall);
@@ -482,14 +483,15 @@ export default function JengaTowerGame() {
         const sofaAsset = Asset.fromModule(require('../assets/images/sofa.png'));
         await sofaAsset.downloadAsync();
         const sofaTexture = await loadTextureAsync({ asset: sofaAsset });
-        const sofaWallGeometry = new THREE.PlaneGeometry(30, 20);
+        const sofaWallGeometry = new THREE.PlaneGeometry(40, 25);
         const sofaWallMaterial = new THREE.MeshBasicMaterial({
             map: sofaTexture,
             transparent: true,
+            opacity: 0.5,
             side: THREE.DoubleSide,
         });
         const sofaWall = new THREE.Mesh(sofaWallGeometry, sofaWallMaterial);
-        sofaWall.position.set(12, 5, 0);
+        sofaWall.position.set(20, 5, 0);
         sofaWall.rotation.y = -Math.PI / 2;
         sofaWallRef.current = sofaWall;
         scene.add(sofaWall);
@@ -620,7 +622,22 @@ export default function JengaTowerGame() {
                 mesh.userData = { blockId: `${level}-${pos}` };
 
                 const edges = new THREE.EdgesGeometry(geometry);
-                mesh.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x3a2510 })));
+                mesh.add(new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 })));
+
+                // Add invisible larger hitbox for better tap detection
+                const hitboxGeometry = new THREE.BoxGeometry(
+                    BLOCK_LENGTH * 1.3,
+                    BLOCK_HEIGHT * 2.5,  // Much taller hitbox to prevent selecting wrong level
+                    BLOCK_WIDTH * 1.3
+                );
+                const hitboxMaterial = new THREE.MeshBasicMaterial({
+                    visible: false,  // Invisible
+                    transparent: true,
+                    opacity: 0
+                });
+                const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
+                hitbox.userData = { blockId: `${level}-${pos}`, isHitbox: true };
+                mesh.add(hitbox);  // Add as child so it moves with the block
 
                 const offset = (pos - 1) * BLOCK_WIDTH;
                 if (isHorizontal) {
@@ -672,26 +689,24 @@ export default function JengaTowerGame() {
 
     // Sound effects
     const playSound = async (type: 'pickup' | 'place' | 'crash' | 'wobble') => {
-        try {
-            // Use existing sounds as placeholders
-            const soundFile = type === 'crash'
-                ? require('../assets/sounds/wasted.mp3')
-                : require('../assets/sounds/wasted.mp3');
-
-            const { sound } = await Audio.Sound.createAsync(soundFile, {
-                shouldPlay: true,
-                volume: type === 'crash' ? 0.8 : 0.3
-            });
-            soundRef.current = sound;
-
-            // Light haptics for feedback
+        // Only play crash sound - pickup/place don't have appropriate sounds
+        if (type !== 'crash') {
+            // Just do haptics for pickup/place
             if (type === 'pickup') {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             } else if (type === 'place') {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             }
+            return;
+        }
 
-            // Cleanup sound after playing
+        try {
+            const soundFile = require('../assets/sounds/wasted.mp3');
+            const { sound } = await Audio.Sound.createAsync(soundFile, {
+                shouldPlay: true,
+                volume: 0.8
+            });
+            soundRef.current = sound;
             setTimeout(() => sound.unloadAsync(), 2000);
         } catch (e) {
             console.log('Sound error:', e);
@@ -766,29 +781,26 @@ export default function JengaTowerGame() {
             levelCounts[level] = onLevelNow;
         }
 
-        // Rule 1: Bottom 3 levels must have at least 1 block each
-        for (let level = 0; level < 3; level++) {
+        // Rule 1: ANY level that's completely empty causes collapse (no support for above)
+        // Check from bottom up - if a level has blocks above it but is empty, collapse
+        for (let level = 0; level < INITIAL_LEVELS - 1; level++) {
             if (levelCounts[level] === 0) {
-                console.log(`Collapse: Bottom level ${level} is completely empty!`);
-                return true;
-            }
-        }
-
-        // Rule 2: Can't have 3 consecutive empty levels anywhere
-        let consecutiveEmpty = 0;
-        for (let level = 0; level < INITIAL_LEVELS; level++) {
-            if (levelCounts[level] === 0) {
-                consecutiveEmpty++;
-                if (consecutiveEmpty >= 3) {
-                    console.log(`Collapse: 3 consecutive empty levels!`);
+                // Check if there are any blocks above this level
+                let hasBlocksAbove = false;
+                for (let aboveLevel = level + 1; aboveLevel < INITIAL_LEVELS; aboveLevel++) {
+                    if (levelCounts[aboveLevel] > 0) {
+                        hasBlocksAbove = true;
+                        break;
+                    }
+                }
+                if (hasBlocksAbove) {
+                    console.log(`Collapse: Level ${level} is completely empty with blocks above it!`);
                     return true;
                 }
-            } else {
-                consecutiveEmpty = 0;
             }
         }
 
-        // Rule 3: Tower becomes VERY unstable only when >50% of blocks removed
+        // Rule 2: Tower becomes VERY unstable only when >50% of blocks removed
         const totalBlocks = INITIAL_LEVELS * 3;
         const remainingBlocks = blocksRef.current.filter(b => !b.falling && !b.isBeingDragged).length;
         const removedPercent = 1 - (remainingBlocks / totalBlocks);
@@ -849,6 +861,10 @@ export default function JengaTowerGame() {
 
         if (cameraRef.current) {
             const raycaster = raycasterRef.current;
+            // Set very small thresholds for precise intersection
+            raycaster.params.Line = { threshold: 0.01 };
+            raycaster.params.Points = { threshold: 0.01 };
+
             const mouse = new THREE.Vector2(
                 (touchX / width) * 2 - 1,
                 -(touchY / height) * 2 + 1
@@ -859,8 +875,33 @@ export default function JengaTowerGame() {
             const intersects = raycaster.intersectObjects(meshes, false);
 
             if (intersects.length > 0) {
-                const hit = intersects[0];
-                const blockId = (hit.object as THREE.Mesh).userData.blockId;
+                // Use the first intersection's Y position to determine the intended level
+                const firstHit = intersects[0];
+                const hitY = firstHit.point.y;
+
+                // Calculate the approximate level based on Y position
+                // Each level is BLOCK_HEIGHT (0.3) tall, starting from 0
+                const towerBaseY = towerGroupRef.current ? towerGroupRef.current.position.y : -0.5;
+                const relativeY = hitY - towerBaseY;
+                const targetLevel = Math.floor(relativeY / BLOCK_HEIGHT);
+
+                // Find all hits and select the one at the closest level to our target
+                let bestHit = firstHit;
+                let bestLevelDiff = Infinity;
+
+                for (const hit of intersects) {
+                    const blockId = (hit.object as THREE.Mesh).userData.blockId;
+                    const block = blocks.find(b => b.id === blockId);
+                    if (block) {
+                        const levelDiff = Math.abs(block.level - targetLevel);
+                        if (levelDiff < bestLevelDiff) {
+                            bestLevelDiff = levelDiff;
+                            bestHit = hit;
+                        }
+                    }
+                }
+
+                const blockId = (bestHit.object as THREE.Mesh).userData.blockId;
                 const block = blocks.find(b => b.id === blockId);
 
                 if (block && block.mesh) {
@@ -880,8 +921,8 @@ export default function JengaTowerGame() {
                     if (cameraRef.current) {
                         const camDir = new THREE.Vector3();
                         cameraRef.current.getWorldDirection(camDir);
-                        dragPlaneRef.current.setFromNormalAndCoplanarPoint(camDir, hit.point);
-                        dragOffsetRef.current.copy(block.mesh.position).sub(hit.point);
+                        dragPlaneRef.current.setFromNormalAndCoplanarPoint(camDir, bestHit.point);
+                        dragOffsetRef.current.copy(block.mesh.position).sub(bestHit.point);
                     }
 
                     const mat = block.mesh.material as THREE.MeshStandardMaterial;

@@ -6,8 +6,10 @@ import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getSelectedCardBack } from '../data/card-backs';
 
-const deckBackImage = require('../assets/images/deck1.png');
+// Use selected card back (change SELECTED_CARD_BACK_INDEX in card-backs.ts to test)
+const deckBackImage = getSelectedCardBack().image;
 
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 type Card = { suit: Suit; rank: string; value: number; color: 'red' | 'black'; };

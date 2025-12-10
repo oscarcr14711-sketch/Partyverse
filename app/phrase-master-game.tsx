@@ -1,17 +1,29 @@
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Dimensions, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, ImageBackground, Platform, Image as RNImage, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getRandomPhrase } from '../data/phrases';
+import { getRandomPhrase, Phrase } from '../data/phrases';
 
-const { width } = Dimensions.get('window');
-const TOTAL_ROUNDS = 3;
+const { width, height } = Dimensions.get('window');
+const TOTAL_ROUNDS = 5;
+const ROUND_TIME = 60; // 60 seconds per turn
+const MAX_WRONG_PER_TURN = 3; // 3 wrong guesses before switching players
+
+const AVATAR_IMAGES = [
+    require('../assets/images/avatars/avatar1.png'),
+    require('../assets/images/avatars/avatar2.png'),
+    require('../assets/images/avatars/avatar3.png'),
+    require('../assets/images/avatars/avatar4.png'),
+    require('../assets/images/avatars/avatar5.png'),
+    require('../assets/images/avatars/avatar6.png'),
+];
 
 interface Player {
     id: string;
     name: string;
     color: string;
+    avatarIndex: number;
     score: number;
 }
 
@@ -31,14 +43,52 @@ export default function PhraseMasterGame() {
 
     const [currentRound, setCurrentRound] = useState(1);
     const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-    const [phrase, setPhrase] = useState(() => getRandomPhrase(category));
+    const [phrase, setPhrase] = useState<Phrase>(() => getRandomPhrase(category));
     const [guessedLetters, setGuessedLetters] = useState<Set<string>>(new Set());
+    const [wrongGuessesThisTurn, setWrongGuessesThisTurn] = useState(0);
+    const [totalWrongGuesses, setTotalWrongGuesses] = useState(0);
     const [roundOver, setRoundOver] = useState(false);
     const [gameOver, setGameOver] = useState(false);
     const [roundWinner, setRoundWinner] = useState<Player | null>(null);
+    const [timeRemaining, setTimeRemaining] = useState(ROUND_TIME);
+    const [showClue, setShowClue] = useState(false);
+    const [clueUsed, setClueUsed] = useState(false);
+    const [showTurnSwitch, setShowTurnSwitch] = useState(false);
+
+    // Animation values
+    const timerPulse = useRef(new Animated.Value(1)).current;
+    const clueScale = useRef(new Animated.Value(0)).current;
+    const switchAnimation = useRef(new Animated.Value(0)).current;
 
     const currentPlayer = players[currentPlayerIndex];
 
+    // Timer countdown
+    useEffect(() => {
+        if (roundOver || gameOver || showTurnSwitch) return;
+
+        if (timeRemaining <= 0) {
+            handleTimeOut();
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeRemaining(prev => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeRemaining, roundOver, gameOver, showTurnSwitch]);
+
+    // Timer pulse animation when low
+    useEffect(() => {
+        if (timeRemaining <= 10 && timeRemaining > 0 && !roundOver) {
+            Animated.sequence([
+                Animated.timing(timerPulse, { toValue: 1.2, duration: 150, useNativeDriver: true }),
+                Animated.timing(timerPulse, { toValue: 1, duration: 150, useNativeDriver: true }),
+            ]).start();
+        }
+    }, [timeRemaining]);
+
+    // Check for win condition
     useEffect(() => {
         if (roundOver || gameOver) return;
 
@@ -52,10 +102,43 @@ export default function PhraseMasterGame() {
         }
     }, [guessedLetters]);
 
+    const handleTimeOut = () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        // Time ran out for current player - switch to next
+        if (players.length > 1) {
+            switchToNextPlayer();
+        } else {
+            // Solo player - round over
+            setRoundOver(true);
+            setRoundWinner(null);
+        }
+    };
+
+    const switchToNextPlayer = () => {
+        setShowTurnSwitch(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+        Animated.sequence([
+            Animated.timing(switchAnimation, { toValue: 1, duration: 300, useNativeDriver: true }),
+            Animated.delay(1500),
+            Animated.timing(switchAnimation, { toValue: 0, duration: 300, useNativeDriver: true }),
+        ]).start(() => {
+            const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            setCurrentPlayerIndex(nextPlayerIndex);
+            setWrongGuessesThisTurn(0);
+            setTimeRemaining(ROUND_TIME); // Reset timer
+            setShowTurnSwitch(false);
+        });
+    };
+
     const handleRoundWin = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         const updatedPlayers = [...players];
-        updatedPlayers[currentPlayerIndex].score += 10;
+        // Bonus points: time left + base points - penalty for clue usage
+        const timeBonus = Math.floor(timeRemaining / 2);
+        const cluepenalty = clueUsed ? 5 : 0;
+        const points = 10 + timeBonus - cluepenalty;
+        updatedPlayers[currentPlayerIndex].score += Math.max(points, 5);
         setPlayers(updatedPlayers);
         setRoundWinner(currentPlayer);
         setRoundOver(true);
@@ -66,8 +149,14 @@ export default function PhraseMasterGame() {
             setCurrentRound(currentRound + 1);
             setPhrase(getRandomPhrase(category));
             setGuessedLetters(new Set());
+            setWrongGuessesThisTurn(0);
+            setTotalWrongGuesses(0);
             setRoundOver(false);
             setRoundWinner(null);
+            setTimeRemaining(ROUND_TIME);
+            setShowClue(false);
+            setClueUsed(false);
+            // Next round starts with the player after the current one
             setCurrentPlayerIndex((currentPlayerIndex + 1) % players.length);
         } else {
             setGameOver(true);
@@ -75,7 +164,7 @@ export default function PhraseMasterGame() {
     };
 
     const handleLetterGuess = (letter: string) => {
-        if (guessedLetters.has(letter) || roundOver || gameOver) return;
+        if (guessedLetters.has(letter) || roundOver || gameOver || showTurnSwitch) return;
 
         const newGuessed = new Set(guessedLetters);
         newGuessed.add(letter);
@@ -83,13 +172,38 @@ export default function PhraseMasterGame() {
 
         if (phrase.text.includes(letter)) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            // Count occurrences and add points
+            const occurrences = phrase.text.split(letter).length - 1;
             const updatedPlayers = [...players];
-            updatedPlayers[currentPlayerIndex].score += 1;
+            updatedPlayers[currentPlayerIndex].score += occurrences;
             setPlayers(updatedPlayers);
+            // Reset wrong guesses on correct guess
+            setWrongGuessesThisTurn(0);
         } else {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setCurrentPlayerIndex((currentPlayerIndex + 1) % players.length);
+            const newWrongCount = wrongGuessesThisTurn + 1;
+            setWrongGuessesThisTurn(newWrongCount);
+            setTotalWrongGuesses(prev => prev + 1);
+
+            // Check if player used up their wrong guesses
+            if (newWrongCount >= MAX_WRONG_PER_TURN && players.length > 1) {
+                switchToNextPlayer();
+            }
         }
+    };
+
+    const handleShowClue = () => {
+        if (clueUsed || roundOver) return;
+        setShowClue(true);
+        setClueUsed(true);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+        Animated.spring(clueScale, {
+            toValue: 1,
+            friction: 6,
+            tension: 40,
+            useNativeDriver: true,
+        }).start();
     };
 
     const renderPhrase = () => {
@@ -137,6 +251,39 @@ export default function PhraseMasterGame() {
         );
     };
 
+    const renderClueButton = () => {
+        if (clueUsed) {
+            return (
+                <Animated.View style={[styles.clueContainer, { transform: [{ scale: clueScale }] }]}>
+                    <Text style={styles.clueLabel}>💡 CLUE:</Text>
+                    <Text style={styles.clueText}>{phrase.clue}</Text>
+                </Animated.View>
+            );
+        }
+
+        return (
+            <TouchableOpacity style={styles.clueButton} onPress={handleShowClue}>
+                <Text style={styles.clueButtonText}>💡 Need a Clue? (-5 pts)</Text>
+            </TouchableOpacity>
+        );
+    };
+
+    const renderWrongGuessIndicator = () => {
+        return (
+            <View style={styles.wrongGuessIndicator}>
+                {Array.from({ length: MAX_WRONG_PER_TURN }).map((_, index) => (
+                    <View
+                        key={index}
+                        style={[
+                            styles.wrongGuessDot,
+                            index < wrongGuessesThisTurn && styles.wrongGuessDotFilled
+                        ]}
+                    />
+                ))}
+            </View>
+        );
+    };
+
     const renderKeyboard = () => {
         return (
             <View style={styles.keyboard}>
@@ -151,9 +298,10 @@ export default function PhraseMasterGame() {
                                 styles.keyButton,
                                 isGuessed && styles.keyButtonUsed,
                                 isGuessed && isInPhrase && styles.keyButtonCorrect,
+                                isGuessed && !isInPhrase && styles.keyButtonWrong,
                             ]}
                             onPress={() => handleLetterGuess(letter)}
-                            disabled={isGuessed || roundOver || gameOver}
+                            disabled={isGuessed || roundOver || gameOver || showTurnSwitch}
                         >
                             <Text style={[
                                 styles.keyText,
@@ -167,6 +315,49 @@ export default function PhraseMasterGame() {
             </View>
         );
     };
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Turn switch overlay
+    if (showTurnSwitch) {
+        const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+        const nextPlayer = players[nextPlayerIndex];
+        return (
+            <View style={styles.container}>
+                <SafeAreaView style={styles.safeArea}>
+                    <Animated.View style={[
+                        styles.turnSwitchOverlay,
+                        { opacity: switchAnimation }
+                    ]}>
+                        <Text style={styles.turnSwitchTitle}>⏰ TURN SWITCH!</Text>
+                        <Text style={styles.turnSwitchText}>
+                            {currentPlayer.name} used {MAX_WRONG_PER_TURN} wrong guesses
+                        </Text>
+                        <View style={styles.turnSwitchArrow}>
+                            <View style={styles.turnSwitchPlayerCard}>
+                                <RNImage source={AVATAR_IMAGES[currentPlayer.avatarIndex % AVATAR_IMAGES.length]} style={[styles.turnSwitchAvatar, { borderColor: currentPlayer.color }]} />
+                                <Text style={[styles.turnSwitchPlayer, { color: currentPlayer.color }]}>
+                                    {currentPlayer.name}
+                                </Text>
+                            </View>
+                            <Text style={styles.turnSwitchArrowIcon}>→</Text>
+                            <View style={styles.turnSwitchPlayerCard}>
+                                <RNImage source={AVATAR_IMAGES[nextPlayer.avatarIndex % AVATAR_IMAGES.length]} style={[styles.turnSwitchAvatar, { borderColor: nextPlayer.color }]} />
+                                <Text style={[styles.turnSwitchPlayer, { color: nextPlayer.color }]}>
+                                    {nextPlayer.name}
+                                </Text>
+                            </View>
+                        </View>
+                        <Text style={styles.turnSwitchHint}>Timer will reset to {ROUND_TIME}s</Text>
+                    </Animated.View>
+                </SafeAreaView>
+            </View>
+        );
+    }
 
     if (gameOver) {
         const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -182,7 +373,7 @@ export default function PhraseMasterGame() {
                                     index === 0 && styles.winnerRow
                                 ]}>
                                     <Text style={styles.rankText}>#{index + 1}</Text>
-                                    <View style={[styles.playerColorDot, { backgroundColor: player.color }]} />
+                                    <RNImage source={AVATAR_IMAGES[player.avatarIndex % AVATAR_IMAGES.length]} style={[styles.leaderboardAvatar, { borderColor: player.color }]} />
                                     <Text style={[styles.playerName, index === 0 && styles.winnerNameText]}>
                                         {player.name}
                                     </Text>
@@ -204,12 +395,19 @@ export default function PhraseMasterGame() {
             <View style={styles.container}>
                 <SafeAreaView style={styles.safeArea}>
                     <View style={styles.roundOverContainer}>
-                        <Text style={styles.roundOverTitle}>ROUND {currentRound} COMPLETE!</Text>
-                        <Text style={styles.roundWinner}>
-                            Winner: <Text style={{ color: roundWinner?.color }}>{roundWinner?.name}</Text>
+                        <Text style={styles.roundOverTitle}>
+                            {roundWinner ? 'ROUND COMPLETE! 🎉' : 'TIME\'S UP! ⏰'}
                         </Text>
+                        {roundWinner ? (
+                            <Text style={styles.roundWinner}>
+                                Winner: <Text style={{ color: roundWinner?.color }}>{roundWinner?.name}</Text>
+                            </Text>
+                        ) : (
+                            <Text style={styles.roundWinner}>No one solved it in time!</Text>
+                        )}
                         <Text style={styles.phraseReveal}>The phrase was:</Text>
                         <Text style={styles.fullPhrase}>{phrase.text}</Text>
+                        <Text style={styles.clueReveal}>Clue: {phrase.clue}</Text>
                         <TouchableOpacity style={styles.nextRoundButton} onPress={nextRound}>
                             <Text style={styles.nextRoundText}>
                                 {currentRound < TOTAL_ROUNDS ? 'NEXT ROUND' : 'SEE RESULTS'}
@@ -230,7 +428,16 @@ export default function PhraseMasterGame() {
                     </TouchableOpacity>
                     <View style={styles.headerCenter}>
                         <Text style={styles.roundLabel}>Round {currentRound}/{TOTAL_ROUNDS}</Text>
-                        <Text style={styles.categoryLabel}>{category}</Text>
+                        <Animated.View style={[
+                            styles.timerContainer,
+                            timeRemaining <= 10 && styles.timerDanger,
+                            { transform: [{ scale: timerPulse }] }
+                        ]}>
+                            <Text style={[
+                                styles.timerText,
+                                timeRemaining <= 10 && styles.timerTextDanger
+                            ]}>⏱️ {formatTime(timeRemaining)}</Text>
+                        </Animated.View>
                         <View style={[styles.currentPlayerIndicator, {
                             backgroundColor: currentPlayer.color,
                             shadowColor: currentPlayer.color,
@@ -238,12 +445,20 @@ export default function PhraseMasterGame() {
                             <Text style={styles.currentPlayerText}>{currentPlayer.name}'s Turn</Text>
                         </View>
                     </View>
-                    <View style={styles.placeholder} />
+                    <View style={styles.headerRight}>
+                        {renderWrongGuessIndicator()}
+                    </View>
                 </View>
 
+                {renderClueButton()}
                 {renderPhrase()}
                 {renderKeyboard()}
-                <Text style={styles.instructions}>Tap a letter to guess!</Text>
+
+                <Text style={styles.instructions}>
+                    {wrongGuessesThisTurn > 0
+                        ? `⚠️ ${MAX_WRONG_PER_TURN - wrongGuessesThisTurn} wrong guesses left before switch!`
+                        : 'Guess letters to reveal the hidden phrase!'}
+                </Text>
             </SafeAreaView>
         </View>
     );
@@ -262,7 +477,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 15,
-        paddingVertical: 10,
+        paddingVertical: 8,
     },
     backButton: {
         width: 40,
@@ -282,21 +497,40 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
     },
+    headerRight: {
+        width: 50,
+        alignItems: 'center',
+    },
     roundLabel: {
         fontSize: 14,
         color: '#00ffff',
         fontWeight: 'bold',
-        marginBottom: 2,
+        marginBottom: 4,
     },
-    categoryLabel: {
-        fontSize: 16,
-        color: 'rgba(255, 255, 255, 0.9)',
-        marginBottom: 5,
-        fontWeight: '600',
+    timerContainer: {
+        backgroundColor: 'rgba(0, 255, 255, 0.2)',
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: 15,
+        marginBottom: 6,
+        borderWidth: 2,
+        borderColor: 'rgba(0, 255, 255, 0.5)',
+    },
+    timerDanger: {
+        backgroundColor: 'rgba(255, 0, 0, 0.3)',
+        borderColor: 'rgba(255, 0, 0, 0.8)',
+    },
+    timerText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#00ffff',
+    },
+    timerTextDanger: {
+        color: '#ff4444',
     },
     currentPlayerIndicator: {
         paddingHorizontal: 20,
-        paddingVertical: 8,
+        paddingVertical: 6,
         borderRadius: 20,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.8,
@@ -304,19 +538,70 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     currentPlayerText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#0a1628',
     },
-    placeholder: {
-        width: 40,
+    wrongGuessIndicator: {
+        flexDirection: 'row',
+        gap: 4,
+    },
+    wrongGuessDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.4)',
+    },
+    wrongGuessDotFilled: {
+        backgroundColor: '#ff6b6b',
+        borderColor: '#ff4444',
+    },
+    clueButton: {
+        backgroundColor: 'rgba(255, 215, 0, 0.2)',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        marginHorizontal: 20,
+        marginBottom: 10,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 215, 0, 0.6)',
+        alignItems: 'center',
+    },
+    clueButtonText: {
+        color: '#ffd700',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    clueContainer: {
+        backgroundColor: 'rgba(255, 215, 0, 0.15)',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 15,
+        marginHorizontal: 20,
+        marginBottom: 10,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 215, 0, 0.4)',
+    },
+    clueLabel: {
+        color: '#ffd700',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    clueText: {
+        color: 'white',
+        fontSize: 16,
+        fontStyle: 'italic',
+        textAlign: 'center',
     },
     boardContainer: {
         width: '100%',
-        height: 250,
+        height: 200,
         justifyContent: 'center',
         alignItems: 'center',
-        marginVertical: 15,
+        marginVertical: 10,
     },
     boardImage: {
         width: '100%',
@@ -339,8 +624,8 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     letterTile: {
-        width: width * 0.065,
-        height: width * 0.075,
+        width: width * 0.06,
+        height: width * 0.07,
         backgroundColor: '#2d5a4f',
         borderRadius: 3,
         margin: 1.5,
@@ -358,7 +643,7 @@ const styles = StyleSheet.create({
         borderWidth: 0,
     },
     letterText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: 'transparent',
         ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
@@ -370,15 +655,15 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        paddingHorizontal: 10,
-        marginTop: 10,
+        paddingHorizontal: 8,
+        marginTop: 20,
     },
     keyButton: {
-        width: width * 0.11,
-        height: width * 0.11,
+        width: width * 0.1,
+        height: width * 0.1,
         backgroundColor: 'rgba(0, 255, 255, 0.2)',
         borderRadius: 8,
-        margin: 3,
+        margin: 2,
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 2,
@@ -392,8 +677,12 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 255, 0, 0.2)',
         borderColor: 'rgba(0, 255, 0, 0.5)',
     },
+    keyButtonWrong: {
+        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+        borderColor: 'rgba(255, 0, 0, 0.4)',
+    },
     keyText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#00ffff',
         ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
@@ -403,10 +692,66 @@ const styles = StyleSheet.create({
     },
     instructions: {
         textAlign: 'center',
-        color: 'rgba(255, 255, 255, 0.5)',
+        color: 'rgba(255, 255, 255, 0.6)',
         fontSize: 14,
         marginTop: 10,
-        marginBottom: 10,
+        marginBottom: 5,
+        paddingHorizontal: 20,
+    },
+    turnSwitchOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        padding: 40,
+    },
+    turnSwitchTitle: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#ff6b6b',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    turnSwitchText: {
+        fontSize: 18,
+        color: 'rgba(255, 255, 255, 0.8)',
+        marginBottom: 30,
+        textAlign: 'center',
+    },
+    turnSwitchArrow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 30,
+    },
+    turnSwitchPlayer: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginTop: 8,
+    },
+    turnSwitchPlayerCard: {
+        alignItems: 'center',
+    },
+    turnSwitchAvatar: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        borderWidth: 3,
+    },
+    turnSwitchArrowIcon: {
+        fontSize: 30,
+        color: 'white',
+        marginHorizontal: 20,
+    },
+    turnSwitchHint: {
+        fontSize: 16,
+        color: '#00ffff',
+    },
+    leaderboardAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        borderWidth: 2,
+        marginRight: 12,
     },
     gameOverContainer: {
         flex: 1,
@@ -480,29 +825,37 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     roundOverTitle: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#00ffff',
         marginBottom: 20,
         textAlign: 'center',
     },
     roundWinner: {
-        fontSize: 24,
+        fontSize: 22,
         color: 'white',
-        marginBottom: 40,
+        marginBottom: 30,
     },
     phraseReveal: {
-        fontSize: 18,
+        fontSize: 16,
         color: 'rgba(255, 255, 255, 0.7)',
-        marginBottom: 10,
+        marginBottom: 8,
     },
     fullPhrase: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: 'bold',
         color: 'white',
         textAlign: 'center',
-        marginBottom: 40,
+        marginBottom: 15,
         paddingHorizontal: 20,
+    },
+    clueReveal: {
+        fontSize: 14,
+        color: '#ffd700',
+        fontStyle: 'italic',
+        textAlign: 'center',
+        marginBottom: 30,
+        paddingHorizontal: 30,
     },
     nextRoundButton: {
         backgroundColor: '#00ffff',

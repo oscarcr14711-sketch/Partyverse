@@ -38,6 +38,38 @@ const STORE_ITEMS = {
     { id: 1, name: 'Trivia Expansion', emoji: '🧠', price: '$3.99', count: '500+ questions', owned: false },
     { id: 2, name: 'Dare Pack', emoji: '🎭', price: '$2.99', count: '200+ dares', owned: false },
     { id: 3, name: 'Classic Games', emoji: '🎲', price: '$4.99', count: '10 games', owned: false },
+    {
+      id: 4,
+      name: 'Extreme Roulette Pack 2',
+      emoji: '🎰',
+      price: '$3.99',
+      count: '15 new challenges',
+      owned: false,
+      isPackage: true,
+      packageContents: [
+        '🔥 15 brand new extreme challenges',
+        '🎡 New roulette wheel design',
+        '💀 Even more intense dares',
+        '🎯 Unique pop-out animations'
+      ]
+    },
+    {
+      id: 5,
+      name: 'Card Backs Pack',
+      emoji: '🃏',
+      price: '$1.99',
+      count: '6 premium designs',
+      owned: false,
+      isPackage: true,
+      packageContents: [
+        '🌈 Neon Party design',
+        '🌌 Galaxy design',
+        '🎰 Casino Gold design',
+        '🔥 Flames design',
+        '✨ Holographic design',
+        '❓ Mystery design'
+      ]
+    },
   ],
   music: [
     { id: 1, name: 'EDM Party', emoji: '🎧', price: '$1.99', count: '25 tracks', owned: false },

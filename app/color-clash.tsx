@@ -4,8 +4,10 @@ import { useRouter } from 'expo-router';
 import React, { useMemo, useRef, useState } from 'react';
 import { Animated, Image, ImageBackground, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getSelectedCardBack } from '../data/card-backs';
 
-const deckBackImage = require('../assets/images/Deck.png');
+// Use selected card back (change SELECTED_CARD_BACK_INDEX in card-backs.ts to test)
+const deckBackImage = getSelectedCardBack().image;
 const cardFrontImage = require('../assets/images/Colorclash.png');
 const pokerTableImage = require('../assets/images/poker_table_bg.jpg');
 

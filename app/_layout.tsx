@@ -154,6 +154,7 @@ function classifyGameScreen(screen: string): {
     /^index$/,
     /^start/,
     /^party-mode-games$/,
+    /^game-menu$/,
     /^practice-mode-games$/,
     /^spicy-games$/,
     /^word-mental-games$/,

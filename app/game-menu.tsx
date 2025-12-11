@@ -2,9 +2,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { PulsingButton } from '../../components/PulsingButton';
-import { playSound } from '../../utils/SoundManager';
-import { useTheme } from '../../utils/ThemeContext';
+import { PulsingButton } from '../components/PulsingButton';
+import { playSound } from '../utils/SoundManager';
+import { useTheme } from '../utils/ThemeContext';
 
 const gameModes = [
   {

@@ -16,7 +16,7 @@ export default function HomeScreen() {
   const goPlay = () => {
     playSound('ui.buttonClick');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/(tabs)/games');
+    router.push('/game-menu');
   };
   const goSpicy = () => {
     playSound('ui.buttonClick');

@@ -292,6 +292,11 @@ export default function BlownAwayScreen() {
       >
         <SafeAreaView style={{ flex: 1 }}>
           <View style={styles.setupContainer}>
+            {/* Back Button */}
+            <TouchableOpacity style={styles.setupBackButton} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={28} color="#fff" />
+            </TouchableOpacity>
+
             <View style={styles.setupTopSection}>
               <Image
                 source={require('../assets/images/Blownavatar.png')}
@@ -703,6 +708,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFE0B2',
     fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  setupBackButton: {
+    position: 'absolute',
+    top: 10,
+    left: 20,
+    zIndex: 10,
+    padding: 8,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 20,
   },
   header: {
     flexDirection: 'row',

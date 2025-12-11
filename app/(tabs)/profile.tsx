@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Alert, Dimensions, Image, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ACHIEVEMENTS } from '../../data/achievements';
 import { CARD_BACKS, getCardBackById } from '../../data/card-backs';
 import { useCardBack } from '../../utils/CardBackContext';
 import { soundManager } from '../../utils/SoundManager';
@@ -20,20 +21,19 @@ const AVATAR_IMAGES = [
   require('../../assets/images/avatars/avatar6.png'),
 ];
 
-const ACHIEVEMENTS = [
-  { id: 1, name: 'First Game', icon: '🎮', unlocked: true, description: 'Play your first game' },
-  { id: 2, name: 'Party Starter', icon: '🎉', unlocked: true, description: 'Host 5 games' },
-  { id: 3, name: 'Social Butterfly', icon: '🦋', unlocked: true, description: 'Play with 10 different people' },
-  { id: 4, name: 'Night Owl', icon: '🦉', unlocked: false, description: 'Play past midnight' },
-  { id: 5, name: 'Champion', icon: '🏆', unlocked: false, description: 'Win 20 games' },
-  { id: 6, name: 'Dedicated', icon: '⭐', unlocked: false, description: 'Play 7 days in a row' },
-];
 
 const RECENT_GAMES = [
   { id: 1, name: 'Memory Rush', result: 'Won', date: '2 hours ago', icon: '🧠' },
   { id: 2, name: 'Color Clash', result: 'Lost', date: 'Yesterday', icon: '🎨' },
   { id: 3, name: 'Brain Buzzer', result: 'Won', date: '2 days ago', icon: '⚡' },
 ];
+
+// Stats start at 0 - will be tracked with real data in future update
+const INITIAL_STATS = {
+  gamesPlayed: 0,
+  wins: 0,
+  playTime: '0h',
+};
 
 export default function ProfileScreen() {
   const [userName, setUserName] = useState('Party King');
@@ -57,6 +57,8 @@ export default function ProfileScreen() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showCardBackSettings, setShowCardBackSettings] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const { selectedCardBackId, setCardBack } = useCardBack();
 
   // Volume change handlers that update SoundManager
@@ -132,36 +134,54 @@ export default function ProfileScreen() {
             {/* Stats Grid */}
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>47</Text>
+                <Text style={styles.statValue}>{INITIAL_STATS.gamesPlayed}</Text>
                 <Text style={styles.statLabel}>Games</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>28</Text>
+                <Text style={styles.statValue}>{INITIAL_STATS.wins}</Text>
                 <Text style={styles.statLabel}>Wins</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>12h</Text>
+                <Text style={styles.statValue}>{INITIAL_STATS.playTime}</Text>
                 <Text style={styles.statLabel}>Play Time</Text>
               </View>
             </View>
 
-            {/* Achievements */}
+            {/* Achievements - Compact View */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🏆 Achievements</Text>
-              <View style={styles.achievementsGrid}>
-                {ACHIEVEMENTS.map((achievement) => (
-                  <TouchableOpacity key={achievement.id} style={[
-                    styles.achievementCard,
-                    !achievement.unlocked && styles.achievementLocked
-                  ]}>
-                    <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-                    <Text style={[
-                      styles.achievementName,
-                      !achievement.unlocked && styles.achievementNameLocked
-                    ]}>{achievement.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <TouchableOpacity
+                style={styles.achievementHeader}
+                onPress={() => setShowAchievements(!showAchievements)}
+              >
+                <Text style={styles.sectionTitle}>🏆 Achievements ({ACHIEVEMENTS.filter(a => a.unlocked).length}/{ACHIEVEMENTS.length})</Text>
+                <Ionicons
+                  name={showAchievements ? 'chevron-up' : 'chevron-down'}
+                  size={24}
+                  color="#fff"
+                />
+              </TouchableOpacity>
+
+              {showAchievements && (
+                <View style={styles.achievementsGrid}>
+                  {ACHIEVEMENTS.slice(0, 12).map((achievement) => (
+                    <TouchableOpacity key={achievement.id} style={[
+                      styles.achievementCard,
+                      !achievement.unlocked && styles.achievementLocked
+                    ]}>
+                      <Text style={styles.achievementIcon}>{achievement.icon}</Text>
+                      <Text style={[
+                        styles.achievementName,
+                        !achievement.unlocked && styles.achievementNameLocked
+                      ]}>{achievement.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  {ACHIEVEMENTS.length > 12 && (
+                    <Text style={styles.achievementNote}>
+                      +{ACHIEVEMENTS.length - 12} more achievements to unlock!
+                    </Text>
+                  )}
+                </View>
+              )}
             </View>
 
             {/* Recent Games */}
@@ -187,11 +207,34 @@ export default function ProfileScreen() {
             {/* Quick Actions */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>⚡ Quick Actions</Text>
-              <TouchableOpacity style={styles.actionButton}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={async () => {
+                  try {
+                    await Share.share({
+                      message: `Check out my Partyverse profile! 🎉\n\n🎮 Games Played: ${INITIAL_STATS.gamesPlayed}\n🏆 Wins: ${INITIAL_STATS.wins}\n⏱️ Play Time: ${INITIAL_STATS.playTime}\n\nJoin me on Partyverse - the ultimate party game app!`,
+                      title: 'My Partyverse Profile',
+                    });
+                    if (hapticsEnabled) {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    }
+                  } catch (error) {
+                    console.error('Share failed:', error);
+                  }
+                }}
+              >
                 <Ionicons name="share-social" size={24} color="white" />
                 <Text style={styles.actionText}>Share Profile</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  setShowLeaderboard(true);
+                  if (hapticsEnabled) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                }}
+              >
                 <Ionicons name="trophy" size={24} color="white" />
                 <Text style={styles.actionText}>View Leaderboard</Text>
               </TouchableOpacity>
@@ -701,6 +744,59 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Leaderboard Modal */}
+      <Modal visible={showLeaderboard} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>🏆 Leaderboard</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.leaderboardList}>
+                {[
+                  { rank: 1, name: 'Party Legend', score: 2847, icon: '👑' },
+                  { rank: 2, name: 'Game Master', score: 2156, icon: '🎯' },
+                  { rank: 3, name: 'Fun Seeker', score: 1923, icon: '🎊' },
+                  { rank: 4, name: 'Night Owl', score: 1654, icon: '🦉' },
+                  { rank: 5, name: 'Champion', score: 1432, icon: '🏅' },
+                ].map((player) => (
+                  <View key={player.rank} style={styles.leaderboardItem}>
+                    <View style={styles.leaderboardRank}>
+                      <Text style={styles.leaderboardRankText}>{player.rank}</Text>
+                    </View>
+                    <Text style={styles.leaderboardIcon}>{player.icon}</Text>
+                    <View style={styles.leaderboardInfo}>
+                      <Text style={styles.leaderboardName}>{player.name}</Text>
+                      <Text style={styles.leaderboardScore}>{player.score} pts</Text>
+                    </View>
+                  </View>
+                ))}
+
+                {/* Current User Position */}
+                <View style={[styles.leaderboardItem, styles.currentUserItem]}>
+                  <View style={styles.leaderboardRank}>
+                    <Text style={styles.leaderboardRankText}>-</Text>
+                  </View>
+                  <Text style={styles.leaderboardIcon}>🎮</Text>
+                  <View style={styles.leaderboardInfo}>
+                    <Text style={styles.leaderboardName}>{userName} (You)</Text>
+                    <Text style={styles.leaderboardScore}>Start playing to rank!</Text>
+                  </View>
+                </View>
+              </View>
+
+              <Text style={styles.leaderboardNote}>
+                💡 Earn points by playing games and unlocking achievements!
+              </Text>
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowLeaderboard(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1078,5 +1174,75 @@ const styles = StyleSheet.create({
   aboutCopyright: {
     fontSize: 12,
     color: '#999',
+  },
+  // Achievements
+  achievementHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  achievementNote: {
+    fontSize: 13,
+    color: '#fff',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 10,
+    opacity: 0.7,
+  },
+  // Leaderboard Modal
+  leaderboardList: {
+    marginBottom: 20,
+  },
+  leaderboardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
+  },
+  currentUserItem: {
+    backgroundColor: 'rgba(102, 126, 234, 0.2)',
+    borderWidth: 2,
+    borderColor: '#667eea',
+  },
+  leaderboardRank: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#667eea',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  leaderboardRankText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  leaderboardIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  leaderboardInfo: {
+    flex: 1,
+  },
+  leaderboardName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  leaderboardScore: {
+    fontSize: 14,
+    color: '#667eea',
+  },
+  leaderboardNote: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginVertical: 15,
   },
 });

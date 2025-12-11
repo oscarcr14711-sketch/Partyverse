@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Dimensions, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -33,6 +34,11 @@ export default function LightningRoundsPreGame() {
                 imageStyle={{ alignSelf: 'center' }}
             >
                 <SafeAreaView style={styles.safeArea}>
+                    {/* Back Button */}
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Ionicons name="arrow-back" size={28} color="#fff" />
+                    </TouchableOpacity>
+
                     {/* Spacer to push buttons to bottom */}
                     <View style={styles.spacer} />
 
@@ -107,6 +113,15 @@ const styles = StyleSheet.create({
     },
     spacer: {
         flex: 1,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        zIndex: 10,
+        padding: 8,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        borderRadius: 20,
     },
     buttonContainer: {
         flexDirection: 'row',

@@ -1,5 +1,0 @@
-Starting project at C:\Users\oscar\OneDrive\Escritorio\Partyverse
-React Compiler enabled
-Starting Metro Bundler
-Waiting on http://localhost:8082
-Logs for your project will appear below.

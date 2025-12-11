@@ -1,6 +1,5 @@
 {
   "cli": {
-    "version": ">= 16.24.1",
     "appVersionSource": "remote"
   },
   "build": {
@@ -8,7 +7,6 @@
       "developmentClient": true,
       "distribution": "internal"
     },
-    
     "preview": {
       "developmentClient": true,
       "distribution": "internal",

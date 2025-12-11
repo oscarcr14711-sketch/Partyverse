@@ -126,17 +126,15 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <>
-        <CardBackProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="party-mode-games" />
-            <Stack.Screen name="start" />
-            <Stack.Screen name="mic-madness-card-reveal" />
-          </Stack>
-          <AdBanner />
-        </>
+      <CardBackProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="party-mode-games" />
+          <Stack.Screen name="start" />
+          <Stack.Screen name="mic-madness-card-reveal" />
+        </Stack>
+        <AdBanner />
       </CardBackProvider>
     </ThemeProvider>
   );

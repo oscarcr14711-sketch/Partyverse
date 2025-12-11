@@ -1,4 +1,5 @@
 import { CategoryCard } from '@/components/CategoryCard';
+import { BackButton } from '@/components/BackButton';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -34,13 +35,11 @@ export default function PartyModeGamesScreen() {
   const isChristmasTheme = themeId === 'christmas';
 
   const screenContent = (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={26} color="white" />
-        </TouchableOpacity>
+        <BackButton />
         <Text style={styles.headerTitle}>Party Mode</Text>
-        <View style={{ width: 26 }} />
+        <View style={styles.spacer} />
       </View>
       <ScrollView>
         <Text style={styles.title}>What kind of fun are you in the mood for?</Text>
@@ -113,21 +112,27 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 0,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
-  backButton: {
-    padding: 6,
+  spacer: {
+    width: 40,
   },
   headerTitle: {
     color: 'white',
     fontSize: 22,
     fontWeight: '700',
+    flex: 1,
+    textAlign: 'center',
   },
   title: {
     fontSize: 28,

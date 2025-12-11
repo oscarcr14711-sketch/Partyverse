@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Renderer, loadTextureAsync } from 'expo-three';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, GestureResponderEvent, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as THREE from 'three';
 
 const { width, height } = Dimensions.get('window');
@@ -84,6 +85,7 @@ function createWoodTexture(dark = false): THREE.Texture {
 export default function StackTowerGame() {
     const router = useRouter();
     const params = useLocalSearchParams();
+    const insets = useSafeAreaInsets();
 
     const playersParam: Player[] = JSON.parse((params.players as string) || '[]');
     const players: Player[] = playersParam.length > 0 ? playersParam : [{ id: '1', name: 'Player', color: '#f94144' }];
@@ -1229,7 +1231,7 @@ export default function StackTowerGame() {
     return (
         <View style={styles.container}>
             <View style={styles.safeArea}>
-                <View style={styles.header}>
+                <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color="#FFE0B2" />
                     </TouchableOpacity>
@@ -1330,7 +1332,7 @@ export default function StackTowerGame() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#1a0f0a' },
     safeArea: { flex: 1 },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10, backgroundColor: 'rgba(61,37,24,0.95)' },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 10, backgroundColor: 'rgba(61,37,24,0.95)' },
     headerStability: { alignItems: 'center' },
     backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 20 },
     title: { fontSize: 28, fontWeight: 'bold', color: '#FFE0B2' },

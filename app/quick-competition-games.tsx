@@ -1,115 +1,20 @@
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { playSound } from '../utils/SoundManager';
+import { GameListScreen, Game } from '../components/GameListScreen';
 
-const games = [
-  { title: 'Last Spoon Standing', description: 'Collect four of the same digital cards as fast as you can.\nWhen you’re ready — grab a spoon before anyone else!\nThe last one without a spoon… is out.', emoji: '🥄', color: '#5390d9', path: '/last-spoon-standing' },
-  { title: 'Poker Widow', description: 'Build the best poker hand by swapping cards with the five cards in the center — the Widow.\nIn the first round, you can trade your entire hand for the Widow.\nAfter that, swap one card per turn until you decide to stay.', emoji: '♠️', color: '#7209b7', path: '/poker-widow' },
+const games: Game[] = [
+  { title: 'Last Spoon Standing', description: 'Collect four of the same digital cards as fast as you can. When you\'re ready — grab a spoon before anyone else! The last one without a spoon… is out.', emoji: '🥄', color: '#5390d9', path: '/last-spoon-standing' },
+  { title: 'Poker Widow', description: 'Build the best poker hand by swapping cards with the five cards in the center — the Widow. In the first round, you can trade your entire hand for the Widow. After that, swap one card per turn until you decide to stay.', emoji: '♠️', color: '#7209b7', path: '/poker-widow' },
   { title: 'Party Poll', description: 'Guess the most popular answers to funny survey questions before the other team does! The faster and closer you get to the top answers, the more points you score.', emoji: '📊', color: '#ef476f', path: '/party-poll' },
   { title: 'Charades (Party Edition)', description: 'One player acts out a secret word while others try to guess it before time runs out — no speaking allowed!', emoji: '🎭', color: '#fca311', path: '/charades-party-edition' },
-  { title: 'Card Clash', description: 'Choose the perfect card before time runs out!\nOutsmart, block, or steal your way to victory.', emoji: '🃏', color: '#006400', path: '/card-clash' },
+  { title: 'Card Clash', description: 'Choose the perfect card before time runs out! Outsmart, block, or steal your way to victory.', emoji: '🃏', color: '#006400', path: '/card-clash' },
 ];
 
-const GameItem = ({ title, description, emoji, color, onPress }) => (
-  <LinearGradient
-    colors={[color, '#16a34a']}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    style={styles.gameButtonOuter}
-  >
-    <TouchableOpacity style={styles.gameButtonInner} onPress={onPress}>
-      <Text style={styles.gameTitle}>{emoji} {title}</Text>
-      <Text style={styles.gameDescription}>{description}</Text>
-    </TouchableOpacity>
-  </LinearGradient>
-);
-
 export default function QuickCompetitionGamesScreen() {
-  const router = useRouter();
-
   return (
-    <View style={styles.background}>
-      <SafeAreaView style={styles.container}>
-        <ScrollView>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text style={styles.title}>Quick Competition</Text>
-          </View>
-          <View style={styles.grid}>
-            {games.map((game) => (
-              <GameItem key={game.title} {...game} onPress={() => { playSound('ui.buttonClick'); router.push(game.path as any); }} />
-            ))}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+    <GameListScreen
+      title="Quick Competition"
+      games={games}
+      backgroundColor="#0a2239"
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    backgroundColor: '#43aa8b',
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  backButton: {
-    position: 'absolute',
-    left: 0,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'green',
-    textAlign: 'center',
-  },
-  grid: {
-    justifyContent: 'space-around',
-  },
-  gameButtonOuter: {
-    borderRadius: 20,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  gameButtonInner: {
-    borderRadius: 15,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderWidth: 3,
-    borderColor: '#fff',
-    backgroundColor: 'rgba(255,255,255,0.10)',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  gameTitle: {
-    color: 'white',
-    fontSize: 22,
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowRadius: 4,
-  },
-  gameDescription: {
-    color: 'white',
-    fontSize: 14,
-    marginTop: 5,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowRadius: 2,
-  },
-});

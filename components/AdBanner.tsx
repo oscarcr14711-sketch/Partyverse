@@ -18,7 +18,6 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'center',
-    paddingBottom: 8,
     backgroundColor: 'transparent',
   },
 });

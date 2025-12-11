@@ -1,7 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { FlatList, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../components/PulsingButton';
 import { playSound } from '../utils/SoundManager';
 import { useTheme } from '../utils/ThemeContext';
@@ -108,7 +110,12 @@ export default function MainScreen() {
   const hasChristmasBackground = theme.categoryBackgrounds?.gamesMenu;
 
   const content = (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+      <View style={styles.backButtonContainer}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Let the Games</Text>
         <Text style={[styles.title, styles.titleBegin]}>Begin! 🎮</Text>
@@ -148,8 +155,22 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  backButtonContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 5,
+  },
+  backButton: {
+    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerContainer: {
-    paddingTop: 30,
+    paddingTop: 10,
     paddingBottom: 20,
     paddingHorizontal: 20,
     alignItems: 'center',

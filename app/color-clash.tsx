@@ -4,10 +4,8 @@ import { useRouter } from 'expo-router';
 import React, { useMemo, useRef, useState } from 'react';
 import { Animated, Image, ImageBackground, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getSelectedCardBack } from '../data/card-backs';
+import { useCardBack } from '../utils/CardBackContext';
 
-// Use selected card back (change SELECTED_CARD_BACK_INDEX in card-backs.ts to test)
-const deckBackImage = getSelectedCardBack().image;
 const cardFrontImage = require('../assets/images/Colorclash.png');
 const pokerTableImage = require('../assets/images/poker_table_bg.jpg');
 
@@ -39,6 +37,8 @@ function shuffle<T>(arr: T[]): T[] {
 
 export default function ColorClashScreen() {
   const router = useRouter();
+  const { selectedCardBack } = useCardBack();
+  const deckBackImage = selectedCardBack.image;
   const initialDeck = useMemo(() => shuffle(createDeck()), []);
   const [deck, setDeck] = useState<Card[]>(initialDeck);
   const [current, setCurrent] = useState<Card | null>(null);

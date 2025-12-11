@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -26,6 +27,11 @@ export default function BrainBuzzerPreGame() {
                 resizeMode="contain"
             >
                 <View style={styles.overlay}>
+                    {/* Back Button */}
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Ionicons name="arrow-back" size={28} color="#FFC107" />
+                    </TouchableOpacity>
+
                     {/* Title is part of the background image, so we just add spacing */}
                     <View style={styles.headerSpacer} />
 
@@ -103,6 +109,18 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         height: '100%',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 50,
+        left: 20,
+        zIndex: 10,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     overlay: {
         flex: 1,

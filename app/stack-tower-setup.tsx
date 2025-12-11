@@ -13,7 +13,7 @@ interface Player {
 
 const PLAYER_COLORS = ['#f94144', '#f8961e', '#90be6d', '#577590', '#f3722c', '#43aa8b'];
 
-export default function JengaSetup() {
+export default function StackTowerSetup() {
     const router = useRouter();
     const [step, setStep] = useState<'mode' | 'players' | 'tower'>('mode');
     const [gameMode, setGameMode] = useState<'single' | 'multiplayer' | null>(null);

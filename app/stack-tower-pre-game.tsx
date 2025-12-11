@@ -68,7 +68,7 @@ export default function StackTowerPreGame() {
                 <RulesModal
                     visible={showRules}
                     onClose={() => setShowRules(false)}
-                    title="How to Play Jenga"
+                    title="How to Play Stack Tower"
                     accentColor="#D2B48C"
                 >
                     <RuleSection title="🎯 Objective">

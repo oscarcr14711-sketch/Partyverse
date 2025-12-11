@@ -6,10 +6,7 @@ import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getSelectedCardBack } from '../data/card-backs';
-
-// Use selected card back (change SELECTED_CARD_BACK_INDEX in card-backs.ts to test)
-const deckBackImage = getSelectedCardBack().image;
+import { useCardBack } from '../utils/CardBackContext';
 
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 type Card = { suit: Suit; rank: string; value: number; color: 'red' | 'black'; };
@@ -44,6 +41,8 @@ function shuffle<T>(arr: T[]): T[] {
 
 export default function RideTheBusGame() {
     const router = useRouter();
+    const { selectedCardBack } = useCardBack();
+    const deckBackImage = selectedCardBack.image;
     const [deck, setDeck] = useState<Card[]>([]);
     const [phase, setPhase] = useState<1 | 2 | 3>(1); // 1: Collection, 2: Pyramid, 3: Ride The Bus
 

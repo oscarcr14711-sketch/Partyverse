@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Alert, Dimensions, Image, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CARD_BACKS, getCardBackById } from '../../data/card-backs';
+import { useCardBack } from '../../utils/CardBackContext';
 import { soundManager } from '../../utils/SoundManager';
 import { THEMES, useTheme } from '../../utils/ThemeContext';
 
@@ -56,7 +57,7 @@ export default function ProfileScreen() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showCardBackSettings, setShowCardBackSettings] = useState(false);
-  const [selectedCardBack, setSelectedCardBack] = useState('default');
+  const { selectedCardBackId, setCardBack } = useCardBack();
 
   // Volume change handlers that update SoundManager
   const handleMasterVolumeChange = (value: number) => {
@@ -271,7 +272,7 @@ export default function ProfileScreen() {
               <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowCardBackSettings(true), 300); }}>
                 <Ionicons name="albums" size={24} color="#667eea" />
                 <Text style={styles.settingText}>Card Back Design</Text>
-                <Text style={styles.settingValue}>{getCardBackById(selectedCardBack).name}</Text>
+                <Text style={styles.settingValue}>{getCardBackById(selectedCardBackId).name}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
@@ -424,7 +425,7 @@ export default function ProfileScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Choose Theme</Text>
             <Text style={{ color: '#666', textAlign: 'center', marginBottom: 15, fontSize: 14 }}>
-              Only owned themes are shown. Get more themes from the Store!
+              Select your favorite theme!
             </Text>
             {ownedThemes.map((ownedThemeId) => {
               const themeData = THEMES[ownedThemeId];
@@ -501,13 +502,13 @@ export default function ProfileScreen() {
               <View style={styles.avatarGrid}>
                 {CARD_BACKS.map((cardBack) => {
                   const isOwned = !cardBack.isPremium; // Default is free, others require purchase
-                  const isSelected = selectedCardBack === cardBack.id;
+                  const isSelected = selectedCardBackId === cardBack.id;
                   return (
                     <TouchableOpacity
                       key={cardBack.id}
                       onPress={() => {
                         if (isOwned) {
-                          setSelectedCardBack(cardBack.id);
+                          setCardBack(cardBack.id);
                           if (hapticsEnabled) {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                           }

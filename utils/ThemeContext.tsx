@@ -97,7 +97,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 // Provider component
 export function ThemeProvider({ children }: { children: ReactNode }) {
     const [themeId, setThemeId] = useState<string>('default');
-    const [ownedThemes, setOwnedThemes] = useState<string[]>(['default']); // Default is always owned
+    const [ownedThemes, setOwnedThemes] = useState<string[]>(['default', 'christmas']); // Default and Christmas are always available in MVP
 
     const theme = THEMES[themeId] || DEFAULT_THEME;
 

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Image, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -23,6 +24,11 @@ export default function PreGameScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#3B1A5A', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 }}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <Ionicons name="arrow-back" size={28} color="#f9c846" />
+      </TouchableOpacity>
+
       {/* Removed EXTREME CHALLENGE and ROULETTE text */}
       <View style={{ alignItems: 'center', marginTop: 60, marginBottom: 0 }}>
         <Image source={require('../assets/images/extreme.png')} style={{ width: 500, height: 140, marginBottom: -35 }} resizeMode="contain" />
@@ -278,5 +284,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

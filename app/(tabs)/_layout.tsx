@@ -56,10 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="store"
         options={{
-          title: 'Store',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart" size={24} color={color} />
-          ),
+          href: null, // Hidden for MVP - will be enabled in future update
         }}
       />
       <Tabs.Screen

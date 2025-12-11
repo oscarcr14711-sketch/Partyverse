@@ -3,10 +3,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { getSelectedCardBack } from '../../data/card-backs';
+import { useCardBack } from '../../utils/CardBackContext';
 
 export default function StartScreen() {
   const router = useRouter();
+  const { selectedCardBack } = useCardBack();
+  const deckBackImage = selectedCardBack.image;
   const { playerNames } = useLocalSearchParams();
   const parsedPlayerNames = playerNames ? JSON.parse(playerNames as string) : ["Player 1", "Player 2", "Player 3"];
 
@@ -287,7 +289,7 @@ export default function StartScreen() {
             {/* FRONT (Deck) */}
             <Animated.View style={[styles.cardFace, frontAnimatedStyle]}>
               <Image
-                source={getSelectedCardBack().image}
+                source={deckBackImage}
                 style={styles.deckImage}
                 resizeMode="contain"
               />

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -39,6 +40,11 @@ export default function ColorClashPreGame() {
             style={styles.container}
         >
             <SafeAreaView style={styles.safeArea}>
+                {/* Back Button */}
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                    <Ionicons name="arrow-back" size={28} color="#fff" />
+                </TouchableOpacity>
+
                 {/* Title */}
                 <View style={styles.titleContainer}>
                     <Text style={[styles.titleText, { color: '#FF0000' }]}>Color</Text>
@@ -119,6 +125,18 @@ export default function ColorClashPreGame() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 50,
+        left: 20,
+        zIndex: 10,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     safeArea: {
         flex: 1,

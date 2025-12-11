@@ -12,7 +12,7 @@ import { useTheme } from '../utils/ThemeContext';
 
 const games = [
   { title: 'Hot Bomb', description: 'Pass the bomb before it explodes!', emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
-  { title: 'Stack Tower', description: 'Stack blocks as high as you can without falling!', emoji: '📦', color: '#f8961e', path: '/jenga-pre-game' },
+  { title: 'Stack Tower', description: 'Stack blocks as high as you can without falling!', emoji: '📦', color: '#f8961e', path: '/stack-tower-pre-game' },
   { title: 'Lightning Rounds', description: 'Race to complete physical challenges - last one gets a strike!', emoji: '⚡', color: '#f9c74f', path: '/lightning-rounds-pre-game' },
   { title: 'Don\'t Let It PIC You', description: 'Avoid being caught in surprise photos!', emoji: '📸', color: '#90be6d', path: '/dont-let-it-pic-you-pre-game' },
   { title: 'Blown Away', description: 'Players blow into the phone mic and whoever blows the bigger balloon without popping it, wins', emoji: '🎈', color: '#43aa8b', path: '/blown-away' },

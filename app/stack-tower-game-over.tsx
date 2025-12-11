@@ -11,7 +11,7 @@ interface Player {
     color: string;
 }
 
-export default function JengaGameOver() {
+export default function StackTowerGameOver() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
@@ -58,7 +58,7 @@ export default function JengaGameOver() {
                 </View>
 
                 <View style={styles.footer}>
-                    <TouchableOpacity style={styles.playAgainButton} onPress={() => router.replace('/jenga-setup')}>
+                    <TouchableOpacity style={styles.playAgainButton} onPress={() => router.replace('/stack-tower-setup')}>
                         <Ionicons name="refresh" size={22} color="#FFE0B2" />
                         <Text style={styles.playAgainText}>PLAY AGAIN</Text>
                     </TouchableOpacity>

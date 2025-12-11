@@ -2,6 +2,7 @@ import { Asset } from 'expo-asset';
 import { Stack } from 'expo-router';
 import React, { useEffect } from 'react';
 import { InteractionManager } from 'react-native';
+import { CardBackProvider } from '../utils/CardBackContext';
 import { initializeSounds } from '../utils/SoundManager';
 import { ThemeProvider } from '../utils/ThemeContext';
 
@@ -37,13 +38,15 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="party-mode-games" />
-        <Stack.Screen name="start" />
-        <Stack.Screen name="mic-madness-card-reveal" />
-      </Stack>
+      <CardBackProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="party-mode-games" />
+          <Stack.Screen name="start" />
+          <Stack.Screen name="mic-madness-card-reveal" />
+        </Stack>
+      </CardBackProvider>
     </ThemeProvider>
   );
 }

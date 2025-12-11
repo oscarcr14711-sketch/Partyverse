@@ -81,7 +81,7 @@ function createWoodTexture(dark = false): THREE.Texture {
     return texture;
 }
 
-export default function JengaTowerGame() {
+export default function StackTowerGame() {
     const router = useRouter();
     const params = useLocalSearchParams();
 
@@ -597,7 +597,7 @@ export default function JengaTowerGame() {
             scene.add(leaf);
         }
 
-        // === JENGA TOWER ===
+        // === STACK TOWER ===
         const towerGroup = new THREE.Group();
         towerGroup.position.set(0, -0.5, 0);
         scene.add(towerGroup);
@@ -768,7 +768,7 @@ export default function JengaTowerGame() {
         }
     };
 
-    // More realistic collapse check - real Jenga can have many blocks removed
+    // More realistic collapse check - real block tower games can have many blocks removed
     const checkCollapse = (): boolean => {
         // Count blocks on each level and check structural integrity
         const levelCounts: number[] = [];
@@ -841,7 +841,7 @@ export default function JengaTowerGame() {
         // Navigate to game over after collapse animation
         setTimeout(() => {
             router.replace({
-                pathname: '/jenga-game-over',
+                pathname: '/stack-tower-game-over',
                 params: {
                     loserName: currentPlayer?.name || 'Player',
                     loserColor: currentPlayer?.color || '#f94144',
@@ -1260,7 +1260,7 @@ export default function JengaTowerGame() {
 
                 {!gameStarted && !gameOver && gamePhase === 'play' && (
                     <View style={styles.startOverlay}>
-                        <Text style={styles.titleLarge}>🏗️ JENGA</Text>
+                        <Text style={styles.titleLarge}>🏗️ STACK TOWER</Text>
                         <Text style={styles.subtitle}>Remove & stack blocks carefully!</Text>
                         <TouchableOpacity style={styles.startButton} onPress={handleStartGame}>
                             <Text style={styles.startButtonText}>CLASSIC MODE</Text>

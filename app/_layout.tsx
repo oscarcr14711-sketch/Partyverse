@@ -1,7 +1,7 @@
 import { Asset } from 'expo-asset';
 import { Stack, usePathname } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
-import { InteractionManager } from 'react-native';
+import { InteractionManager, View } from 'react-native';
 import { CardBackProvider } from '../utils/CardBackContext';
 import {
   initializeAppServices,
@@ -127,14 +127,16 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <CardBackProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="party-mode-games" />
-          <Stack.Screen name="start" />
-          <Stack.Screen name="mic-madness-card-reveal" />
-        </Stack>
-        <AdBanner />
+        <View style={{ flex: 1 }}>
+          <AdBanner />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="party-mode-games" />
+            <Stack.Screen name="start" />
+            <Stack.Screen name="mic-madness-card-reveal" />
+          </Stack>
+        </View>
       </CardBackProvider>
     </ThemeProvider>
   );

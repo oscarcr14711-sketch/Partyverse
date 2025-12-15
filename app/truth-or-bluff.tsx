@@ -130,6 +130,11 @@ const TruthOrBluffScreen = () => {
 		// Pre-game setup screen
 		return (
 			<View style={styles.container}>
+				<SafeAreaView style={styles.safeHeader}>
+					<View style={styles.header}>
+						<BackButton color="#fff" />
+					</View>
+				</SafeAreaView>
 				<Image
 					source={require('../assets/images/Truth1.png')}
 					style={styles.titleImageMiddle}
@@ -258,6 +263,17 @@ const styles = StyleSheet.create({
 		alignSelf: 'center',
 		marginTop: 32,
 	},
+	safeHeader: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
+		zIndex: 10,
+	},
+	header: {
+		paddingHorizontal: 20,
+		paddingTop: 10,
+	},
 	charactersWrapper: {
 		width: '100%',
 		alignItems: 'center',
@@ -348,7 +364,7 @@ const styles = StyleSheet.create({
 		width: '100%',
 		alignItems: 'center',
 		position: 'absolute',
-		bottom: 110,
+		bottom: 30,
 		left: 0,
 		right: 0,
 		zIndex: 10,

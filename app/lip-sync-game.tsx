@@ -460,12 +460,15 @@ export default function LipSyncGame() {
                     <Text style={styles.songNameText}>{currentSong}</Text>
                 </View>
 
+                <View style={styles.timerContainer}>
+                    <Text style={styles.timerDisplay}>{formatTime(timeRemaining)}</Text>
+                </View>
+
                 <View style={styles.speechBubbleArea}>
                     <Text style={styles.phraseText}>{currentPhrase}</Text>
                 </View>
 
                 <View style={styles.bottomControls}>
-                    <Text style={styles.timerDisplay}>{formatTime(timeRemaining)}</Text>
                     <TouchableOpacity
                         style={styles.doneButton}
                         onPress={handleDoneGuessing}
@@ -805,7 +808,7 @@ const styles = StyleSheet.create({
     },
     speechBubbleArea: {
         position: 'absolute',
-        top: '32%',
+        top: '36%',
         alignSelf: 'center',
         width: '75%',
     },
@@ -819,6 +822,12 @@ const styles = StyleSheet.create({
             android: 'sans-serif-black'
         }),
         letterSpacing: 0.5,
+    },
+    timerContainer: {
+        position: 'absolute',
+        top: '28%',
+        alignSelf: 'center',
+        alignItems: 'center',
     },
     bottomControls: {
         width: '90%',
@@ -869,6 +878,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 10,
         elevation: 12,
+        justifyContent: 'space-around',
     },
     phraseTextScoring: {
         color: '#0D253F',

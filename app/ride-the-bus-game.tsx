@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCardBack } from '../utils/CardBackContext';
 
@@ -39,33 +39,65 @@ function shuffle<T>(arr: T[]): T[] {
     return a;
 }
 
+// Pyramid row drink seconds: Row 1 (bottom) = 6, Row 5 (top) = 10
+const PYRAMID_DRINK_SECONDS = [6, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 10];
+const getRowForIndex = (i: number): number => {
+    if (i < 5) return 1;  // Bottom row: indices 0-4
+    if (i < 9) return 2;  // Row 2: indices 5-8
+    if (i < 12) return 3; // Row 3: indices 9-11
+    if (i < 14) return 4; // Row 4: indices 12-13
+    return 5;             // Top row: index 14
+};
+
 export default function RideTheBusGame() {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const { selectedCardBack } = useCardBack();
     const deckBackImage = selectedCardBack.image;
+
+    // Parse player names from params
+    const players: string[] = useMemo(() => {
+        try {
+            return JSON.parse(params.players as string) || ['Player 1', 'Player 2'];
+        } catch {
+            return ['Player 1', 'Player 2'];
+        }
+    }, [params.players]);
+
     const [deck, setDeck] = useState<Card[]>([]);
-    const [phase, setPhase] = useState<1 | 2 | 3>(1); // 1: Collection, 2: Pyramid, 3: Ride The Bus
+    const [phase, setPhase] = useState<1 | 2 | 3>(1);
+
+    // Player tracking
+    const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+    const [playerHands, setPlayerHands] = useState<{ [key: string]: Card[] }>({});
 
     // Phase 1 State
-    const [playerHand, setPlayerHand] = useState<Card[]>([]);
-    const [collectionStep, setCollectionStep] = useState(0); // 0-3
+    const [collectionStep, setCollectionStep] = useState(0);
     const [currentCard, setCurrentCard] = useState<Card | null>(null);
-    const [message, setMessage] = useState('Guess: Red or Black?');
+    const [message, setMessage] = useState('');
     const [showResult, setShowResult] = useState(false);
+    const [tempHand, setTempHand] = useState<Card[]>([]);
 
     // Phase 2 State
     const [pyramidCards, setPyramidCards] = useState<Card[]>([]);
     const [flippedPyramidIndices, setFlippedPyramidIndices] = useState<Set<number>>(new Set());
-    const [currentPyramidRow, setCurrentPyramidRow] = useState(0);
+    const [playerAttempts, setPlayerAttempts] = useState<{ [key: string]: number }>({});
+    const [showDrinkModal, setShowDrinkModal] = useState(false);
+    const [drinkSeconds, setDrinkSeconds] = useState(0);
+    const [matchedCard, setMatchedCard] = useState<Card | null>(null);
 
     // Phase 3 State
     const [busCards, setBusCards] = useState<Card[]>([]);
     const [busIndex, setBusIndex] = useState(0);
     const [busFlipped, setBusFlipped] = useState(false);
-    const [showConfetti, setShowConfetti] = useState(false);
+    const [survivors, setSurvivors] = useState<string[]>([]);
+    const [eliminated, setEliminated] = useState<string[]>([]);
+    const [showSurvivorModal, setShowSurvivorModal] = useState(false);
 
     // Animations
     const flipAnim = useRef(new Animated.Value(0)).current;
+
+    const currentPlayer = players[currentPlayerIndex];
 
     useEffect(() => {
         startNewGame();
@@ -75,22 +107,30 @@ export default function RideTheBusGame() {
         const newDeck = shuffle(createDeck());
         setDeck(newDeck);
         setPhase(1);
-        setPlayerHand([]);
+        setCurrentPlayerIndex(0);
+        setPlayerHands({});
         setCollectionStep(0);
-        setMessage('Guess: Red or Black?');
+        setTempHand([]);
+        setMessage(`${players[0]}: Red or Black?`);
         setShowResult(false);
         flipAnim.setValue(0);
+
+        // Initialize player attempts for Phase 2
+        const attempts: { [key: string]: number } = {};
+        players.forEach(p => { attempts[p] = 5; });
+        setPlayerAttempts(attempts);
     };
 
     const drawCard = () => {
         if (deck.length === 0) {
-            console.error('Deck is empty!');
-            return null;
+            const newDeck = shuffle(createDeck());
+            setDeck(newDeck);
+            return newDeck.shift()!;
         }
         const newDeck = [...deck];
-        const card = newDeck.shift();
+        const card = newDeck.shift()!;
         setDeck(newDeck);
-        return card!;
+        return card;
     };
 
     // --- PHASE 1: COLLECTION ---
@@ -98,15 +138,10 @@ export default function RideTheBusGame() {
         if (showResult) return;
 
         const card = drawCard();
-        if (!card) {
-            console.error('Failed to draw card in Phase 1!');
-            return;
-        }
-
         setCurrentCard(card);
 
         let correct = false;
-        const lastCard = playerHand[playerHand.length - 1];
+        const lastCard = tempHand[tempHand.length - 1];
 
         switch (collectionStep) {
             case 0: // Red or Black
@@ -115,11 +150,11 @@ export default function RideTheBusGame() {
             case 1: // High or Low
                 if (guess === 'high') correct = card.value > lastCard.value;
                 else if (guess === 'low') correct = card.value < lastCard.value;
-                else correct = card.value === lastCard.value; // Tie is usually a push or loss, let's say push/correct for simplicity or loss? Let's say loss for strictness.
+                else correct = card.value === lastCard.value;
                 break;
             case 2: // Inside or Outside
-                const c1 = playerHand[0].value;
-                const c2 = playerHand[1].value;
+                const c1 = tempHand[0].value;
+                const c2 = tempHand[1].value;
                 const min = Math.min(c1, c2);
                 const max = Math.max(c1, c2);
                 if (guess === 'inside') correct = card.value > min && card.value < max;
@@ -131,10 +166,10 @@ export default function RideTheBusGame() {
         }
 
         if (correct) {
-            setMessage('Correct! Next card...');
+            setMessage('Correct! ✓');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } else {
-            setMessage('Wrong! Drink!');
+            setMessage('Wrong! Drink! 🍺');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
 
@@ -147,7 +182,8 @@ export default function RideTheBusGame() {
         setShowResult(true);
 
         setTimeout(() => {
-            setPlayerHand([...playerHand, card]);
+            const newHand = [...tempHand, card];
+            setTempHand(newHand);
             setCurrentCard(null);
             setShowResult(false);
             flipAnim.setValue(0);
@@ -156,120 +192,195 @@ export default function RideTheBusGame() {
                 setCollectionStep(collectionStep + 1);
                 updateMessage(collectionStep + 1);
             } else {
-                startPhase2();
+                // Save this player's hand and move to next player
+                const newHands = { ...playerHands, [currentPlayer]: newHand };
+                setPlayerHands(newHands);
+
+                if (currentPlayerIndex < players.length - 1) {
+                    // Next player
+                    setCurrentPlayerIndex(currentPlayerIndex + 1);
+                    setCollectionStep(0);
+                    setTempHand([]);
+                    setMessage(`${players[currentPlayerIndex + 1]}: Red or Black?`);
+                } else {
+                    // All players done, start Phase 2
+                    startPhase2(newHands);
+                }
             }
         }, 1500);
     };
 
     const updateMessage = (step: number) => {
         switch (step) {
-            case 0: setMessage('Guess: Red or Black?'); break;
-            case 1: setMessage('Guess: Higher or Lower?'); break;
-            case 2: setMessage('Guess: Inside or Outside?'); break;
-            case 3: setMessage('Guess the Suit!'); break;
+            case 0: setMessage(`${currentPlayer}: Red or Black?`); break;
+            case 1: setMessage(`${currentPlayer}: Higher or Lower?`); break;
+            case 2: setMessage(`${currentPlayer}: Inside or Outside?`); break;
+            case 3: setMessage(`${currentPlayer}: Guess the Suit!`); break;
         }
     };
 
     // --- PHASE 2: PYRAMID ---
-    const startPhase2 = () => {
-        console.log('Starting Phase 2. Deck size:', deck.length);
-        console.log('Player hand:', playerHand.map(c => `${c.rank}${c.suit[0]}`));
+    const startPhase2 = (hands: { [key: string]: Card[] }) => {
         setPhase(2);
-        setMessage('The Pyramid: Tap to flip!');
-        setFlippedPyramidIndices(new Set()); // Reset flipped indices
+        setCurrentPlayerIndex(0);
+        setMessage(`${players[0]}'s turn - Pick a pyramid card!`);
+        setFlippedPyramidIndices(new Set());
 
-        // Use functional update to get current deck state
         setDeck(currentDeck => {
             const deckCopy = [...currentDeck];
             const pCards = [];
-
-            for (let i = 0; i < 15; i++) {
-                if (deckCopy.length > 0) {
-                    const card = deckCopy.shift()!;
-                    pCards.push(card);
-                    console.log(`Pyramid card ${i}:`, `${card.rank}${card.suit[0]}`);
-                } else {
-                    console.error('Deck ran out during pyramid!');
-                }
+            for (let i = 0; i < 15 && deckCopy.length > 0; i++) {
+                pCards.push(deckCopy.shift()!);
             }
-
-            console.log('Pyramid cards generated:', pCards.length);
-            console.log('Deck size after pyramid:', deckCopy.length);
             setPyramidCards(pCards);
-
             return deckCopy;
         });
     };
 
     const handlePyramidFlip = (index: number) => {
         if (flippedPyramidIndices.has(index)) return;
+        if (playerAttempts[currentPlayer] <= 0) return;
 
-        const row = getRowForIndex(index);
-
+        // Flip the card
         const newFlipped = new Set(flippedPyramidIndices);
         newFlipped.add(index);
         setFlippedPyramidIndices(newFlipped);
 
         const card = pyramidCards[index];
-        console.log(`Flipped pyramid card ${index}:`, `${card.rank}${card.suit[0]}`);
-        console.log('Player hand:', playerHand.map(c => `${c.rank}${c.suit[0]}`));
+        const row = getRowForIndex(index);
+        const seconds = 5 + row; // Row 1 = 6 sec, Row 5 = 10 sec
 
-        // Check if player has match
-        const match = playerHand.find(c => c.rank === card.rank);
-        console.log('Match found:', match ? `${match.rank}${match.suit[0]}` : 'none');
+        // Check if player has matching card
+        const playerCards = playerHands[currentPlayer] || [];
+        const matchIndex = playerCards.findIndex(c => c.rank === card.rank);
 
-        if (match) {
-            setMessage(`Match! Give ${row} drinks!`);
+        // Reduce attempts
+        const newAttempts = { ...playerAttempts, [currentPlayer]: playerAttempts[currentPlayer] - 1 };
+        setPlayerAttempts(newAttempts);
+
+        if (matchIndex >= 0) {
+            // Match! Remove card from hand, show drink modal
+            const newHand = [...playerCards];
+            newHand.splice(matchIndex, 1);
+            setPlayerHands({ ...playerHands, [currentPlayer]: newHand });
+
+            setMatchedCard(card);
+            setDrinkSeconds(seconds);
+            setShowDrinkModal(true);
+            setMessage(`MATCH! ${currentPlayer} chooses who drinks ${seconds} seconds!`);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } else {
-            setMessage(`No match. Row ${row}.`);
-        }
+            // No match, player drinks
+            setMessage(`No match! ${currentPlayer} drinks ${seconds} seconds! 🍺`);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
-        if (newFlipped.size === 15) {
             setTimeout(() => {
-                startPhase3();
-            }, 1000);
+                advancePhase2Player(newAttempts);
+            }, 2000);
         }
     };
 
-    const getRowForIndex = (i: number) => {
-        if (i === 0) return 1;
-        if (i <= 2) return 2;
-        if (i <= 5) return 3;
-        if (i <= 9) return 4;
-        return 5;
+    const handleDrinkAssign = (targetPlayer: string) => {
+        setShowDrinkModal(false);
+        setMessage(`${targetPlayer} drinks ${drinkSeconds} seconds! 🍺`);
+
+        setTimeout(() => {
+            advancePhase2Player(playerAttempts);
+        }, 2000);
+    };
+
+    const advancePhase2Player = (attempts: { [key: string]: number }) => {
+        // Check if current player still has attempts
+        if (attempts[currentPlayer] > 0) {
+            setMessage(`${currentPlayer}'s turn - ${attempts[currentPlayer]} attempts left`);
+            return;
+        }
+
+        // Move to next player with attempts remaining
+        let nextIndex = (currentPlayerIndex + 1) % players.length;
+        let checked = 0;
+        while (checked < players.length) {
+            if (attempts[players[nextIndex]] > 0) {
+                setCurrentPlayerIndex(nextIndex);
+
+                // Reset pyramid for new player - generate fresh cards
+                setFlippedPyramidIndices(new Set());
+                setDeck(currentDeck => {
+                    let deckToUse = currentDeck.length >= 15 ? [...currentDeck] : shuffle(createDeck());
+                    const pCards = [];
+                    for (let i = 0; i < 15 && deckToUse.length > 0; i++) {
+                        pCards.push(deckToUse.shift()!);
+                    }
+                    setPyramidCards(pCards);
+                    return deckToUse;
+                });
+
+                setMessage(`${players[nextIndex]}'s turn - ${attempts[players[nextIndex]]} attempts left`);
+                return;
+            }
+            nextIndex = (nextIndex + 1) % players.length;
+            checked++;
+        }
+
+        // All players done with Phase 2, start Phase 3
+        startPhase3();
     };
 
     // --- PHASE 3: RIDE THE BUS ---
-    const startPhase3 = () => {
-        console.log('Starting Phase 3. Deck size:', deck.length);
-        setPhase(3);
-        setMessage('RIDE THE BUS! Avoid Face Cards!');
+    const generateBalancedBusCards = (deckCopy: Card[]): Card[] => {
+        const faceCards = deckCopy.filter(c => ['J', 'Q', 'K', 'A'].includes(c.rank));
+        const safeCards = deckCopy.filter(c => !['J', 'Q', 'K', 'A'].includes(c.rank));
 
-        // Use functional update to get current deck state
-        setDeck(currentDeck => {
-            const deckCopy = [...currentDeck];
-            const bCards = [];
+        // Randomly decide if this round should be winnable (50% chance)
+        const isWinnable = Math.random() < 0.5;
 
-            for (let i = 0; i < 7; i++) {
-                if (deckCopy.length > 0) {
-                    const card = deckCopy.shift()!;
-                    bCards.push(card);
-                    console.log(`Bus card ${i}:`, `${card.rank}${card.suit[0]}`);
-                } else {
-                    console.error('Deck ran out during bus!');
-                }
+        if (isWinnable) {
+            // All 7 cards are safe - player can survive!
+            const shuffledSafe = shuffle(safeCards);
+            return shuffledSafe.slice(0, 7);
+        } else {
+            // Put 1-2 face cards ONLY in positions 5, 6, or 7
+            // First 4 cards are ALWAYS safe
+            const numFaceCards = Math.floor(Math.random() * 2) + 1; // 1-2 face cards
+
+            const first4Safe = shuffle(safeCards).slice(0, 4);
+            const remaining = shuffle(safeCards.slice(4));
+
+            // For positions 5-7, mix some safe with face cards
+            const lastPositions: Card[] = [];
+            const shuffledFace = shuffle(faceCards);
+            const lastSafeCards = remaining.slice(0, 3 - numFaceCards);
+
+            for (let i = 0; i < numFaceCards && i < shuffledFace.length; i++) {
+                lastPositions.push(shuffledFace[i]);
+            }
+            for (let i = 0; i < lastSafeCards.length; i++) {
+                lastPositions.push(lastSafeCards[i]);
             }
 
-            console.log('Bus cards generated:', bCards.length);
-            console.log('Deck size after bus:', deckCopy.length);
-            setBusCards(bCards);
+            // Shuffle only the last 3 positions
+            const shuffledLast = shuffle(lastPositions);
 
-            return deckCopy;
-        });
+            return [...first4Safe, ...shuffledLast];
+        }
+    };
 
+    const startPhase3 = () => {
+        setPhase(3);
+        setCurrentPlayerIndex(0);
+        setSurvivors([]);
+        setEliminated([]);
         setBusIndex(0);
         setBusFlipped(false);
+        setMessage(`${players[0]} rides the bus! Tap to flip cards.`);
+
+        setDeck(currentDeck => {
+            let deckToUse = currentDeck.length >= 15 ? [...currentDeck] : shuffle(createDeck());
+            const bCards = generateBalancedBusCards(deckToUse);
+            setBusCards(bCards);
+            const usedCards = new Set(bCards);
+            return deckToUse.filter(c => !usedCards.has(c));
+        });
     };
 
     const handleBusFlip = () => {
@@ -277,63 +388,29 @@ export default function RideTheBusGame() {
 
         setBusFlipped(true);
         const card = busCards[busIndex];
-
-        // Face card logic (J, Q, K, A)
         const isFace = ['J', 'Q', 'K', 'A'].includes(card.rank);
 
         if (isFace) {
-            setMessage('FACE CARD! DRINK & RESTART!');
+            // Face card - eliminated
+            const faceSeconds = card.value; // J=11, Q=12, K=13, A=14
+            setMessage(`${currentPlayer} hit ${card.rank}! Drink ${faceSeconds} seconds! ELIMINATED! 💀`);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+            setEliminated([...eliminated, currentPlayer]);
+
             setTimeout(() => {
-                setMessage('Restarting... Good luck!');
-
-                // Restart bus with functional update
-                setTimeout(() => {
-                    setDeck(currentDeck => {
-                        const deckCopy = [...currentDeck];
-
-                        // Check if we have enough cards left
-                        if (deckCopy.length < 7) {
-                            // Not enough cards, reshuffle and create new deck
-                            const newDeck = shuffle(createDeck());
-                            const newBus = [];
-                            for (let i = 0; i < 7; i++) {
-                                if (newDeck.length > 0) {
-                                    newBus.push(newDeck.shift()!);
-                                }
-                            }
-                            setBusCards(newBus);
-                            setBusIndex(0);
-                            setBusFlipped(false);
-                            setMessage('RIDE THE BUS! Avoid Face Cards!');
-                            return newDeck;
-                        } else {
-                            // Enough cards, continue with current deck
-                            const newBus = [];
-                            for (let i = 0; i < 7; i++) {
-                                if (deckCopy.length > 0) {
-                                    newBus.push(deckCopy.shift()!);
-                                }
-                            }
-                            setBusCards(newBus);
-                            setBusIndex(0);
-                            setBusFlipped(false);
-                            setMessage('RIDE THE BUS! Avoid Face Cards!');
-                            return deckCopy;
-                        }
-                    });
-                }, 500);
-            }, 2000);
+                advancePhase3Player();
+            }, 3000);
         } else {
-            setMessage('Safe! Next card...');
+            // Safe card
+            setMessage(`${currentPlayer} is safe! Card ${busIndex + 1}/7`);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-            // Check if this is the last card
-            if (busIndex >= busCards.length - 1) {
-                setShowConfetti(true);
-                setTimeout(() => {
-                    router.push('/ride-the-bus-game-over');
-                }, 2000);
+            if (busIndex >= 6) {
+                // Survived all 7!
+                setSurvivors([...survivors, currentPlayer]);
+                setShowSurvivorModal(true);
+                setMessage(`${currentPlayer} SURVIVED! 🎉 Choose who drinks!`);
             } else {
                 setTimeout(() => {
                     setBusIndex(busIndex + 1);
@@ -343,18 +420,63 @@ export default function RideTheBusGame() {
         }
     };
 
+    const handleSurvivorDrinkAssign = (targetPlayer: string, seconds: number) => {
+        setShowSurvivorModal(false);
+        setMessage(`${targetPlayer} drinks ${seconds} seconds! 🍺`);
+
+        setTimeout(() => {
+            advancePhase3Player();
+        }, 2000);
+    };
+
+    const advancePhase3Player = () => {
+        if (currentPlayerIndex < players.length - 1) {
+            const nextIndex = currentPlayerIndex + 1;
+            setCurrentPlayerIndex(nextIndex);
+            setBusIndex(0);
+            setBusFlipped(false);
+
+            setDeck(currentDeck => {
+                let deckToUse = currentDeck.length >= 15 ? [...currentDeck] : shuffle(createDeck());
+                const bCards = generateBalancedBusCards(deckToUse);
+                setBusCards(bCards);
+                const usedCards = new Set(bCards);
+                return deckToUse.filter(c => !usedCards.has(c));
+            });
+
+            setMessage(`${players[nextIndex]} rides the bus!`);
+        } else {
+            // Game over
+            router.push({
+                pathname: '/ride-the-bus-game-over',
+                params: {
+                    survivors: JSON.stringify(survivors),
+                    eliminated: JSON.stringify(eliminated)
+                }
+            });
+        }
+    };
+
     // --- RENDER HELPERS ---
-    const renderCard = (card: Card | null, isFlipped: boolean, size = 'normal') => {
+    const getSuitSymbol = (suit: Suit) => suit === 'hearts' ? '♥' : suit === 'diamonds' ? '♦' : suit === 'clubs' ? '♣' : '♠';
+
+    const renderCard = (card: Card | null, isFlipped: boolean) => {
         if (!card || !isFlipped) {
             return <Image source={deckBackImage} style={styles.cardImage} resizeMode="contain" />;
         }
+        const suitSymbol = getSuitSymbol(card.suit);
+        const textColor = card.color === 'red' ? '#D11A2A' : '#1a1a1a';
+
         return (
             <View style={[styles.cardFace, { backgroundColor: 'white' }]}>
-                <View style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={[styles.cardRank, { color: card.color === 'red' ? '#D11A2A' : 'black' }]}>{card.rank}</Text>
-                    <Text style={[styles.cardSuit, { color: card.color === 'red' ? '#D11A2A' : 'black' }]}>
-                        {card.suit === 'hearts' ? '♥' : card.suit === 'diamonds' ? '♦' : card.suit === 'clubs' ? '♣' : '♠'}
-                    </Text>
+                <View style={styles.cardCornerTopLeft}>
+                    <Text style={[styles.cornerRank, { color: textColor }]}>{card.rank}</Text>
+                    <Text style={[styles.cornerSuit, { color: textColor }]}>{suitSymbol}</Text>
+                </View>
+                <Text style={[styles.centerSuit, { color: textColor }]}>{suitSymbol}</Text>
+                <View style={styles.cardCornerBottomRight}>
+                    <Text style={[styles.cornerRank, { color: textColor }]}>{card.rank}</Text>
+                    <Text style={[styles.cornerSuit, { color: textColor }]}>{suitSymbol}</Text>
                 </View>
             </View>
         );
@@ -375,6 +497,12 @@ export default function RideTheBusGame() {
                     </Text>
                 </View>
 
+                {/* Current Player Indicator */}
+                <View style={styles.playerIndicator}>
+                    <Text style={styles.playerIndicatorText}>{currentPlayer}</Text>
+                    {phase === 2 && <Text style={styles.attemptsText}>{playerAttempts[currentPlayer]} attempts left</Text>}
+                </View>
+
                 {/* Message */}
                 <View style={styles.messageBar}>
                     <Text style={styles.messageText}>{message}</Text>
@@ -388,7 +516,7 @@ export default function RideTheBusGame() {
                             <View style={styles.handContainer}>
                                 <Text style={styles.label}>Your Hand:</Text>
                                 <View style={styles.miniHand}>
-                                    {playerHand.map((c, i) => (
+                                    {tempHand.map((c, i) => (
                                         <View key={i} style={styles.miniCard}>{renderCard(c, true)}</View>
                                     ))}
                                 </View>
@@ -421,14 +549,16 @@ export default function RideTheBusGame() {
                                     <View style={styles.suitGrid}>
                                         {['hearts', 'diamonds', 'clubs', 'spades'].map(s => (
                                             <TouchableOpacity key={s} style={styles.suitBtn} onPress={() => handleCollectionGuess(s)}>
-                                                <Text style={styles.suitText}>{s === 'hearts' ? '♥' : s === 'diamonds' ? '♦' : s === 'clubs' ? '♣' : '♠'}</Text>
+                                                <Text style={[styles.suitText, { color: s === 'hearts' || s === 'diamonds' ? '#D11A2A' : '#1a1a1a' }]}>
+                                                    {s === 'hearts' ? '♥' : s === 'diamonds' ? '♦' : s === 'clubs' ? '♣' : '♠'}
+                                                </Text>
                                             </TouchableOpacity>
                                         ))}
                                     </View>
                                 )}
                             </View>
 
-                            {/* Bus Loader Animation */}
+                            {/* Bus Animation */}
                             <View style={styles.busLoaderContainer}>
                                 <LottieView
                                     source={require('../assets/animations/Bus Loader.json')}
@@ -439,74 +569,64 @@ export default function RideTheBusGame() {
                             </View>
                         </View>
                     )}
-
                     {phase === 2 && (
-                        <View style={styles.pyramidContainer}>
-                            <View style={styles.pyramidRow}>
-                                <TouchableOpacity onPress={() => handlePyramidFlip(0)} style={styles.pyramidCard}>
-                                    {renderCard(pyramidCards[0], flippedPyramidIndices.has(0))}
-                                </TouchableOpacity>
-                            </View>
-                            <View style={styles.pyramidRow}>
-                                {[1, 2].map(i => (
-                                    <TouchableOpacity key={i} onPress={() => handlePyramidFlip(i)} style={styles.pyramidCard}>
-                                        {renderCard(pyramidCards[i], flippedPyramidIndices.has(i))}
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                            <View style={styles.pyramidRow}>
-                                {[3, 4, 5].map(i => (
-                                    <TouchableOpacity key={i} onPress={() => handlePyramidFlip(i)} style={styles.pyramidCard}>
-                                        {renderCard(pyramidCards[i], flippedPyramidIndices.has(i))}
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                            <View style={styles.pyramidRow}>
-                                {[6, 7, 8, 9].map(i => (
-                                    <TouchableOpacity key={i} onPress={() => handlePyramidFlip(i)} style={styles.pyramidCard}>
-                                        {renderCard(pyramidCards[i], flippedPyramidIndices.has(i))}
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                            <View style={styles.pyramidRow}>
-                                {[10, 11, 12, 13, 14].map(i => (
-                                    <TouchableOpacity key={i} onPress={() => handlePyramidFlip(i)} style={styles.pyramidCard}>
-                                        {renderCard(pyramidCards[i], flippedPyramidIndices.has(i))}
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-
+                        <ScrollView contentContainerStyle={styles.pyramidScrollContainer}>
+                            {/* Player's hand */}
                             <View style={styles.handContainer}>
-                                <Text style={styles.label}>Your Hand (Match these!):</Text>
+                                <Text style={styles.label}>{currentPlayer}'s Hand:</Text>
                                 <View style={styles.miniHand}>
-                                    {playerHand.map((c, i) => (
+                                    {(playerHands[currentPlayer] || []).map((c, i) => (
                                         <View key={i} style={styles.miniCard}>{renderCard(c, true)}</View>
                                     ))}
                                 </View>
                             </View>
 
-                            {flippedPyramidIndices.size === 15 && (
-                                <TouchableOpacity style={[styles.btn, { marginTop: 20, backgroundColor: '#FFD700' }]} onPress={startPhase3}>
-                                    <Text style={[styles.btnText, { color: 'black' }]}>RIDE THE BUS! 🚌</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
+                            {/* Pyramid */}
+                            <View style={styles.pyramidContainer}>
+                                {/* Row 5 (top) - 1 card */}
+                                <View style={styles.pyramidRow}>
+                                    <TouchableOpacity onPress={() => handlePyramidFlip(14)} style={styles.pyramidCard}>
+                                        {renderCard(pyramidCards[14], flippedPyramidIndices.has(14))}
+                                    </TouchableOpacity>
+                                </View>
+                                {/* Row 4 - 2 cards */}
+                                <View style={styles.pyramidRow}>
+                                    {[12, 13].map(i => (
+                                        <TouchableOpacity key={i} onPress={() => handlePyramidFlip(i)} style={styles.pyramidCard}>
+                                            {renderCard(pyramidCards[i], flippedPyramidIndices.has(i))}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                                {/* Row 3 - 3 cards */}
+                                <View style={styles.pyramidRow}>
+                                    {[9, 10, 11].map(i => (
+                                        <TouchableOpacity key={i} onPress={() => handlePyramidFlip(i)} style={styles.pyramidCard}>
+                                            {renderCard(pyramidCards[i], flippedPyramidIndices.has(i))}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                                {/* Row 2 - 4 cards */}
+                                <View style={styles.pyramidRow}>
+                                    {[5, 6, 7, 8].map(i => (
+                                        <TouchableOpacity key={i} onPress={() => handlePyramidFlip(i)} style={styles.pyramidCard}>
+                                            {renderCard(pyramidCards[i], flippedPyramidIndices.has(i))}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                                {/* Row 1 (bottom) - 5 cards */}
+                                <View style={styles.pyramidRow}>
+                                    {[0, 1, 2, 3, 4].map(i => (
+                                        <TouchableOpacity key={i} onPress={() => handlePyramidFlip(i)} style={styles.pyramidCard}>
+                                            {renderCard(pyramidCards[i], flippedPyramidIndices.has(i))}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+                        </ScrollView>
                     )}
 
                     {phase === 3 && (
                         <View style={styles.busContainer}>
-                            {/* Confetti Animation (shown on win) */}
-                            {showConfetti && (
-                                <View style={styles.confettiContainer}>
-                                    <LottieView
-                                        source={require('../assets/animations/Confetti.json')}
-                                        autoPlay
-                                        loop={false}
-                                        style={styles.confetti}
-                                    />
-                                </View>
-                            )}
-
                             <View style={styles.busRow}>
                                 {busCards.map((c, i) => (
                                     <View key={i} style={[styles.busCardWrapper, i === busIndex && styles.activeBusCard]}>
@@ -522,8 +642,9 @@ export default function RideTheBusGame() {
                                     </View>
                                 ))}
                             </View>
+                            <Text style={styles.busProgress}>Card {busIndex + 1} of 7</Text>
 
-                            {/* Bus Loader Animation */}
+                            {/* Bus Animation */}
                             <View style={styles.busLoaderContainer}>
                                 <LottieView
                                     source={require('../assets/animations/Bus Loader.json')}
@@ -536,8 +657,50 @@ export default function RideTheBusGame() {
                     )}
 
                 </View>
-            </SafeAreaView>
-        </View>
+
+                {/* Drink Assignment Modal (Phase 2) */}
+                <Modal visible={showDrinkModal} transparent animationType="fade">
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>🍺 Choose who drinks {drinkSeconds} seconds!</Text>
+                            <ScrollView style={styles.playerList}>
+                                {players.filter(p => p !== currentPlayer).map(p => (
+                                    <TouchableOpacity key={p} style={styles.playerOption} onPress={() => handleDrinkAssign(p)}>
+                                        <Text style={styles.playerOptionText}>{p}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* Survivor Drink Modal (Phase 3) */}
+                <Modal visible={showSurvivorModal} transparent animationType="fade">
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>🎉 You survived! Choose who drinks!</Text>
+                            <View style={styles.drinkOptions}>
+                                {[11, 12, 13, 14].map(sec => (
+                                    <TouchableOpacity key={sec} style={styles.drinkOption} onPress={() => {
+                                        // Show player selection for this amount
+                                    }}>
+                                        <Text style={styles.drinkOptionText}>{sec} sec</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                            <ScrollView style={styles.playerList}>
+                                {players.filter(p => p !== currentPlayer).map(p => (
+                                    <TouchableOpacity key={p} style={styles.playerOption} onPress={() => handleSurvivorDrinkAssign(p, 12)}>
+                                        <Text style={styles.playerOptionText}>{p}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    </View>
+                </Modal>
+
+            </SafeAreaView >
+        </View >
     );
 }
 
@@ -549,14 +712,32 @@ const styles = StyleSheet.create({
     backButton: { marginRight: 15 },
     phaseTitle: {
         color: 'white',
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
         textShadowColor: '#000',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 4,
     },
+    playerIndicator: {
+        backgroundColor: '#FFD700',
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        borderRadius: 20,
+        marginHorizontal: 20,
+        marginBottom: 10,
+    },
+    playerIndicatorText: {
+        color: '#1a1a1a',
+        fontSize: 22,
+        fontWeight: 'bold',
+    },
+    attemptsText: {
+        color: '#333',
+        fontSize: 14,
+    },
     messageBar: {
-        padding: 15,
+        padding: 10,
         backgroundColor: 'rgba(0,0,0,0.5)',
         alignItems: 'center',
         borderBottomWidth: 2,
@@ -564,31 +745,24 @@ const styles = StyleSheet.create({
     },
     messageText: {
         color: '#FFD700',
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: 'bold',
-        textShadowColor: '#000',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 3,
+        textAlign: 'center',
     },
-    gameArea: { flex: 1, padding: 20, alignItems: 'center' },
-
-    // Phase 1
+    gameArea: { flex: 1, padding: 10, alignItems: 'center' },
     phase1Container: { width: '100%', alignItems: 'center', flex: 1 },
-    handContainer: { width: '100%', marginBottom: 20 },
+    handContainer: { width: '100%', marginBottom: 10 },
     label: {
         color: '#FFD700',
         marginBottom: 8,
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: 'bold',
-        textShadowColor: '#000',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
     },
-    miniHand: { flexDirection: 'row', gap: 10 },
+    miniHand: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
     miniCard: {
-        width: 60,
-        height: 84,
-        borderRadius: 8,
+        width: 55,
+        height: 77,
+        borderRadius: 6,
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -597,134 +771,150 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     mainCardContainer: {
-        width: 200,
-        height: 280,
-        marginBottom: 40,
+        width: 160,
+        height: 224,
+        marginBottom: 20,
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.8,
         shadowRadius: 15,
         elevation: 15,
     },
-    controls: { flexDirection: 'row', gap: 20, flexWrap: 'wrap', justifyContent: 'center' },
+    controls: { flexDirection: 'row', gap: 15, flexWrap: 'wrap', justifyContent: 'center' },
     btn: {
         backgroundColor: '#3CB371',
-        paddingVertical: 18,
-        paddingHorizontal: 40,
+        paddingVertical: 16,
+        paddingHorizontal: 36,
         borderRadius: 15,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.4,
         shadowRadius: 8,
         elevation: 10,
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.3)',
     },
-    redBtn: {
-        backgroundColor: '#FF1744',
-        shadowColor: '#FF1744',
-    },
-    blackBtn: {
-        backgroundColor: '#263238',
-        shadowColor: '#263238',
-    },
+    redBtn: { backgroundColor: '#FF1744' },
+    blackBtn: { backgroundColor: '#263238' },
     btnText: {
         color: 'white',
         fontWeight: 'bold',
         fontSize: 20,
-        textShadowColor: '#000',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
     },
-    suitGrid: { flexDirection: 'row', gap: 18 },
+    suitGrid: { flexDirection: 'row', gap: 12 },
     suitBtn: {
-        width: 80,
-        height: 80,
+        width: 60,
+        height: 60,
         backgroundColor: 'white',
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 10,
-        borderWidth: 3,
+        borderRadius: 12,
+        borderWidth: 2,
         borderColor: '#FFD700',
     },
-    suitText: { fontSize: 42, color: 'black' },
-
-    // Card Styles
+    suitText: { fontSize: 32 },
     cardImage: { width: '100%', height: '100%' },
     cardFace: {
         width: '100%',
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 12,
+        borderRadius: 8,
         overflow: 'hidden',
-        borderWidth: 2,
-        borderColor: '#FFD700',
+        borderWidth: 1,
+        borderColor: '#ccc',
     },
-    cardRank: { fontSize: 42, fontWeight: 'bold' },
-    cardSuit: { fontSize: 52 },
-
-    // Phase 2
-    pyramidContainer: { flex: 1, width: '100%', alignItems: 'center' },
-    pyramidRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+    cardCornerTopLeft: { position: 'absolute', top: 3, left: 3, alignItems: 'center' },
+    cardCornerBottomRight: { position: 'absolute', bottom: 3, right: 3, alignItems: 'center', transform: [{ rotate: '180deg' }] },
+    cornerRank: { fontSize: 10, fontWeight: 'bold', lineHeight: 12 },
+    cornerSuit: { fontSize: 10, lineHeight: 12 },
+    centerSuit: { fontSize: 24 },
+    pyramidScrollContainer: { alignItems: 'center', paddingBottom: 20 },
+    pyramidContainer: { alignItems: 'center' },
+    pyramidRow: { flexDirection: 'row', gap: 5, marginBottom: 5 },
     pyramidCard: {
-        width: 70,
-        height: 98,
+        width: 58,
+        height: 81,
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.5,
         shadowRadius: 5,
         elevation: 5,
     },
-
-    // Phase 3
     busContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     busRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
-    busCardWrapper: {
-        width: 85,
-        height: 119,
-    },
+    busCardWrapper: { width: 80, height: 112 },
     activeBusCard: {
-        transform: [{ scale: 1.2 }],
+        transform: [{ scale: 1.15 }],
         zIndex: 10,
         shadowColor: '#FFD700',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 1,
-        shadowRadius: 20,
-        elevation: 20,
+        shadowRadius: 15,
+        elevation: 15,
     },
     busCard: { width: '100%', height: '100%' },
-
-    // Animations
+    busProgress: { color: '#FFD700', fontSize: 18, fontWeight: 'bold', marginTop: 20 },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: '#1a1a1a',
+        borderRadius: 20,
+        padding: 25,
+        width: '85%',
+        maxHeight: '70%',
+        borderWidth: 2,
+        borderColor: '#FFD700',
+    },
+    modalTitle: {
+        color: '#FFD700',
+        fontSize: 20,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    playerList: { maxHeight: 300 },
+    playerOption: {
+        backgroundColor: '#3CB371',
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 10,
+    },
+    playerOptionText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    drinkOptions: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 10,
+        marginBottom: 15,
+    },
+    drinkOption: {
+        backgroundColor: '#FF1744',
+        padding: 10,
+        borderRadius: 10,
+    },
+    drinkOptionText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
     busLoaderContainer: {
         position: 'absolute',
-        bottom: 0,
+        bottom: -30,
         left: 0,
         right: 0,
-        height: 200,
+        height: 120,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    busLoader: {
-        width: 300,
-        height: 200,
-    },
-    confettiContainer: {
-        position: 'absolute',
-        top: -100,
-        left: 0,
-        right: 0,
-        height: 400,
-        zIndex: 100,
         pointerEvents: 'none',
     },
-    confetti: {
-        width: '100%',
-        height: '100%',
+    busLoader: {
+        width: 250,
+        height: 125,
     },
 });

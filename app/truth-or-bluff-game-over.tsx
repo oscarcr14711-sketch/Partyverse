@@ -1,11 +1,22 @@
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 export default function TruthOrBluffGameOverScreen() {
   const { player1Score = 0, player2Score = 0 } = useLocalSearchParams();
   const router = useRouter();
+  const { recordGamePlayed } = usePlayerStats();
+  const hasRecordedRef = useRef(false);
+
+  // Record game stats on mount
+  useEffect(() => {
+    if (!hasRecordedRef.current) {
+      hasRecordedRef.current = true;
+      recordGamePlayed('Truth or Bluff', 'completed', '🎭');
+    }
+  }, []);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>GAME OVER</Text>
@@ -24,7 +35,7 @@ export default function TruthOrBluffGameOverScreen() {
           <Text style={styles.playerCorrect}>CORRECT</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/truth-or-bluff')}> 
+      <TouchableOpacity style={styles.button} onPress={() => router.push('/truth-or-bluff')}>
         <Text style={styles.buttonText}>CONTINUE</Text>
       </TouchableOpacity>
     </View>

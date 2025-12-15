@@ -1,4 +1,5 @@
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { storageService } from './StorageService';
 
 // Theme definitions
 export interface Theme {
@@ -98,12 +99,33 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
     const [themeId, setThemeId] = useState<string>('default');
     const [ownedThemes, setOwnedThemes] = useState<string[]>(['default', 'christmas']); // Default and Christmas are always available in MVP
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Load saved theme on startup
+    useEffect(() => {
+        const loadSavedTheme = async () => {
+            try {
+                const savedTheme = await storageService.loadTheme();
+                // Only apply saved theme if it exists in THEMES and is owned
+                if (savedTheme && THEMES[savedTheme] && ownedThemes.includes(savedTheme)) {
+                    setThemeId(savedTheme);
+                }
+            } catch (error) {
+                console.error('Failed to load saved theme:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadSavedTheme();
+    }, []);
 
     const theme = THEMES[themeId] || DEFAULT_THEME;
 
     const setTheme = (newThemeId: string) => {
         if (ownedThemes.includes(newThemeId) && THEMES[newThemeId]) {
             setThemeId(newThemeId);
+            // Save the theme when user explicitly changes it
+            storageService.saveTheme(newThemeId);
         }
     };
 

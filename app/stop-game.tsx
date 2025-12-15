@@ -4,9 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, Vibration, View } from 'react-native';
+import { soundManager } from '../utils/SoundManager';
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const WRITING_TIME = 10; // seconds per player
+const WRITING_TIME = 15; // seconds per player
 
 type GamePhase = 'letter-spin' | 'writing' | 'review' | 'round-end';
 
@@ -89,7 +90,10 @@ export default function StopGame() {
         }
     }, [timeLeft, currentPhase]);
 
-    const handleTimeUp = () => {
+    const handleTimeUp = async () => {
+        // Play buzzer sound to signal time's up
+        await soundManager.play('buzzer');
+
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         Vibration.vibrate(500);
 

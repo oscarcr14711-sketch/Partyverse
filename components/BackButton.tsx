@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { playSound } from '../utils/SoundManager';
-import { BouncyButton } from './BouncyButton';
 
 interface BackButtonProps {
     onPress?: () => void;
@@ -30,11 +29,9 @@ export function BackButton({
     };
 
     return (
-        <BouncyButton onPress={handlePress}>
-            <TouchableOpacity style={[styles.backButton, style]} activeOpacity={0.7}>
-                <Ionicons name="arrow-back" size={size} color={color} />
-            </TouchableOpacity>
-        </BouncyButton>
+        <TouchableOpacity onPress={handlePress} style={[styles.backButton, style]} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={size} color={color} />
+        </TouchableOpacity>
     );
 }
 

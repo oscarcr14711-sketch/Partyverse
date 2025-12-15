@@ -1,6 +1,8 @@
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
 import { PulsingButton } from '../components/PulsingButton';
 import { RuleSection, RulesModal } from '../components/RulesModal';
 
@@ -18,6 +20,11 @@ export default function IfYouLaughYouLoseScreen() {
   ];
   return (
     <View style={styles.container}>
+      <SafeAreaView style={styles.safeHeader}>
+        <View style={styles.header}>
+          <BackButton color="#FFE0B2" />
+        </View>
+      </SafeAreaView>
       <Image source={require("../assets/images/lol.png")}
         style={styles.titleImage}
         resizeMode="contain"
@@ -97,6 +104,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingTop: 60,
+  },
+  safeHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
   },
   titleImage: {
     width: 300,

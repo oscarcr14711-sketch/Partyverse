@@ -23,11 +23,11 @@ export default function RideTheBusPreGame() {
                 <View style={styles.content}>
                     <View style={styles.spacer} />
 
-                    {/* Buttons Container - Start and Info together */}
+                    {/* Buttons Container */}
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
                             style={styles.startButton}
-                            onPress={() => router.push('/ride-the-bus-game')}
+                            onPress={() => router.push('/ride-the-bus-player-setup')}
                         >
                             <Text style={styles.startButtonText}>START GAME</Text>
                         </TouchableOpacity>
@@ -48,7 +48,7 @@ export default function RideTheBusPreGame() {
                     accentColor="#3CB371"
                 >
                     <RuleSection title="Phase 1: Collection">
-                        You will be dealt 4 cards. Before each card, you must guess:{'\n'}
+                        Each player collects 4 cards by guessing:{'\n'}
                         1. Red or Black?{'\n'}
                         2. Higher or Lower?{'\n'}
                         3. Inside or Outside?{'\n'}
@@ -56,15 +56,18 @@ export default function RideTheBusPreGame() {
                         Wrong guess = Drink!
                     </RuleSection>
                     <RuleSection title="Phase 2: The Pyramid">
-                        Cards are flipped in a pyramid. If you have a matching card, place it to make someone drink!{'\n'}
-                        Row 1 = 1 Drink{'\n'}
-                        Row 5 = 5 Drinks
+                        Each player gets 5 chances to match cards.{'\n'}
+                        Pick a pyramid card - if it matches your hand, choose who drinks!{'\n'}
+                        Row 1 (bottom) = 6 seconds{'\n'}
+                        Row 5 (top) = 10 seconds{'\n'}
+                        Miss = You drink those seconds!
                     </RuleSection>
                     <RuleSection title="Phase 3: Ride The Bus">
-                        The player with the most cards left must Ride the Bus.{'\n'}
-                        Flip cards one by one.{'\n'}
-                        Number card = Safe.{'\n'}
-                        Face card (J,Q,K,A) = Drink & Restart!
+                        Each player flips 7 cards, avoiding face cards.{'\n'}
+                        Number card = Safe, keep going.{'\n'}
+                        Face card = Drink & Eliminated!{'\n'}
+                        J=11s, Q=12s, K=13s, A=14s{'\n'}
+                        Survive all 7? Choose who drinks!
                     </RuleSection>
                 </RulesModal>
             </SafeAreaView>
@@ -99,7 +102,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 15,
-        marginBottom: 30,
     },
     startButton: {
         backgroundColor: '#263238',

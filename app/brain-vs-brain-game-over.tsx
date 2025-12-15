@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 export default function BrainVsBrainGameOver() {
     const router = useRouter();
@@ -18,6 +19,8 @@ export default function BrainVsBrainGameOver() {
 
     const confettiAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0)).current;
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
 
     useEffect(() => {
         // Celebration animation
@@ -35,6 +38,12 @@ export default function BrainVsBrainGameOver() {
                 ])
             ),
         ]).start();
+
+        // Record game stats (only once)
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed('Brain vs Brain', 'completed', '🧠');
+        }
     }, []);
 
     const getBadges = () => {

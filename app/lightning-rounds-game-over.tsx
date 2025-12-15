@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 const { width } = Dimensions.get('window');
 
@@ -42,6 +43,8 @@ export default function LightningRoundsGameOver() {
         y: new Animated.Value(-50),
         rotate: new Animated.Value(0),
     }))).current;
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
 
     useEffect(() => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -95,6 +98,12 @@ export default function LightningRoundsGameOver() {
                 ])
             ).start();
         });
+
+        // Record game stats (only once)
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed('Lightning Rounds', 'completed', '⚡');
+        }
     }, []);
 
     const trophySpin = rotateAnim.interpolate({

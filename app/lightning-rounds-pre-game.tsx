@@ -128,7 +128,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingBottom: 40,
+        paddingBottom: 20,
+        marginTop: 40,
         gap: 15,
     },
     startButton: {

@@ -27,10 +27,13 @@ export default {
       bundleIdentifier: 'com.oscarcr.partyverse',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSCameraUsageDescription: 'Partyverse uses the camera for the "Don\'t Let It PIC You" game to take fun photos during gameplay.',
+        NSMicrophoneUsageDescription: 'Partyverse uses the microphone for games like "Blown Away" to detect blowing and "Lip Sync Chaos" for music playback.',
       },
     },
     android: {
       googleServicesFile: googleServicesJson,
+      permissions: ['CAMERA', 'RECORD_AUDIO'],
       adaptiveIcon: {
         backgroundColor: '#E6F4FE',
         foregroundImage: './assets/images/android-icon-foreground.png',

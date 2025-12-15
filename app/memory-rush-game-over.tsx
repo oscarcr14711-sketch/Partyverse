@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 interface Player {
     id: number;
@@ -41,6 +42,8 @@ export default function MemoryRushGameOver() {
     const neonAnim = useRef(new Animated.Value(0)).current;
     const confettiAnim = useRef(new Animated.Value(0)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
 
     const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
     const winner = sortedPlayers[0];
@@ -142,6 +145,12 @@ export default function MemoryRushGameOver() {
             duration: 800,
             useNativeDriver: true,
         }).start();
+
+        // Record game stats (only once)
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed('Memory Rush', 'completed', '🧠');
+        }
     }, []);
 
     const neonGlow = neonAnim.interpolate({

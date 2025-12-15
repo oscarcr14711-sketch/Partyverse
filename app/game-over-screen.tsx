@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 const HARDCORE_CHALLENGES = [
   { emoji: '🔥', challenge: 'Do 50 burpees right now!', description: 'No breaks allowed' },
@@ -22,6 +23,16 @@ const HARDCORE_CHALLENGES = [
 export default function GameOverScreen() {
   const [showModal, setShowModal] = useState(false);
   const [currentChallenge, setCurrentChallenge] = useState(HARDCORE_CHALLENGES[0]);
+  const { recordGamePlayed } = usePlayerStats();
+  const hasRecordedRef = useRef(false);
+
+  // Record game stats on mount
+  useEffect(() => {
+    if (!hasRecordedRef.current) {
+      hasRecordedRef.current = true;
+      recordGamePlayed('Extreme Challenge', 'completed', '🎰');
+    }
+  }, []);
 
   const showRandomChallenge = () => {
     const randomIndex = Math.floor(Math.random() * HARDCORE_CHALLENGES.length);

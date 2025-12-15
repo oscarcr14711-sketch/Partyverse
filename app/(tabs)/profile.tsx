@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import { CARD_BACKS, getCardBackById } from '../../data/card-backs';
 import { useCardBack } from '../../utils/CardBackContext';
+import { useLanguage } from '../../utils/LanguageContext';
+import { usePlayerStats } from '../../utils/PlayerStatsContext';
 import { soundManager } from '../../utils/SoundManager';
 import { THEMES, useTheme } from '../../utils/ThemeContext';
 
@@ -22,17 +24,21 @@ const AVATAR_IMAGES = [
 ];
 
 
-const RECENT_GAMES = [
-  { id: 1, name: 'Memory Rush', result: 'Won', date: '2 hours ago', icon: '🧠' },
-  { id: 2, name: 'Color Clash', result: 'Lost', date: 'Yesterday', icon: '🎨' },
-  { id: 3, name: 'Brain Buzzer', result: 'Won', date: '2 days ago', icon: '⚡' },
-];
+// Helper function to format relative time
+const getRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
 
-// Stats start at 0 - will be tracked with real data in future update
-const INITIAL_STATS = {
-  gamesPlayed: 0,
-  wins: 0,
-  playTime: '0h',
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString();
 };
 
 export default function ProfileScreen() {
@@ -50,7 +56,6 @@ export default function ProfileScreen() {
   const [musicVolume, setMusicVolume] = useState(75);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const { theme, themeId, setTheme, ownedThemes } = useTheme();
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [showThemeSettings, setShowThemeSettings] = useState(false);
   const [showLanguageSettings, setShowLanguageSettings] = useState(false);
@@ -60,6 +65,8 @@ export default function ProfileScreen() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const { selectedCardBackId, setCardBack } = useCardBack();
+  const { stats, getFormattedPlayTime } = usePlayerStats();
+  const { language, setLanguage, t } = useLanguage();
 
   // Volume change handlers that update SoundManager
   const handleMasterVolumeChange = (value: number) => {
@@ -134,15 +141,15 @@ export default function ProfileScreen() {
             {/* Stats Grid */}
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>{INITIAL_STATS.gamesPlayed}</Text>
+                <Text style={styles.statValue}>{stats.gamesPlayed}</Text>
                 <Text style={styles.statLabel}>Games</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>{INITIAL_STATS.wins}</Text>
+                <Text style={styles.statValue}>{stats.wins}</Text>
                 <Text style={styles.statLabel}>Wins</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>{INITIAL_STATS.playTime}</Text>
+                <Text style={styles.statValue}>{getFormattedPlayTime()}</Text>
                 <Text style={styles.statLabel}>Play Time</Text>
               </View>
             </View>
@@ -187,21 +194,30 @@ export default function ProfileScreen() {
             {/* Recent Games */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>📊 Recent Games</Text>
-              {RECENT_GAMES.map((game) => (
-                <View key={game.id} style={styles.gameCard}>
-                  <Text style={styles.gameIcon}>{game.icon}</Text>
-                  <View style={styles.gameInfo}>
-                    <Text style={styles.gameName}>{game.name}</Text>
-                    <Text style={styles.gameDate}>{game.date}</Text>
+              {stats.recentGames.length > 0 ? (
+                stats.recentGames.slice(0, 5).map((game) => (
+                  <View key={game.id} style={styles.gameCard}>
+                    <Text style={styles.gameIcon}>{game.icon}</Text>
+                    <View style={styles.gameInfo}>
+                      <Text style={styles.gameName}>{game.name}</Text>
+                      <Text style={styles.gameDate}>{getRelativeTime(game.date)}</Text>
+                    </View>
+                    <View style={[
+                      styles.resultBadge,
+                      game.result === 'won' ? styles.resultWon : game.result === 'lost' ? styles.resultLost : styles.resultCompleted
+                    ]}>
+                      <Text style={styles.resultText}>
+                        {game.result === 'won' ? 'Won' : game.result === 'lost' ? 'Lost' : 'Played'}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={[
-                    styles.resultBadge,
-                    game.result === 'Won' ? styles.resultWon : styles.resultLost
-                  ]}>
-                    <Text style={styles.resultText}>{game.result}</Text>
-                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyGames}>
+                  <Text style={styles.emptyGamesText}>🎮 No games played yet!</Text>
+                  <Text style={styles.emptyGamesSubtext}>Start playing to see your history here</Text>
                 </View>
-              ))}
+              )}
             </View>
 
             {/* Quick Actions */}
@@ -212,7 +228,7 @@ export default function ProfileScreen() {
                 onPress={async () => {
                   try {
                     await Share.share({
-                      message: `Check out my Partyverse profile! 🎉\n\n🎮 Games Played: ${INITIAL_STATS.gamesPlayed}\n🏆 Wins: ${INITIAL_STATS.wins}\n⏱️ Play Time: ${INITIAL_STATS.playTime}\n\nJoin me on Partyverse - the ultimate party game app!`,
+                      message: `Check out my Partyverse profile! 🎉\n\n🎮 Games Played: ${stats.gamesPlayed}\n🏆 Wins: ${stats.wins}\n⏱️ Play Time: ${getFormattedPlayTime()}\n\nJoin me on Partyverse - the ultimate party game app!`,
                       title: 'My Partyverse Profile',
                     });
                     if (hapticsEnabled) {
@@ -279,17 +295,17 @@ export default function ProfileScreen() {
       <Modal visible={showSettings} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { maxHeight: '80%' }]}>
-            <Text style={styles.modalTitle}>Settings</Text>
+            <Text style={styles.modalTitle}>{t('settings.title')}</Text>
             <ScrollView>
               <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowSoundSettings(true), 300); }}>
                 <Ionicons name="volume-high" size={24} color="#667eea" />
-                <Text style={styles.settingText}>Sound & Music</Text>
+                <Text style={styles.settingText}>{t('settings.soundMusic')}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
               <View style={styles.settingItem}>
                 <Ionicons name="notifications" size={24} color="#667eea" />
-                <Text style={styles.settingText}>Notifications</Text>
+                <Text style={styles.settingText}>{t('settings.notifications')}</Text>
                 <Switch
                   value={notificationsEnabled}
                   onValueChange={setNotificationsEnabled}
@@ -300,47 +316,47 @@ export default function ProfileScreen() {
 
               <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowThemeSettings(true), 300); }}>
                 <Ionicons name="color-palette" size={24} color="#667eea" />
-                <Text style={styles.settingText}>Theme</Text>
+                <Text style={styles.settingText}>{t('settings.theme')}</Text>
                 <Text style={styles.settingValue}>{THEMES[themeId]?.name || 'Default'}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowLanguageSettings(true), 300); }}>
                 <Ionicons name="language" size={24} color="#667eea" />
-                <Text style={styles.settingText}>Language</Text>
-                <Text style={styles.settingValue}>{selectedLanguage}</Text>
+                <Text style={styles.settingText}>{t('settings.language')}</Text>
+                <Text style={styles.settingValue}>{language === 'en' ? 'English' : language === 'es' ? 'Español' : 'Français'}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowCardBackSettings(true), 300); }}>
                 <Ionicons name="albums" size={24} color="#667eea" />
-                <Text style={styles.settingText}>Card Back Design</Text>
+                <Text style={styles.settingText}>{t('settings.cardBackDesign')}</Text>
                 <Text style={styles.settingValue}>{getCardBackById(selectedCardBackId).name}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowPrivacy(true), 300); }}>
                 <Ionicons name="shield-checkmark" size={24} color="#667eea" />
-                <Text style={styles.settingText}>Privacy</Text>
+                <Text style={styles.settingText}>{t('settings.privacy')}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowAbout(true), 300); }}>
                 <Ionicons name="information-circle" size={24} color="#667eea" />
-                <Text style={styles.settingText}>About</Text>
+                <Text style={styles.settingText}>{t('settings.about')}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.settingItem, { borderTopWidth: 1, borderTopColor: '#eee', marginTop: 20, paddingTop: 20 }]}>
                 <Ionicons name="log-out" size={24} color="#e74c3c" />
-                <Text style={[styles.settingText, { color: '#e74c3c' }]}>Log Out</Text>
+                <Text style={[styles.settingText, { color: '#e74c3c' }]}>{t('settings.logOut')}</Text>
               </TouchableOpacity>
             </ScrollView>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowSettings(false)}
             >
-              <Text style={styles.closeButtonText}>Close</Text>
+              <Text style={styles.closeButtonText}>{t('common.close')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -507,19 +523,19 @@ export default function ProfileScreen() {
       <Modal visible={showLanguageSettings} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Choose Language</Text>
+            <Text style={styles.modalTitle}>{t('settings.chooseLanguage')}</Text>
             <ScrollView style={{ maxHeight: 300 }}>
-              {['English', 'Español', 'Français', 'Deutsch', 'Italiano', 'Português'].map((lang) => (
+              {[{ code: 'en' as const, name: 'English' }, { code: 'es' as const, name: 'Español' }, { code: 'fr' as const, name: 'Français' }].map((lang) => (
                 <TouchableOpacity
-                  key={lang}
-                  style={[styles.optionItem, selectedLanguage === lang && styles.optionSelected]}
+                  key={lang.code}
+                  style={[styles.optionItem, language === lang.code && styles.optionSelected]}
                   onPress={() => {
-                    setSelectedLanguage(lang);
+                    setLanguage(lang.code);
                     setShowLanguageSettings(false);
                   }}
                 >
-                  <Text style={styles.optionText}>{lang}</Text>
-                  {selectedLanguage === lang && <Ionicons name="checkmark" size={24} color="#667eea" />}
+                  <Text style={styles.optionText}>{lang.name}</Text>
+                  {language === lang.code && <Ionicons name="checkmark" size={24} color="#667eea" />}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -527,7 +543,7 @@ export default function ProfileScreen() {
               style={styles.closeButton}
               onPress={() => setShowLanguageSettings(false)}
             >
-              <Text style={styles.closeButtonText}>Cancel</Text>
+              <Text style={styles.closeButtonText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -970,10 +986,32 @@ const styles = StyleSheet.create({
   resultLost: {
     backgroundColor: '#e74c3c',
   },
+  resultCompleted: {
+    backgroundColor: '#3498db',
+  },
   resultText: {
     color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  emptyGames: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
+    padding: 30,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  emptyGamesText: {
+    fontSize: 18,
+    color: 'white',
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  emptyGamesSubtext: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
   },
   actionButton: {
     flexDirection: 'row',

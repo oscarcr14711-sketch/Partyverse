@@ -2,7 +2,7 @@ import { Asset } from 'expo-asset';
 import { Stack, usePathname } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { InteractionManager, View } from 'react-native';
-import { CardBackProvider } from '../utils/CardBackContext';
+import AdBanner from '../components/AdBanner';
 import {
   initializeAppServices,
   logGameEnd,
@@ -12,9 +12,11 @@ import {
   logScreenView,
   showGameInterstitial,
 } from '../utils/appServices';
+import { CardBackProvider } from '../utils/CardBackContext';
+import { LanguageProvider } from '../utils/LanguageContext';
+import { PlayerStatsProvider } from '../utils/PlayerStatsContext';
 import { initializeSounds } from '../utils/SoundManager';
 import { ThemeProvider } from '../utils/ThemeContext';
-import AdBanner from '../components/AdBanner';
 
 // Centralized asset list for eager preloading (Hot Bomb + commonly used)
 const PRELOAD_ASSETS = [
@@ -125,20 +127,24 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <CardBackProvider>
-        <View style={{ flex: 1 }}>
-          <AdBanner />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="party-mode-games" />
-            <Stack.Screen name="start" />
-            <Stack.Screen name="mic-madness-card-reveal" />
-          </Stack>
-        </View>
-      </CardBackProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <PlayerStatsProvider>
+          <CardBackProvider>
+            <View style={{ flex: 1 }}>
+              <AdBanner />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="party-mode-games" />
+                <Stack.Screen name="start" />
+                <Stack.Screen name="mic-madness-card-reveal" />
+              </Stack>
+            </View>
+          </CardBackProvider>
+        </PlayerStatsProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }
 

@@ -11,7 +11,7 @@ import { RuleSection, RulesModal } from '../components/RulesModal';
 
 const MAX_BALLOON_SIZE = 500; // Size at which balloon pops
 const MIN_BALLOON_SIZE = 100;
-const BLOW_THRESHOLD = -60; // Audio level threshold (very sensitive for air blowing)
+const BLOW_THRESHOLD = -45; // Audio level threshold - higher (less negative) = requires harder blowing
 
 export default function BlownAwayScreen() {
   const router = useRouter();
@@ -31,6 +31,7 @@ export default function BlownAwayScreen() {
   const [roundPopped, setRoundPopped] = useState(0); // Current round popped count
   const [roundScore, setRoundScore] = useState(0); // Current round total score
   const [roundBalloons, setRoundBalloons] = useState<number[]>([]); // Sizes of balloons inflated this round
+  const [readyToInflate, setReadyToInflate] = useState(false); // Player pressed Start Turn, ready for Start Inflating
 
   const balloonScale = useRef(new Animated.Value(1)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -114,12 +115,20 @@ export default function BlownAwayScreen() {
     const currentRecording = recordingRef.current || recording;
     if (currentRecording) {
       try {
-        await currentRecording.stopAndUnloadAsync();
+        // Check if recording is still loaded before attempting to unload
+        const status = await currentRecording.getStatusAsync();
+        if (status.canRecord || status.isRecording) {
+          await currentRecording.stopAndUnloadAsync();
+        }
         recordingRef.current = null;
         setRecording(null);
         setIsListening(false);
       } catch (err) {
-        console.error('Failed to stop recording', err);
+        // Silently handle if recording was already unloaded
+        console.log('Recording cleanup:', err);
+        recordingRef.current = null;
+        setRecording(null);
+        setIsListening(false);
       }
     }
   };
@@ -149,7 +158,7 @@ export default function BlownAwayScreen() {
   };
 
   const handleStartTurn = () => {
-    setGameStarted(true);
+    setReadyToInflate(true);
     setBalloonSize(MIN_BALLOON_SIZE);
     setHasPopped(false);
     setTimeLeft(20);
@@ -159,6 +168,11 @@ export default function BlownAwayScreen() {
     setRoundBalloons([]);
     balloonScale.setValue(1);
     popOpacity.setValue(0);
+  };
+
+  const handleStartInflating = () => {
+    setGameStarted(true);
+    setReadyToInflate(false);
     startListening();
   };
 
@@ -215,6 +229,7 @@ export default function BlownAwayScreen() {
     setBalloonSize(MIN_BALLOON_SIZE);
     setHasPopped(false);
     setGameStarted(false);
+    setReadyToInflate(false);
     setRoundInflated(0);
     setRoundPopped(0);
     setRoundScore(0);
@@ -230,6 +245,7 @@ export default function BlownAwayScreen() {
     setBalloonSize(MIN_BALLOON_SIZE);
     setHasPopped(false);
     setGameStarted(false);
+    setReadyToInflate(false);
     setRoundInflated(0);
     setRoundPopped(0);
     setRoundScore(0);
@@ -476,7 +492,7 @@ export default function BlownAwayScreen() {
             </View>
           </View>
           {/* Top-right timer */}
-          {gameStarted && (
+          {(gameStarted || readyToInflate) && (
             <View style={styles.timerContainer}>
               <Text style={styles.timerText}>{timeLeft}</Text>
             </View>
@@ -516,7 +532,7 @@ export default function BlownAwayScreen() {
             )}
           </View>
           <View style={styles.gameButtonsWrapper}>
-            {!gameStarted ? (
+            {!gameStarted && !readyToInflate ? (
               <TouchableOpacity
                 style={styles.gameButton}
                 onPress={handleStartTurn}
@@ -524,6 +540,13 @@ export default function BlownAwayScreen() {
                 <Text style={[styles.gameButtonText, { color: '#8B0000' }]}>
                   {playerScores[currentPlayer] !== undefined ? 'Next Player' : 'Start Turn'}
                 </Text>
+              </TouchableOpacity>
+            ) : readyToInflate ? (
+              <TouchableOpacity
+                style={[styles.gameButton, { backgroundColor: '#4CAF50' }]}
+                onPress={handleStartInflating}
+              >
+                <Text style={styles.gameButtonText}>Start Inflating</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -809,7 +832,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 15,
-    marginTop: 200,
+    marginTop: 20,
     paddingBottom: 20,
   },
   gameButton: {

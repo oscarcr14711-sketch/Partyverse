@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 interface GameStats {
     correct: number;
@@ -23,6 +24,8 @@ export default function ColorClashGameOver() {
     const neonPulse = useRef(new Animated.Value(0)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const confettiAnim = useRef(new Animated.Value(0)).current;
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
 
     const totalGuesses = correct + wrong;
     const accuracy = totalGuesses > 0 ? Math.round((correct / totalGuesses) * 100) : 0;
@@ -79,6 +82,12 @@ export default function ColorClashGameOver() {
             duration: 800,
             useNativeDriver: true,
         }).start();
+
+        // Record game stats (only once)
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed('Color Clash', 'completed', '🎨');
+        }
     }, []);
 
     const neonGlow = neonPulse.interpolate({

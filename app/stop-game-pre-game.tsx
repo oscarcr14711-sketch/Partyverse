@@ -57,7 +57,7 @@ export default function StopGamePreGame() {
         >
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
-                    <BackButton />
+                    <BackButton color="#fff" />
                     <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
                         <Text style={styles.infoButtonText}>i</Text>
                     </TouchableOpacity>

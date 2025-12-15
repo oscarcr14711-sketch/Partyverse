@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 interface Player {
     id: number;
@@ -27,6 +28,8 @@ export default function StopGameOver() {
 
     const confettiAnim = useRef(new Animated.Value(0)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
 
     // Sort players by score
     const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -123,6 +126,12 @@ export default function StopGameOver() {
             duration: 800,
             useNativeDriver: true,
         }).start();
+
+        // Record game stats (only once)
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed('Stop!', 'completed', '🔎');
+        }
     }, []);
 
     const confettiTranslateY = confettiAnim.interpolate({

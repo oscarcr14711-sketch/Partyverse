@@ -52,6 +52,7 @@ export default function ColorClashScreen() {
   const [round, setRound] = useState(1);
   const [drinkSeconds, setDrinkSeconds] = useState(0);
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const [revealedCardsByIndex, setRevealedCardsByIndex] = useState<{ [key: number]: Card }>({});
   const [showEnlargedView, setShowEnlargedView] = useState(false);
 
   // Single Ellipse: 16 cards to match reference style roughly (or just use a fixed number)
@@ -113,8 +114,9 @@ export default function ColorClashScreen() {
     const baseValue = getCardValue(cardToFlip.rank);
     const totalDrinks = baseValue * multiplier;
 
-    // Mark this card as flipped
+    // Mark this card as flipped and store the card that was revealed
     setFlippedCards(prev => new Set(prev).add(cardIndex));
+    setRevealedCardsByIndex(prev => ({ ...prev, [cardIndex]: cardToFlip }));
 
     // small delay so state sets before animation
     setTimeout(() => {
@@ -183,6 +185,7 @@ export default function ColorClashScreen() {
     setCurrent(null);
     setDrinkSeconds(0);
     setFlippedCards(new Set()); // Reset flipped cards for new round
+    setRevealedCardsByIndex({}); // Reset revealed cards for new round
 
     // Advance to next round (up to round 4)
     if (round < 4) {
@@ -247,9 +250,9 @@ export default function ColorClashScreen() {
               // Single Ellipse distribution - Vertical (Portrait)
               // To make it vertical, we use a larger radiusY than radiusX
               const angle = (index / numCards) * 2 * Math.PI - Math.PI / 2; // Start from top (-PI/2)
-              const radiusX = 160; // Narrower
-              const radiusY = 280; // Taller
-              const cardSize = { width: 50, height: 70 };
+              const radiusX = 130; // Narrower
+              const radiusY = 200; // Reduced height to fit with ad banner
+              const cardSize = { width: 52, height: 75 };
 
               const x = Math.cos(angle) * radiusX;
               const y = Math.sin(angle) * radiusY;
@@ -297,12 +300,17 @@ export default function ColorClashScreen() {
                   ]}>
                     {/* Front */}
                     <Animated.View style={[styles.cardFace, styles.cardFront, { transform: [{ rotateY: frontRotateY }] }]}>
-                      {isCurrentCard && current && (
+                      {(isCurrentCard && current) ? (
                         <>
                           <Text style={[styles.centerRank, current.color === 'red' ? styles.red : styles.black, { fontSize: cardSize.width * 0.4 }]}>{current.rank}</Text>
                           <Text style={[styles.centerSuitSmall, { color: suitColor(current.suit), fontSize: cardSize.width * 0.5 }]}>{suitSymbol(current.suit)}</Text>
                         </>
-                      )}
+                      ) : (isFlipped && revealedCardsByIndex[index]) ? (
+                        <>
+                          <Text style={[styles.centerRank, revealedCardsByIndex[index].color === 'red' ? styles.red : styles.black, { fontSize: cardSize.width * 0.4 }]}>{revealedCardsByIndex[index].rank}</Text>
+                          <Text style={[styles.centerSuitSmall, { color: suitColor(revealedCardsByIndex[index].suit), fontSize: cardSize.width * 0.5 }]}>{suitSymbol(revealedCardsByIndex[index].suit)}</Text>
+                        </>
+                      ) : null}
                     </Animated.View>
                     {/* Back */}
                     <Animated.View style={[styles.cardFace, styles.cardBack, { transform: [{ rotateY: backRotateY }] }]}>
@@ -466,6 +474,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginVertical: -20,
   },
   cardTable: {
     width: '100%',

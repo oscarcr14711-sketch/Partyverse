@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 interface Player {
     id: number;
@@ -35,6 +36,8 @@ export default function DontLetItPicYouGameOver() {
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(50)).current;
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
 
     // Sort players by strikes (fewest wins)
     const sortedPlayers = [...players].sort((a, b) => a.strikes - b.strikes);
@@ -108,6 +111,12 @@ export default function DontLetItPicYouGameOver() {
                 useNativeDriver: true,
             }),
         ]).start();
+
+        // Record game stats (only once)
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed("Don't Let It PIC You", 'completed', '📸');
+        }
     }, []);
 
     return (

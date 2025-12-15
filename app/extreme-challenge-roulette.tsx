@@ -133,7 +133,7 @@ export default function ExtremeChallengeRouletteScreen() {
 			<View style={{ width: rouletteSize, alignItems: 'center', justifyContent: 'flex-start', marginTop: 32, marginBottom: 0, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }}>
 				<LottieView source={require('../assets/animations/lights.json')} autoPlay loop style={{ width: rouletteSize, height: 260 }} />
 			</View>
-			<View style={{ width: rouletteSize, height: rouletteSize, justifyContent: 'center', alignItems: 'center', position: 'relative', marginTop: -72, marginBottom: 8 }}>
+			<View style={{ width: rouletteSize, height: rouletteSize, justifyContent: 'center', alignItems: 'center', position: 'relative', marginTop: -100, marginBottom: 0 }}>
 				<Animated.Image
 					source={require('../assets/images/Roulettenew.png')}
 					style={{ width: rouletteSize, height: rouletteSize, transform: [{ rotate: currentIndex === 0 ? `${staticOffset}deg` : rotateInterpolate }] }}
@@ -251,7 +251,7 @@ export default function ExtremeChallengeRouletteScreen() {
 					</TouchableOpacity>
 				)}
 			</View>
-			<TouchableOpacity onPress={spinRoulette} style={{ marginTop: 32, alignSelf: 'center' }} activeOpacity={0.7}>
+			<TouchableOpacity onPress={spinRoulette} style={{ marginTop: -20, alignSelf: 'center' }} activeOpacity={0.7}>
 				<Image source={require('../assets/images/Button.png')} style={{ width: 120, height: 120 }} resizeMode="contain" />
 			</TouchableOpacity>
 			<TouchableOpacity

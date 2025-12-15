@@ -1,6 +1,8 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
 import { PulsingButton } from '../components/PulsingButton';
 import { RuleSection, RulesModal } from '../components/RulesModal';
 
@@ -18,21 +20,40 @@ export default function LipSyncPreGame() {
         require('../assets/images/avatars/avatar6.png'),
     ];
 
+    const handleStart = () => {
+        // Show headphones warning popup
+        Alert.alert(
+            '🎧 Headphones Required!',
+            'Make sure the guesser is wearing headphones with LOUD music so they can\'t hear! Ready to play?',
+            [
+                {
+                    text: 'Not Ready',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Let\'s Play!',
+                    onPress: () => {
+                        router.push({ pathname: "/lip-sync-game", params: { numPlayers } });
+                    }
+                }
+            ]
+        );
+    };
+
     return (
         <ImageBackground
             source={require('../assets/images/lip.png')}
             style={styles.container}
             resizeMode="cover"
         >
+            <SafeAreaView style={styles.safeHeader}>
+                <View style={styles.header}>
+                    <BackButton color="#FFE0B2" />
+                </View>
+            </SafeAreaView>
             <View style={styles.overlay}>
                 {/* Title */}
                 <Text style={styles.titleText}>LIP SYNC{'\n'}CHAOS</Text>
-
-                {/* Headphones Requirement Notice */}
-                <View style={styles.noticeContainer}>
-                    <Text style={styles.noticeIcon}>🎧</Text>
-                    <Text style={styles.noticeText}>This game requires headphones!</Text>
-                </View>
 
                 {/* Spacer to push controls down if needed, or just use justify content */}
                 <View style={{ flex: 1 }} />
@@ -69,7 +90,7 @@ export default function LipSyncPreGame() {
 
                     {/* Start Button */}
                     <View style={styles.buttonContainer}>
-                        <TouchableOpacity style={styles.startButton} onPress={() => router.push({ pathname: "/lip-sync-game", params: { numPlayers } })}>
+                        <TouchableOpacity style={styles.startButton} onPress={handleStart}>
                             <Text style={styles.startButtonText}>START</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
@@ -114,6 +135,17 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         height: '100%',
+    },
+    safeHeader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
+    },
+    header: {
+        paddingHorizontal: 20,
+        paddingTop: 10,
     },
     overlay: {
         flex: 1,

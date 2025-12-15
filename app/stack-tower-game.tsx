@@ -11,6 +11,9 @@ import * as THREE from 'three';
 
 const { width, height } = Dimensions.get('window');
 
+// Get the canvas container layout for accurate touch coordinates
+let canvasLayout = { x: 0, y: 0, width: width, height: height };
+
 const BLOCK_LENGTH = 1.5;
 const BLOCK_WIDTH = 0.5;
 const BLOCK_HEIGHT = 0.3;
@@ -115,6 +118,10 @@ export default function StackTowerGame() {
     const soundRef = useRef<Audio.Sound | null>(null);
     const shelfWallRef = useRef<THREE.Mesh | null>(null);
     const sofaWallRef = useRef<THREE.Mesh | null>(null);
+    const coffeeShopWallRef = useRef<THREE.Mesh | null>(null);
+    const counterWallRef = useRef<THREE.Mesh | null>(null);
+    const canvasViewRef = useRef<View | null>(null);
+    const canvasOffsetRef = useRef({ x: 0, y: 0 });
 
     const currentPlayer = players[currentPlayerIndex];
 
@@ -132,18 +139,26 @@ export default function StackTowerGame() {
             cameraRef.current.position.z = radius * Math.cos(theta) * Math.cos(phi);
             cameraRef.current.lookAt(0, 3, 0); // Look at tower center
 
-            // Fade walls based on camera direction to prevent blocking view
-            // Left wall (shelf) fades when camera looks left (theta > 0)
+            // Dynamic wall opacity: fully visible when not blocking, fade when blocking
             if (shelfWallRef.current) {
-                const leftFace = Math.abs(Math.sin(theta));
-                const leftOpacity = theta > 0.3 ? Math.max(0.05, 0.5 - leftFace * 0.5) : 0.5;
+                // Left wall: fade when camera is on left side (theta > 0.8)
+                const leftOpacity = theta > 0.8 ? 0.2 : 1.0;
                 (shelfWallRef.current.material as THREE.MeshBasicMaterial).opacity = leftOpacity;
             }
-            // Right wall (sofa) fades when camera looks right (theta < 0)
             if (sofaWallRef.current) {
-                const rightFace = Math.abs(Math.sin(theta));
-                const rightOpacity = theta < -0.3 ? Math.max(0.05, 0.5 - rightFace * 0.5) : 0.5;
+                // Right wall: fade when camera is on right side (theta < -0.8)
+                const rightOpacity = theta < -0.8 ? 0.2 : 1.0;
                 (sofaWallRef.current.material as THREE.MeshBasicMaterial).opacity = rightOpacity;
+            }
+            if (coffeeShopWallRef.current) {
+                // Front wall: fade when viewing from front (|theta| < 0.6)
+                const frontOpacity = Math.abs(theta) < 0.6 ? 0.2 : 1.0;
+                (coffeeShopWallRef.current.material as THREE.MeshBasicMaterial).opacity = frontOpacity;
+            }
+            if (counterWallRef.current) {
+                // Back wall: fade when viewing from back (|theta| > 2.8)
+                const backOpacity = Math.abs(theta) > 2.8 ? 0.2 : 1.0;
+                (counterWallRef.current.material as THREE.MeshBasicMaterial).opacity = backOpacity;
             }
         }
     };
@@ -207,11 +222,11 @@ export default function StackTowerGame() {
 
         for (let i = 0; i < skyVertices.count; i++) {
             const y = skyVertices.getY(i);
-            // Gradient from warm sunset orange at horizon to deep blue at top
+            // Gradient from warm sunset (soft yellow-orange) to light blue-white sky
             const t = (y + 50) / 100; // 0 at bottom, 1 at top
-            const r = 0.2 + 0.6 * (1 - t); // More red at bottom
-            const g = 0.4 + 0.3 * t; // Green varies
-            const b = 0.5 + 0.4 * t; // More blue at top
+            const r = 0.95 - 0.25 * t; // Warm yellow-orange at bottom to cooler at top
+            const g = 0.85 - 0.15 * t; // Keep it warm
+            const b = 0.70 + 0.25 * t; // Slight blue tint at top
             skyColors.push(r, g, b);
         }
         skyGeo.setAttribute('color', new THREE.Float32BufferAttribute(skyColors, 3));
@@ -249,22 +264,7 @@ export default function StackTowerGame() {
         scene.add(createCloud(-8, 10, -18, 1));
         scene.add(createCloud(18, 11, -22, 1.8));
 
-        // === CITY SKYLINE SILHOUETTE ===
-        const buildingSilhouetteMat = new THREE.MeshBasicMaterial({ color: 0x1a1a2e });
-        const addBuilding = (x: number, w: number, h: number) => {
-            const building = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.1), buildingSilhouetteMat);
-            building.position.set(x, h / 2 - 4, -30);
-            scene.add(building);
-        };
-        addBuilding(-20, 3, 8);
-        addBuilding(-15, 2, 12);
-        addBuilding(-11, 4, 6);
-        addBuilding(-6, 2.5, 15);
-        addBuilding(-2, 3, 9);
-        addBuilding(3, 2, 18);
-        addBuilding(8, 4, 7);
-        addBuilding(13, 2.5, 13);
-        addBuilding(18, 3, 10);
+        // City skyline removed - using PNG wall textures instead
 
         // === PREMIUM TABLE SETUP ===
         const tableTexture = createWoodTexture(true);
@@ -426,41 +426,7 @@ export default function StackTowerGame() {
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // Elegant wallpaper back wall
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0xd4c4b0, roughness: 0.9 });
-        const wall = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), wallMat);
-        wall.position.set(0, 5, -12);
-        scene.add(wall);
-
-        // Side walls removed - replaced with texture images below
-
-        // Window frame (single large arched window on left)
-        const windowFrame = (x: number) => {
-            // Window glass (gradient reflection)
-            const glass = new THREE.Mesh(
-                new THREE.PlaneGeometry(5, 7),
-                new THREE.MeshStandardMaterial({ color: 0xa8d8ea, roughness: 0.05, metalness: 0.4, transparent: true, opacity: 0.7 })
-            );
-            glass.position.set(x, 5.5, -11.9);
-            scene.add(glass);
-
-            // Elegant dark frame
-            const frameMat = new THREE.MeshStandardMaterial({ color: 0x2d1f14, roughness: 0.4, metalness: 0.2 });
-            const fTop = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.25, 0.18), frameMat);
-            fTop.position.set(x, 9.2, -11.85);
-            scene.add(fTop);
-            const fBot = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.25, 0.18), frameMat);
-            fBot.position.set(x, 2, -11.85);
-            scene.add(fBot);
-            const fLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 7.4, 0.18), frameMat);
-            fLeft.position.set(x - 2.7, 5.6, -11.85);
-            scene.add(fLeft);
-            const fRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 7.4, 0.18), frameMat);
-            fRight.position.set(x + 2.7, 5.6, -11.85);
-            scene.add(fRight);
-        };
-        windowFrame(-5); // Left window
-        windowFrame(5);  // Right window
+        // Windows removed - using PNG wall textures instead
 
         // === BOOKSHELF WALL TEXTURE (left side wall) ===
         const shelfAsset = Asset.fromModule(require('../assets/images/shelf.png'));
@@ -470,8 +436,9 @@ export default function StackTowerGame() {
         const shelfWallMaterial = new THREE.MeshBasicMaterial({
             map: shelfTexture,
             transparent: true,
-            opacity: 0.5,
+            opacity: 1.0,
             side: THREE.DoubleSide,
+            depthWrite: false,
         });
         const shelfWall = new THREE.Mesh(shelfWallGeometry, shelfWallMaterial);
         shelfWall.position.set(-20, 5, 0);
@@ -487,8 +454,9 @@ export default function StackTowerGame() {
         const sofaWallMaterial = new THREE.MeshBasicMaterial({
             map: sofaTexture,
             transparent: true,
-            opacity: 0.5,
+            opacity: 1.0,
             side: THREE.DoubleSide,
+            depthWrite: false,
         });
         const sofaWall = new THREE.Mesh(sofaWallGeometry, sofaWallMaterial);
         sofaWall.position.set(20, 5, 0);
@@ -496,7 +464,41 @@ export default function StackTowerGame() {
         sofaWallRef.current = sofaWall;
         scene.add(sofaWall);
 
-        // === ENHANCED TABLE ITEMS ===
+        // === COFFEE SHOP WALL TEXTURE (back wall) ===
+        const coffeeShopAsset = Asset.fromModule(require('../assets/images/coffeeshop.png'));
+        await coffeeShopAsset.downloadAsync();
+        const coffeeShopTexture = await loadTextureAsync({ asset: coffeeShopAsset });
+        const coffeeShopWallGeometry = new THREE.PlaneGeometry(40, 25);
+        const coffeeShopWallMaterial = new THREE.MeshBasicMaterial({
+            map: coffeeShopTexture,
+            transparent: true,
+            opacity: 1.0,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+        });
+        const coffeeShopWall = new THREE.Mesh(coffeeShopWallGeometry, coffeeShopWallMaterial);
+        coffeeShopWall.position.set(0, 5, 15);
+        coffeeShopWallRef.current = coffeeShopWall;
+        scene.add(coffeeShopWall);
+
+        // === COUNTER WALL TEXTURE (back wall) ===
+        const counterAsset = Asset.fromModule(require('../assets/images/counter.png'));
+        await counterAsset.downloadAsync();
+        const counterTexture = await loadTextureAsync({ asset: counterAsset });
+        const counterWallGeometry = new THREE.PlaneGeometry(40, 25);
+        const counterWallMaterial = new THREE.MeshBasicMaterial({
+            map: counterTexture,
+            transparent: true,
+            opacity: 1.0,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+        });
+        const counterWall = new THREE.Mesh(counterWallGeometry, counterWallMaterial);
+        counterWall.position.set(0, 5, -15);
+        counterWallRef.current = counterWall;
+        scene.add(counterWall);
+
+        // === TABLE DECORATIONS ===
         // Realistic coffee cup with handle
         const cupMat = new THREE.MeshStandardMaterial({ color: 0xfffef8, roughness: 0.15, metalness: 0.05 });
 
@@ -613,7 +615,10 @@ export default function StackTowerGame() {
             for (let pos = 0; pos < BLOCKS_PER_LEVEL; pos++) {
                 const geometry = new THREE.BoxGeometry(BLOCK_LENGTH, BLOCK_HEIGHT, BLOCK_WIDTH);
                 const material = new THREE.MeshStandardMaterial({
-                    map: woodTexture, color: 0xd4b896, roughness: 0.65,
+                    map: woodTexture,
+                    color: 0xb8956a, // Darker, richer wood tone
+                    roughness: 0.55, // Slightly lower for subtle sheen
+                    metalness: 0.02, // Tiny metalness for depth
                 });
 
                 const mesh = new THREE.Mesh(geometry, material);
@@ -768,46 +773,80 @@ export default function StackTowerGame() {
         }
     };
 
-    // More realistic collapse check - real block tower games can have many blocks removed
+    // Advanced collapse check with center-of-mass physics
     const checkCollapse = (): boolean => {
-        // Count blocks on each level and check structural integrity
-        const levelCounts: number[] = [];
+        // Get blocks on each level
+        const levelData: { level: number; blocks: Block[] }[] = [];
 
         for (let level = 0; level < INITIAL_LEVELS; level++) {
             const blocksOnLevel = blocksRef.current.filter(b =>
                 b.originalLevel === level && !b.isBeingDragged && !b.falling
             );
-            const onLevelNow = blocksOnLevel.filter(b => b.level === level).length;
-            levelCounts[level] = onLevelNow;
+            const onLevelNow = blocksOnLevel.filter(b => b.level === level);
+            levelData.push({ level, blocks: onLevelNow });
         }
 
         // Rule 1: ANY level that's completely empty causes collapse (no support for above)
-        // Check from bottom up - if a level has blocks above it but is empty, collapse
-        for (let level = 0; level < INITIAL_LEVELS - 1; level++) {
-            if (levelCounts[level] === 0) {
+        for (let i = 0; i < levelData.length - 1; i++) {
+            if (levelData[i].blocks.length === 0) {
                 // Check if there are any blocks above this level
                 let hasBlocksAbove = false;
-                for (let aboveLevel = level + 1; aboveLevel < INITIAL_LEVELS; aboveLevel++) {
-                    if (levelCounts[aboveLevel] > 0) {
+                for (let j = i + 1; j < levelData.length; j++) {
+                    if (levelData[j].blocks.length > 0) {
                         hasBlocksAbove = true;
                         break;
                     }
                 }
                 if (hasBlocksAbove) {
-                    console.log(`Collapse: Level ${level} is completely empty with blocks above it!`);
+                    console.log(`Collapse: Level ${i} is completely empty with blocks above!`);
                     return true;
                 }
             }
         }
 
-        // Rule 2: Tower becomes VERY unstable only when >50% of blocks removed
+        // Rule 2: CENTER OF MASS PHYSICS - Check if tower is balanced
+        // For each level with blocks above, check if there's proper support
+        for (let i = 0; i < levelData.length - 1; i++) {
+            const currentLevel = levelData[i];
+
+            // Check if there are blocks above
+            let hasBlocksAbove = false;
+            for (let j = i + 1; j < levelData.length; j++) {
+                if (levelData[j].blocks.length > 0) {
+                    hasBlocksAbove = true;
+                    break;
+                }
+            }
+
+            if (hasBlocksAbove && currentLevel.blocks.length > 0) {
+                // Determine which positions are occupied (0=left, 1=middle, 2=right)
+                const positions = currentLevel.blocks.map(b => b.position);
+                const hasLeft = positions.includes(0);
+                const hasMiddle = positions.includes(1);
+                const hasRight = positions.includes(2);
+
+                // Critical: If only side blocks remain (no middle block), tower collapses
+                if ((hasLeft || hasRight) && !hasMiddle) {
+                    console.log(`Collapse: Level ${i} has only side blocks (no center support)!`);
+                    return true;
+                }
+
+                // If only one outer block remains (left OR right, not both), collapse
+                if ((hasLeft && !hasRight && !hasMiddle) || (!hasLeft && hasRight && !hasMiddle)) {
+                    console.log(`Collapse: Level ${i} has only one side block!`);
+                    return true;
+                }
+            }
+        }
+
+        // Rule 3: Tower becomes unstable when >60% of blocks removed
         const totalBlocks = INITIAL_LEVELS * 3;
         const remainingBlocks = blocksRef.current.filter(b => !b.falling && !b.isBeingDragged).length;
         const removedPercent = 1 - (remainingBlocks / totalBlocks);
 
-        if (removedPercent > 0.6) {
-            // 60%+ blocks removed - increasing collapse chance
-            const collapseChance = (removedPercent - 0.6) * 0.8;
+        if (removedPercent > 0.65) {
+            // 65%+ blocks removed - increasing collapse chance
+            const collapseChance = (removedPercent - 0.65) * 1.2;
             if (Math.random() < collapseChance) {
                 console.log(`Collapse: ${Math.round(removedPercent * 100)}% blocks removed`);
                 return true;
@@ -853,9 +892,12 @@ export default function StackTowerGame() {
     };
 
     const handleTouchStart = (e: GestureResponderEvent) => {
-        const touchX = e.nativeEvent.pageX;
-        const touchY = e.nativeEvent.pageY;
-        lastTouchRef.current = { x: touchX, y: touchY };
+        // Use pageX/pageY (window coordinates) and subtract canvas offset
+        const touchX = e.nativeEvent.pageX - canvasOffsetRef.current.x;
+        const touchY = e.nativeEvent.pageY - canvasOffsetRef.current.y;
+        const pageX = e.nativeEvent.pageX;
+        const pageY = e.nativeEvent.pageY;
+        lastTouchRef.current = { x: pageX, y: pageY };
 
         if (!gameStarted || gameOver || draggedBlockId) return;
 
@@ -865,9 +907,12 @@ export default function StackTowerGame() {
             raycaster.params.Line = { threshold: 0.01 };
             raycaster.params.Points = { threshold: 0.01 };
 
+            // Use canvas-relative coordinates for accurate raycasting
+            const canvasWidth = canvasLayout.width || width;
+            const canvasHeight = canvasLayout.height || height;
             const mouse = new THREE.Vector2(
-                (touchX / width) * 2 - 1,
-                -(touchY / height) * 2 + 1
+                (touchX / canvasWidth) * 2 - 1,
+                -(touchY / canvasHeight) * 2 + 1
             );
             raycaster.setFromCamera(mouse, cameraRef.current);
 
@@ -942,15 +987,20 @@ export default function StackTowerGame() {
     };
 
     const handleTouchMove = (e: GestureResponderEvent) => {
-        const touchX = e.nativeEvent.pageX;
-        const touchY = e.nativeEvent.pageY;
+        // Use pageX/pageY (window coordinates) and subtract canvas offset
+        const touchX = e.nativeEvent.pageX - canvasOffsetRef.current.x;
+        const touchY = e.nativeEvent.pageY - canvasOffsetRef.current.y;
+        const pageX = e.nativeEvent.pageX;
+        const pageY = e.nativeEvent.pageY;
 
         if (draggedBlockId && cameraRef.current) {
             const block = blocks.find(b => b.id === draggedBlockId);
             if (block?.mesh) {
+                const canvasWidth = canvasLayout.width || width;
+                const canvasHeight = canvasLayout.height || height;
                 const mouse = new THREE.Vector2(
-                    (touchX / width) * 2 - 1,
-                    -(touchY / height) * 2 + 1
+                    (touchX / canvasWidth) * 2 - 1,
+                    -(touchY / canvasHeight) * 2 + 1
                 );
 
                 const raycaster = new THREE.Raycaster();
@@ -978,9 +1028,9 @@ export default function StackTowerGame() {
                 }
                 lastPinchDistRef.current = pinchDist;
             } else {
-                // Single finger: rotate camera
-                const deltaX = touchX - lastTouchRef.current.x;
-                const deltaY = touchY - lastTouchRef.current.y;
+                // Single finger: rotate camera (use page coords for deltas)
+                const deltaX = pageX - lastTouchRef.current.x;
+                const deltaY = pageY - lastTouchRef.current.y;
 
                 cameraAngleRef.current.theta += deltaX * 0.008;
                 // Vertical camera angle (clamped)
@@ -992,7 +1042,7 @@ export default function StackTowerGame() {
             }
         }
 
-        lastTouchRef.current = { x: touchX, y: touchY };
+        lastTouchRef.current = { x: pageX, y: pageY };
     };
 
     const handleTouchEnd = () => {
@@ -1251,7 +1301,17 @@ export default function StackTowerGame() {
                     <View style={{ width: 40 }} />
                 </View>
 
-                <View style={styles.canvasContainer}
+                <View
+                    ref={canvasViewRef}
+                    style={styles.canvasContainer}
+                    onLayout={(event) => {
+                        // Measure canvas position in window for accurate touch handling
+                        canvasViewRef.current?.measure((x, y, width, height, pageX, pageY) => {
+                            canvasOffsetRef.current = { x: pageX, y: pageY };
+                            canvasLayout.width = width;
+                            canvasLayout.height = height;
+                        });
+                    }}
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}>

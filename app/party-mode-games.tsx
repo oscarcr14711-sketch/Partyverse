@@ -4,28 +4,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { isCategoryLocked } from '../utils/devMode';
 import { playSound } from '../utils/SoundManager';
 import { useTheme } from '../utils/ThemeContext';
 
+// Only show 4 categories - hide Quick Competition, Social/Truth, and Specials
 const categories = [
   { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', path: '/action-adrenaline-games', id: 'action-adrenaline' },
   { title: 'Humor / Creativity', subtitle: 'Laugh, draw, and act!', icon: '😂', color: '#ffc107', path: '/humor-creativity-games', id: 'humor-creativity' },
   { title: 'Word / Mental', subtitle: 'Quick wits win!', icon: '💡', color: '#1DE9B6', path: '/word-mental-games', id: 'word-mental' },
-  { title: 'Quick Competition', subtitle: 'Fast duels, instant fun.', icon: '🏁', color: '#4caf50', path: '/quick-competition-games', id: 'quick-competition' },
-  { title: 'Social / Truth', subtitle: 'Talk, reveal, and connect.', icon: '💬', color: '#4169E1', path: '/social-truth-games', id: 'social-truth' },
   { title: 'Spicy / 18+ / Alcohol', subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0', path: '/spicy-games', id: 'spicy' },
 ];
-
-const specials = {
-  title: 'Specials (Weekly / Festive',
-  subtitle: 'Limited-time party themes.',
-  icon: '🎁',
-  color: '#ff9800',
-  id: 'specials',
-};
 
 export default function PartyModeGamesScreen() {
   const router = useRouter();
@@ -42,20 +32,42 @@ export default function PartyModeGamesScreen() {
         <Text style={styles.headerTitle}>Party Mode</Text>
         <View style={{ width: 26 }} />
       </View>
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>What kind of fun are you in the mood for?</Text>
         <View style={styles.grid}>
           {categories.map((category) => (
             <CategoryCard
               key={category.title}
               {...category}
-              locked={isCategoryLocked(category.id)}
+              locked={false}
               onPress={() => { playSound('ui.buttonClick'); if (category.path) router.push(category.path as any); }}
             />
           ))}
         </View>
-        <View style={styles.fullWidth}>
-          <CategoryCard {...specials} locked={isCategoryLocked(specials.id)} onPress={() => { }} />
+
+        {/* Coming Soon Banner */}
+        <View style={styles.bannerContainer}>
+          <LinearGradient
+            colors={['#2a1a4a', '#1a0a3a', '#0f0520']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.banner}
+          >
+            <View style={styles.bannerGlow} />
+            <View style={styles.bannerInner}>
+              <View style={styles.bannerIconRow}>
+                <Text style={styles.bannerEmoji}>🎮</Text>
+                <Text style={styles.bannerEmoji}>✨</Text>
+                <Text style={styles.bannerEmoji}>🎁</Text>
+              </View>
+              <Text style={styles.bannerTitle}>NEW GAMES</Text>
+              <Text style={styles.bannerSubtitle}>Coming Soon!</Text>
+              <View style={styles.bannerDivider} />
+              <Text style={styles.bannerDescription}>
+                Special games and seasonal events{'\n'}will be available soon!
+              </Text>
+            </View>
+          </LinearGradient>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -71,7 +83,7 @@ export default function PartyModeGamesScreen() {
         style={styles.background}
       >
         {screenContent}
-        {/* Snow animation covers entire screen - stacked top, middle, bottom */}
+        {/* Snow animation covers entire screen */}
         {theme.overlayAnimation && (
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'column' }} pointerEvents="none">
             <LottieView
@@ -141,7 +153,79 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-around',
   },
-  fullWidth: {
-    marginTop: 10,
+  // Coming Soon Banner
+  bannerContainer: {
+    marginTop: 25,
+    marginBottom: 30,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  banner: {
+    borderRadius: 24,
+    padding: 4,
+    position: 'relative',
+  },
+  bannerGlow: {
+    position: 'absolute',
+    top: -50,
+    left: '50%',
+    marginLeft: -100,
+    width: 200,
+    height: 100,
+    backgroundColor: '#8B5CF6',
+    opacity: 0.15,
+    borderRadius: 100,
+  },
+  bannerInner: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 20,
+    padding: 25,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(139,92,246,0.3)',
+  },
+  bannerIconRow: {
+    flexDirection: 'row',
+    gap: 15,
+    marginBottom: 15,
+  },
+  bannerEmoji: {
+    fontSize: 36,
+  },
+  bannerTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#fff',
+    letterSpacing: 3,
+    textShadowColor: '#8B5CF6',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 15,
+    fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
+  },
+  bannerSubtitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#8B5CF6',
+    marginTop: 5,
+    letterSpacing: 1,
+  },
+  bannerDivider: {
+    width: 80,
+    height: 3,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 2,
+    marginVertical: 15,
+    opacity: 0.6,
+  },
+  bannerDescription: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

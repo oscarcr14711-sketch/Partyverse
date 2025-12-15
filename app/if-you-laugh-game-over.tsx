@@ -1,13 +1,24 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 export default function IfYouLaughGameOver() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const winner = params.winner as string || 'No one';
     const players = JSON.parse(params.players as string || '[]');
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
+
+    // Record game stats on mount
+    useEffect(() => {
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed('If You Laugh', 'completed', '😂');
+        }
+    }, []);
 
     return (
         <LinearGradient

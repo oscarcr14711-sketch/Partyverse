@@ -1,7 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 export default function LipSyncGameOver() {
     const router = useRouter();
@@ -10,6 +11,16 @@ export default function LipSyncGameOver() {
 
     // Sort players by score in descending order
     const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
+
+    // Record game stats on mount
+    useEffect(() => {
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed('Lip Sync Battle', 'completed', '🎤');
+        }
+    }, []);
 
     return (
         <LinearGradient

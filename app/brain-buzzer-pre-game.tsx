@@ -137,7 +137,8 @@ const styles = StyleSheet.create({
     controlsContainer: {
         width: '100%',
         alignItems: 'center',
-        paddingBottom: 40,
+        paddingBottom: 20,
+        marginTop: 60,
     },
     avatarsRow: {
         flexDirection: 'row',

@@ -2,6 +2,8 @@ import { Audio } from 'expo-av';
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../components/BackButton';
 import { PulsingButton } from '../components/PulsingButton';
 import { RuleSection, RulesModal } from '../components/RulesModal';
 
@@ -32,6 +34,11 @@ export default function MicMadnessPreGame() {
 
   return (
     <View style={styles.container}>
+      <SafeAreaView style={styles.safeHeader}>
+        <View style={styles.header}>
+          <BackButton color="#FFE0B2" />
+        </View>
+      </SafeAreaView>
       <Image source={require('../assets/images/mictitle.png')} style={styles.titleImage} resizeMode="contain" />
       <Image source={micMadnessImage} style={styles.image} resizeMode="contain" />
       <View style={styles.avatarsRow}>
@@ -98,6 +105,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
+  safeHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
   titleImage: {
     width: 200,
     height: 200,
@@ -134,7 +152,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     paddingHorizontal: 24,
     paddingVertical: 10,
-    marginVertical: 16,
+    marginVertical: 8,
     width: 320,
     alignSelf: 'center',
     shadowColor: '#000',
@@ -143,7 +161,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 10,
   },
   playerCountCircle: {
     width: 56,
@@ -175,7 +193,7 @@ const styles = StyleSheet.create({
     minWidth: 120,
     ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
   },
-  buttonContainer: { marginTop: 16, alignItems: 'center', flexDirection: 'row', gap: 15 },
+  buttonContainer: { marginTop: 0, alignItems: 'center', flexDirection: 'row', gap: 15 },
   startButton: { backgroundColor: '#263238', borderRadius: 30, paddingHorizontal: 60, paddingVertical: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 10, borderBottomWidth: 4, borderBottomColor: '#1a1f23', alignItems: 'center' },
   startButtonText: { fontSize: 24, fontWeight: 'bold', color: '#FFE0B2', letterSpacing: 1, ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }) },
   infoButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#263238', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },

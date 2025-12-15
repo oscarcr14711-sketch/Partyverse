@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { usePlayerStats } from '../utils/PlayerStatsContext';
 
 interface Player {
     id: string;
@@ -19,6 +20,16 @@ export default function StackTowerGameOver() {
     const loserColor = params.loserColor as string || '#f94144';
     const blocksRemoved = parseInt(params.blocksRemoved as string) || 0;
     const players: Player[] = JSON.parse((params.players as string) || '[]');
+    const { recordGamePlayed } = usePlayerStats();
+    const hasRecordedRef = useRef(false);
+
+    // Record game stats on mount
+    useEffect(() => {
+        if (!hasRecordedRef.current) {
+            hasRecordedRef.current = true;
+            recordGamePlayed('Stack Tower', 'completed', '🏗️');
+        }
+    }, []);
 
     return (
         <LinearGradient colors={['#2d1810', '#3d2518', '#2d1810']} style={styles.container}>

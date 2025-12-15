@@ -28,7 +28,7 @@ export default function BrainBuzzerGame() {
     const buzzer2Anim = useRef(new Animated.Value(1)).current;
     const lottieRef = useRef<LottieView>(null);
 
-    const questionCounts = { easy: 5, medium: 5, hard: 5 };
+    const questionCounts = { easy: 15, medium: 15, hard: 15 };
     const totalQuestions = questionCounts[difficulty];
 
     useEffect(() => {
@@ -178,13 +178,6 @@ export default function BrainBuzzerGame() {
                                 ) : (
                                     <View style={styles.waitingForBuzzer}>
                                         <Text style={styles.waitingText}>⚡ PRESS BUZZER! ⚡</Text>
-                                    </View>
-                                )}
-
-                                {showingAnswer && (
-                                    <View style={styles.explanationContainer}>
-                                        <Text style={styles.explanationTitle}>💡 DID YOU KNOW?</Text>
-                                        <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
                                     </View>
                                 )}
                             </View>

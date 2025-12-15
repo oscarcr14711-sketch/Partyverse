@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackButton } from '../components/BackButton';
 import { RuleSection, RulesModal } from '../components/RulesModal';
@@ -24,19 +24,17 @@ export default function StackTowerPreGame() {
     };
 
     return (
-        <View style={styles.container}>
+        <ImageBackground
+            source={require('../assets/images/stack.png')}
+            style={styles.container}
+            resizeMode="cover"
+        >
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
                     <BackButton color="#FFE0B2" />
                 </View>
 
-                <View style={styles.content}>
-                    <Image
-                        source={require('../assets/images/stack.png')}
-                        style={styles.mainImage}
-                        resizeMode="contain"
-                    />
-                </View>
+                <View style={styles.content} />
 
                 {/* Player Counter */}
                 <View style={styles.playerCountContainer}>
@@ -93,7 +91,7 @@ export default function StackTowerPreGame() {
                     </RuleSection>
                 </RulesModal>
             </SafeAreaView>
-        </View>
+        </ImageBackground>
     );
 }
 

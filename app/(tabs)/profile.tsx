@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Dimensions, Image, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ACHIEVEMENTS } from '../../data/achievements';
 import { CARD_BACKS, getCardBackById } from '../../data/card-backs';
+import { useAchievements } from '../../utils/AchievementContext';
 import { useCardBack } from '../../utils/CardBackContext';
 import { useLanguage } from '../../utils/LanguageContext';
 import { usePlayerStats } from '../../utils/PlayerStatsContext';
@@ -42,6 +43,7 @@ const getRelativeTime = (dateString: string): string => {
 };
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const [userName, setUserName] = useState('Party King');
   const [selectedAvatar, setSelectedAvatar] = useState(0);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -67,11 +69,12 @@ export default function ProfileScreen() {
   const { selectedCardBackId, setCardBack } = useCardBack();
   const { stats, getFormattedPlayTime } = usePlayerStats();
   const { language, setLanguage, t } = useLanguage();
+  const { achievements, getUnlockedCount } = useAchievements();
 
   // Volume change handlers that update SoundManager
   const handleMasterVolumeChange = (value: number) => {
     setMasterVolume(value);
-    soundManager.setMasterVolume(value / 100); // Convert 0-100 to 0-1
+    soundManager.setMasterVolume(value / 100);
   };
 
   const handleEffectsVolumeChange = (value: number) => {
@@ -115,12 +118,12 @@ export default function ProfileScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
           <ScrollView showsVerticalScrollIndicator={false}>
-            {/* Header */}
+            {/* Header with Back Button */}
             <View style={styles.header}>
-              <TouchableOpacity style={styles.settingsIcon} onPress={() => setShowSettings(true)}>
-                <Ionicons name="settings-outline" size={28} color="white" />
+              <TouchableOpacity onPress={() => router.back()} style={styles.settingsIcon}>
+                <Ionicons name="arrow-back" size={24} color="white" />
               </TouchableOpacity>
             </View>
 
@@ -160,7 +163,7 @@ export default function ProfileScreen() {
                 style={styles.achievementHeader}
                 onPress={() => setShowAchievements(!showAchievements)}
               >
-                <Text style={styles.sectionTitle}>🏆 Achievements ({ACHIEVEMENTS.filter(a => a.unlocked).length}/{ACHIEVEMENTS.length})</Text>
+                <Text style={styles.sectionTitle}>🏆 Achievements ({getUnlockedCount()}/{achievements.length})</Text>
                 <Ionicons
                   name={showAchievements ? 'chevron-up' : 'chevron-down'}
                   size={24}
@@ -170,23 +173,37 @@ export default function ProfileScreen() {
 
               {showAchievements && (
                 <View style={styles.achievementsGrid}>
-                  {ACHIEVEMENTS.slice(0, 12).map((achievement) => (
-                    <TouchableOpacity key={achievement.id} style={[
-                      styles.achievementCard,
-                      !achievement.unlocked && styles.achievementLocked
-                    ]}>
+                  {achievements.map((achievement) => (
+                    <TouchableOpacity
+                      key={achievement.id}
+                      style={[
+                        styles.achievementCard,
+                        !achievement.unlocked && styles.achievementLocked
+                      ]}
+                      onPress={() => {
+                        Alert.alert(
+                          `${achievement.icon} ${achievement.name}`,
+                          achievement.description + (achievement.unlocked ? '\n\n✅ UNLOCKED!' : '\n\n🔒 Not yet unlocked'),
+                          [{ text: 'OK' }]
+                        );
+                        if (hapticsEnabled) {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        }
+                      }}
+                      activeOpacity={0.7}
+                    >
                       <Text style={styles.achievementIcon}>{achievement.icon}</Text>
                       <Text style={[
                         styles.achievementName,
                         !achievement.unlocked && styles.achievementNameLocked
                       ]}>{achievement.name}</Text>
+                      {achievement.unlocked && (
+                        <View style={styles.achievementUnlockedBadge}>
+                          <Text style={styles.achievementStar}>⭐</Text>
+                        </View>
+                      )}
                     </TouchableOpacity>
                   ))}
-                  {ACHIEVEMENTS.length > 12 && (
-                    <Text style={styles.achievementNote}>
-                      +{ACHIEVEMENTS.length - 12} more achievements to unlock!
-                    </Text>
-                  )}
                 </View>
               )}
             </View>
@@ -318,13 +335,6 @@ export default function ProfileScreen() {
                 <Ionicons name="color-palette" size={24} color="#667eea" />
                 <Text style={styles.settingText}>{t('settings.theme')}</Text>
                 <Text style={styles.settingValue}>{THEMES[themeId]?.name || 'Default'}</Text>
-                <Ionicons name="chevron-forward" size={24} color="#999" />
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.settingItem} onPress={() => { setShowSettings(false); setTimeout(() => setShowLanguageSettings(true), 300); }}>
-                <Ionicons name="language" size={24} color="#667eea" />
-                <Text style={styles.settingText}>{t('settings.language')}</Text>
-                <Text style={styles.settingValue}>{language === 'en' ? 'English' : language === 'es' ? 'Español' : 'Français'}</Text>
                 <Ionicons name="chevron-forward" size={24} color="#999" />
               </TouchableOpacity>
 
@@ -813,26 +823,31 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </View >
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  gradient: { flex: 1 },
-  safeArea: { flex: 1 },
+  container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: 20,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 0,
   },
   settingsIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
   },
   profileSection: {
     alignItems: 'center',
@@ -853,68 +868,67 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f093fb',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#667eea',
+    padding: 8,
+    borderRadius: 20,
     borderWidth: 3,
     borderColor: 'white',
   },
   userName: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 8,
-    ...Platform.select({ ios: { fontFamily: 'Avenir-Black' }, android: { fontFamily: 'sans-serif-black' } }),
-  },
-  levelBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  levelText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 30,
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 15,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  statValue: {
     fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 5,
   },
-  statLabel: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
+  levelBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderRadius: 15,
   },
-  section: {
+  levelText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     marginBottom: 30,
   },
+  statCard: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginHorizontal: 5,
+    padding: 15,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 5,
+  },
+  statLabel: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+  },
+  section: {
+    paddingHorizontal: 20,
+    marginBottom: 25,
+  },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 15,
-    ...Platform.select({ ios: { fontFamily: 'Avenir-Heavy' }, android: { fontFamily: 'sans-serif-medium' } }),
+  },
+  achievementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
   },
   achievementsGrid: {
     flexDirection: 'row',
@@ -923,43 +937,48 @@ const styles = StyleSheet.create({
   },
   achievementCard: {
     width: (width - 60) / 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    aspectRatio: 1,
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 15,
-    padding: 15,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    justifyContent: 'center',
+    padding: 5,
   },
   achievementLocked: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    opacity: 0.5,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    opacity: 0.7,
   },
   achievementIcon: {
     fontSize: 32,
-    marginBottom: 8,
+    marginBottom: 5,
   },
   achievementName: {
-    fontSize: 12,
-    color: 'white',
+    fontSize: 10,
     textAlign: 'center',
+    color: '#333',
     fontWeight: '600',
   },
   achievementNameLocked: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255,255,255,0.8)',
+  },
+  achievementNote: {
+    width: '100%',
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+    marginTop: 10,
+    fontStyle: 'italic',
   },
   gameCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     padding: 15,
+    borderRadius: 20,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   gameIcon: {
-    fontSize: 32,
+    fontSize: 30,
     marginRight: 15,
   },
   gameInfo: {
@@ -968,31 +987,31 @@ const styles = StyleSheet.create({
   gameName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
+    color: '#333',
+    marginBottom: 2,
   },
   gameDate: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    color: '#666',
   },
   resultBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   resultWon: {
-    backgroundColor: '#2ecc71',
+    backgroundColor: '#d4edda',
   },
   resultLost: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: '#f8d7da',
   },
   resultCompleted: {
     backgroundColor: '#3498db',
   },
   resultText: {
-    color: 'white',
     fontSize: 12,
     fontWeight: 'bold',
+    color: '#333',
   },
   emptyGames: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1016,271 +1035,131 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 15,
     borderRadius: 15,
-    padding: 18,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   actionText: {
-    fontSize: 16,
     color: 'white',
-    marginLeft: 15,
+    fontSize: 16,
     fontWeight: '600',
+    marginLeft: 15,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 25,
-    width: '100%',
-    maxWidth: 400,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    padding: 20,
+    minHeight: '40%',
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
     textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  closeButton: {
+    backgroundColor: '#f5f5f5',
+    padding: 15,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
   avatarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 15,
-    marginBottom: 20,
   },
   avatarOption: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
+    padding: 5,
+    borderRadius: 50,
+    borderWidth: 2,
     borderColor: 'transparent',
   },
   avatarSelected: {
     borderColor: '#667eea',
+    backgroundColor: '#eef2ff',
   },
   avatarOptionImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 40,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
   },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  settingText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 15,
-  },
-  closeButton: {
-    backgroundColor: '#667eea',
-    borderRadius: 15,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  settingValue: {
-    fontSize: 14,
-    color: '#999',
-    marginRight: 8,
-  },
-  settingHint: {
-    fontSize: 12,
-    color: '#999',
-    marginLeft: 37,
-    marginTop: -8,
-    marginBottom: 10,
-    fontStyle: 'italic',
-  },
-  optionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  optionSelected: {
-    backgroundColor: '#f8f9ff',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  privacyText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  privacyHeading: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  aboutContent: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  aboutEmoji: {
-    fontSize: 64,
-    marginBottom: 15,
-  },
-  aboutVersion: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#667eea',
-    marginBottom: 10,
-  },
-  aboutDescription: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 25,
-    lineHeight: 20,
-  },
-  aboutLinks: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 15,
-    width: '100%',
-    paddingHorizontal: 10,
-  },
-  aboutLink: {
-    alignItems: 'center',
-    gap: 5,
-  },
-  aboutLinkText: {
-    fontSize: 12,
-    color: '#667eea',
-    fontWeight: '600',
-  },
-  aboutLinkButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#667eea',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  aboutLinkButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  creditsSection: {
-    marginTop: 15,
-    marginBottom: 20,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(102, 126, 234, 0.2)',
-    alignItems: 'center',
-  },
-  creditsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#667eea',
-    marginBottom: 8,
-  },
-  creditsText: {
-    fontSize: 13,
-    color: '#888',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  aboutCopyright: {
-    fontSize: 12,
-    color: '#999',
-  },
-  // Achievements
-  achievementHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  achievementNote: {
-    fontSize: 13,
-    color: '#fff',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginTop: 10,
-    opacity: 0.7,
-  },
-  // Leaderboard Modal
   leaderboardList: {
-    marginBottom: 20,
+    paddingVertical: 10,
   },
   leaderboardItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-    borderRadius: 12,
+    backgroundColor: '#f8f9fa',
     padding: 15,
+    borderRadius: 15,
     marginBottom: 10,
   },
-  currentUserItem: {
-    backgroundColor: 'rgba(102, 126, 234, 0.2)',
-    borderWidth: 2,
-    borderColor: '#667eea',
-  },
   leaderboardRank: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#667eea',
+    width: 30,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
   },
   leaderboardRankText: {
-    color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#667eea',
   },
   leaderboardIcon: {
-    fontSize: 32,
-    marginRight: 12,
+    fontSize: 24,
+    marginHorizontal: 10,
   },
   leaderboardInfo: {
     flex: 1,
   },
   leaderboardName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333',
-    marginBottom: 2,
   },
   leaderboardScore: {
     fontSize: 14,
-    color: '#667eea',
+    color: '#666',
+  },
+  currentUserItem: {
+    backgroundColor: '#eef2ff',
+    borderWidth: 1,
+    borderColor: '#667eea',
+    marginTop: 20,
   },
   leaderboardNote: {
-    fontSize: 14,
-    color: '#666',
     textAlign: 'center',
+    color: '#888',
+    marginTop: 20,
+    marginBottom: 10,
+    fontSize: 12,
     fontStyle: 'italic',
-    marginVertical: 15,
+  },
+  achievementUnlockedBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  achievementStar: {
+    fontSize: 12,
   },
 });

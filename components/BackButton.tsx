@@ -37,11 +37,12 @@ export function BackButton({
 
 const styles = StyleSheet.create({
     backButton: {
+        padding: 8,
         width: 40,
         height: 40,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(255,255,255,0.2)',
         borderRadius: 20,
     },
 });

@@ -1,30 +1,58 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LastSpoonStandingScreen() {
+  const router = useRouter();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Last Spoon Standing</Text>
-      <Text style={styles.description}>Collect four of the same digital cards as fast as you can. When you’re ready — grab a spoon before anyone else! The last one without a spoon… is out.</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.content}>
+        <Text style={styles.title}>Last Spoon Standing</Text>
+        <Text style={styles.description}>Collect four of the same digital cards as fast as you can. When you’re ready — grab a spoon before anyone else! The last one without a spoon… is out.</Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#fff',
   },
+  header: {
+    padding: 15,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
   },
   description: {
     fontSize: 16,
     textAlign: 'center',
-    marginHorizontal: 40,
+    color: '#666',
+    lineHeight: 24,
   },
 });

@@ -55,11 +55,17 @@ export default function ColorClashScreen() {
   const [revealedCardsByIndex, setRevealedCardsByIndex] = useState<{ [key: number]: Card }>({});
   const [showEnlargedView, setShowEnlargedView] = useState(false);
 
-  // Single Ellipse: 16 cards to match reference style roughly (or just use a fixed number)
-  // Reference image has about 16 cards. Let's use 16.
-  const numCards = 16;
+  // Dynamic cards per round: fewer cards in later rounds since multipliers are higher
+  const getNumCards = () => {
+    if (round === 1) return 16;
+    if (round === 2) return 8;
+    if (round === 3) return 6;
+    return 2; // Round 4
+  };
+  const numCards = getNumCards();
 
-  const flipAnims = useRef(Array.from({ length: numCards }, () => new Animated.Value(0))).current;
+  // Create animations for max possible cards (16), but only use what's needed per round
+  const flipAnims = useRef(Array.from({ length: 16 }, () => new Animated.Value(0))).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
@@ -322,6 +328,20 @@ export default function ColorClashScreen() {
             })}
           </Animated.View>
         </View>
+
+        {/* Next Round Button - appears when all cards flipped */}
+        {flippedCards.size >= numCards && (
+          <View style={styles.nextRoundContainer}>
+            <TouchableOpacity
+              style={styles.nextRoundButton}
+              onPress={handleNext}
+            >
+              <Text style={styles.nextRoundButtonText}>
+                {round < 4 ? `▶️ NEXT ROUND (${round + 1}/4)` : '🏁 VIEW RESULTS'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Bottom Controls */}
         <View style={styles.bottomControls}>
@@ -643,5 +663,31 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     color: '#D11A2A',
+  },
+  nextRoundContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  nextRoundButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 16,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: '#FFA500',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 15,
+    minWidth: 250,
+    alignItems: 'center',
+  },
+  nextRoundButtonText: {
+    color: '#000',
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
 });

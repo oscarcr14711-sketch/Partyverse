@@ -11,16 +11,8 @@ export default function StackTowerPreGame() {
     const [numPlayers, setNumPlayers] = useState(2);
 
     const startGame = () => {
-        const players = Array.from({ length: numPlayers }, (_, i) => ({
-            id: String(i + 1),
-            name: `Player ${i + 1}`,
-            color: ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#90be6d', '#43aa8b'][i % 6],
-        }));
-
-        router.push({
-            pathname: '/stack-tower-game',
-            params: { players: JSON.stringify(players) }
-        });
+        // Navigate to setup screen for player selection and mode choice
+        router.push('/stack-tower-setup');
     };
 
     return (

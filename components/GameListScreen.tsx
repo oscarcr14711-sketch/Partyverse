@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { ReactNode } from 'react';
-import { ImageBackground, ScrollView, StyleSheet, Text, View, ImageSourcePropType } from 'react-native';
+import React from 'react';
+import { ImageBackground, ImageSourcePropType, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { playSound } from '../utils/SoundManager';
 import { BackButton } from './BackButton';
 import { PulsingButton } from './PulsingButton';
-import { playSound } from '../utils/SoundManager';
 
 export interface Game {
     title: string;
@@ -147,6 +147,9 @@ export function GameListScreen({ title, games, backgroundImage, backgroundColor 
 
 const styles = StyleSheet.create({
     background: {
+        flex: 1,
+    },
+    backgroundImage: {
         flex: 1,
     },
     container: {

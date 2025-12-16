@@ -10,6 +10,20 @@ export const en = {
         back: 'Back',
         gotIt: 'Got It!',
         comingSoon: 'Coming Soon',
+        playAgain: 'Play Again',
+        round: 'Round',
+        player: 'Player',
+        players: 'Players',
+        info: 'Info',
+        howToPlay: 'How to Play',
+        rules: 'Rules',
+        ready: 'Ready',
+        go: 'GO!',
+        correct: 'Correct!',
+        wrong: 'Wrong!',
+        winner: 'Winner',
+        gameOver: 'Game Over',
+        yourTurn: 'Your Turn',
     },
 
     // Home Screen
@@ -23,6 +37,14 @@ export const en = {
         wordMental: 'Word / Mental',
         spicy: 'Spicy',
         newGamesBanner: 'New and special games will be available soon!',
+    },
+
+    // Categories
+    categories: {
+        actionTitle: 'Action & Competition',
+        humorTitle: 'Humor & Creativity',
+        wordMentalTitle: 'Word & Mental',
+        spicyTitle: 'Spicy / 18+ / Alcohol',
     },
 
     // Profile Screen
@@ -108,22 +130,100 @@ export const en = {
         points: 'pts',
     },
 
-    // Game Categories
-    gameCategories: {
-        action: 'Action',
-        humor: 'Humor / Creativity',
-        wordMental: 'Word / Mental',
-        spicy: 'Spicy',
+    // Pre-Game Common
+    preGame: {
+        selectPlayers: 'Select Number of Players',
+        selectDifficulty: 'Select Difficulty',
+        easy: 'Easy',
+        medium: 'Medium',
+        hard: 'Hard',
+        objective: 'Objective',
+        howItWorks: 'How It Works',
+        tips: 'Tips',
     },
 
-    // Specific Games
+    // Game Titles & Descriptions
     games: {
-        stopGame: 'Stop Game',
-        brainBuzzer: 'Brain Buzzer',
-        lipSyncChaos: 'Lip Sync Chaos',
-        blownAway: 'Blown Away',
-        stackTower: 'Stack Tower',
-        hotBomb: 'Hot Bomb',
+        hotBomb: {
+            title: 'Hot Bomb',
+            description: 'Pass the bomb before it explodes! Quick reflexes required.',
+        },
+        stackTower: {
+            title: 'Stack Tower',
+            description: 'Build the tallest tower without it falling!',
+        },
+        lightningRounds: {
+            title: 'Lightning Rounds',
+            description: 'Fast-paced questions! Think quick, answer faster!',
+        },
+        picYou: {
+            title: "Don't Let It PIC You",
+            description: 'Avoid getting caught by the camera!',
+        },
+        blownAway: {
+            title: 'Blown Away',
+            description: 'Blow into your mic to keep the balloon from bursting!',
+        },
+        brainBuzzer: {
+            title: 'Brain Buzzer',
+            description: 'Test your knowledge with tricky trivia questions!',
+        },
+        brainVsBrain: {
+            title: 'Brain vs Brain',
+            description: 'Head-to-head trivia battle!',
+        },
+        memoryRush: {
+            title: 'Memory Rush',
+            description: 'Remember the sequence and repeat it!',
+        },
+        phraseMaster: {
+            title: 'Phrase Master',
+            description: 'Complete phrases and sayings!',
+        },
+        stopGame: {
+            title: 'Stop Game',
+            description: 'Categories game - beat the clock!',
+        },
+        colorClash: {
+            title: 'Color Clash',
+            description: 'Red or Black? Guess the card color!',
+        },
+        rideTheBus: {
+            title: 'Ride The Bus',
+            description: 'Classic drinking card game!',
+        },
+        drinkDomino: {
+            title: 'Drink Domino',
+            description: 'One domino falls, everyone drinks!',
+        },
+        partyBoard: {
+            title: 'PartyBoard: Roll & Cheers',
+            description: 'Roll the dice and move around the board!',
+        },
+        hotCupSpin: {
+            title: 'Hot Cup Spin',
+            description: 'Spin the cup and face the consequences!',
+        },
+        micMadness: {
+            title: 'Mic Madness',
+            description: 'Sing songs with the given word!',
+        },
+        lipSync: {
+            title: 'Lip Sync Battle',
+            description: 'Lip sync while wearing headphones!',
+        },
+        ifYouLaugh: {
+            title: 'If You Laugh',
+            description: 'Try not to laugh at funny videos!',
+        },
+        truthOrBluff: {
+            title: 'Truth or Bluff',
+            description: 'Share truths or clever bluffs!',
+        },
+        extremeRoulette: {
+            title: 'Extreme Challenge Roulette',
+            description: 'Random wild challenges!',
+        },
     },
 };
 

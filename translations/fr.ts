@@ -1,7 +1,5 @@
-import { TranslationKeys } from './en';
-
-export const fr: TranslationKeys = {
-    // Common UI
+export const fr = {
+    // UI Commun
     common: {
         close: 'Fermer',
         cancel: 'Annuler',
@@ -11,10 +9,24 @@ export const fr: TranslationKeys = {
         next: 'Suivant',
         back: 'Retour',
         gotIt: 'Compris!',
-        comingSoon: 'Bientôt disponible',
+        comingSoon: 'Bientôt Disponible',
+        playAgain: 'Rejouer',
+        round: 'Manche',
+        player: 'Joueur',
+        players: 'Joueurs',
+        info: 'Info',
+        howToPlay: 'Comment Jouer',
+        rules: 'Règles',
+        ready: 'Prêt',
+        go: 'GO!',
+        correct: 'Correct!',
+        wrong: 'Faux!',
+        winner: 'Gagnant',
+        gameOver: 'Fin du Jeu',
+        yourTurn: 'Votre Tour',
     },
 
-    // Home Screen
+    // Écran Principal
     home: {
         categories: 'Catégories',
         quickCompetition: 'Compétition Rapide',
@@ -22,12 +34,20 @@ export const fr: TranslationKeys = {
         festive: 'Festif',
         action: 'Action',
         humor: 'Humour',
-        wordMental: 'Mots / Mental',
+        wordMental: 'Mot / Mental',
         spicy: 'Épicé',
         newGamesBanner: 'De nouveaux jeux spéciaux seront bientôt disponibles!',
     },
 
-    // Profile Screen
+    // Catégories
+    categories: {
+        actionTitle: 'Action et Compétition',
+        humorTitle: 'Humour et Créativité',
+        wordMentalTitle: 'Mot et Mental',
+        spicyTitle: 'Épicé / 18+ / Alcool',
+    },
+
+    // Écran de Profil
     profile: {
         level: 'Niveau',
         games: 'Jeux',
@@ -40,61 +60,61 @@ export const fr: TranslationKeys = {
         viewLeaderboard: 'Voir le Classement',
         chooseAvatar: 'Choisir un Avatar',
         settings: 'Paramètres',
-        noGamesYet: 'Aucun jeu joué encore!',
+        noGamesYet: 'Aucun jeu joué pour le moment!',
         startPlaying: 'Commencez à jouer pour voir votre historique ici',
         won: 'Gagné',
         lost: 'Perdu',
         played: 'Joué',
     },
 
-    // Settings
+    // Paramètres
     settings: {
         title: 'Paramètres',
         soundMusic: 'Son et Musique',
         notifications: 'Notifications',
         theme: 'Thème',
         language: 'Langue',
-        cardBackDesign: 'Design des Cartes',
+        cardBackDesign: 'Design du Dos de Carte',
         privacy: 'Confidentialité',
-        about: 'À propos',
-        logOut: 'Déconnexion',
+        about: 'À Propos',
+        logOut: 'Se Déconnecter',
         masterVolume: 'Volume Principal',
         soundEffects: 'Effets Sonores',
         effectsVolume: 'Volume des Effets',
         backgroundMusic: 'Musique de Fond',
-        musicVolume: 'Volume Musique',
-        hapticFeedback: 'Retour Haptique',
+        musicVolume: 'Volume de la Musique',
+        hapticFeedback: 'Vibration',
         hapticHint: 'Vibration lors de l\'appui sur les boutons',
         chooseLanguage: 'Choisir la Langue',
         chooseTheme: 'Choisir le Thème',
     },
 
-    // Privacy
+    // Confidentialité
     privacy: {
         title: 'Politique de Confidentialité',
         yourPrivacyMatters: 'Votre Vie Privée Compte',
-        intro: 'Chez Partyverse, nous croyons à la protection de vos moments de fête. Voici comment nous vous protégeons.',
+        intro: 'Chez Partyverse, nous croyons en la confidentialité de vos moments de fête. Voici comment nous vous protégeons.',
         dataCollection: 'Collecte de Données',
-        dataCollectionText: 'Nous collectons un minimum de données pour améliorer votre expérience:\n• Scores et statistiques (stockés localement)\n• Préférences d\'avatar et de profil\n• Paramètres de l\'application\nToutes ces données restent sur VOTRE appareil.',
+        dataCollectionText: 'Nous collectons un minimum de données pour améliorer votre expérience de jeu:\n• Scores et statistiques (stockés localement)\n• Préférences d\'avatar et de profil\n• Paramètres de l\'application\nToutes ces données restent sur VOTRE appareil.',
         cameraUsage: 'Utilisation de la Caméra',
-        cameraText: 'Certains jeux comme "Don\'t Let It Pic You" utilisent votre caméra. Les photos:\n• Ne sont prises que pendant le jeu\n• Ne sont jamais téléchargées ou partagées\n• Ne sont pas stockées après le jeu',
+        cameraText: 'Certains jeux comme "Ne Te Laisse Pas Photographier" utilisent votre caméra. Les photos sont:\n• Prises uniquement pendant le jeu\n• Jamais téléchargées ou partagées\n• Non stockées après la fin du jeu',
         microphoneUsage: 'Utilisation du Microphone',
-        microphoneText: 'Des jeux comme "Blown Away" utilisent votre microphone pour détecter le souffle. Nous:\n• N\'enregistrons jamais l\'audio\n• Détectons uniquement l\'intensité du son\n• Ne stockons aucune donnée audio',
+        microphoneText: 'Des jeux comme "Soufflé" utilisent votre microphone pour détecter le souffle. Nous:\n• N\'enregistrons jamais l\'audio\n• Détectons uniquement l\'intensité sonore\n• Ne stockons aucune donnée audio',
         dataSharing: 'Partage de Données',
         dataSharingText: 'Nous ne partageons PAS vos données personnelles avec des tiers. Point final.',
         yourRights: 'Vos Droits',
-        yourRightsText: 'Vous pouvez supprimer toutes vos données à tout moment:\n• En effaçant les données de l\'application\n• En désinstallant l\'application',
+        yourRightsText: 'Vous pouvez supprimer toutes vos données à tout moment:\n• En effaçant les données de l\'application dans les paramètres de l\'appareil\n• En désinstallant l\'application',
         contactUs: 'Nous Contacter',
-        contactText: 'Questions sur la confidentialité? Envoyez-nous un email à:\nsupport@partyverse.app',
+        contactText: 'Questions sur la confidentialité? Écrivez-nous à:\nsupport@partyverse.app',
     },
 
-    // About
+    // À Propos
     about: {
-        title: 'À propos de Partyverse',
+        title: 'À Propos de Partyverse',
         version: 'Version 1.0.0',
-        description: 'La meilleure collection de jeux de fête! Rassemblez vos amis avec des jeux passionnants, des défis et un plaisir sans fin.',
+        description: 'La meilleure collection de jeux de fête! Rassemblez vos amis avec des jeux passionnants, des défis et du plaisir sans fin.',
         shareApp: 'Partager l\'App',
-        rateUs: 'Notez-nous ⭐',
+        rateUs: 'Nous Noter ⭐',
         contactSupport: 'Contacter le Support',
         followUs: 'Suivez-nous',
         madeWithLove: 'Fait avec ❤️ pour les amateurs de fêtes',
@@ -102,29 +122,107 @@ export const fr: TranslationKeys = {
         copyright: '© 2024 Partyverse. Tous droits réservés.',
     },
 
-    // Leaderboard
+    // Classement
     leaderboard: {
         title: 'Classement',
         you: 'Vous',
-        startPlaying: 'Commencez à jouer pour vous classer!',
+        startPlaying: 'Commencez à jouer pour être classé!',
         points: 'pts',
     },
 
-    // Game Categories
-    gameCategories: {
-        action: 'Action',
-        humor: 'Humour / Créativité',
-        wordMental: 'Mots / Mental',
-        spicy: 'Épicé',
+    // Pré-jeu Commun
+    preGame: {
+        selectPlayers: 'Sélectionner le Nombre de Joueurs',
+        selectDifficulty: 'Sélectionner la Difficulté',
+        easy: 'Facile',
+        medium: 'Moyen',
+        hard: 'Difficile',
+        objective: 'Objectif',
+        howItWorks: 'Comment Ça Marche',
+        tips: 'Conseils',
     },
 
-    // Specific Games
+    // Titres et Descriptions des Jeux
     games: {
-        stopGame: 'Jeu Stop',
-        brainBuzzer: 'Buzzer Cérébral',
-        lipSyncChaos: 'Chaos de Lecture Labiale',
-        blownAway: 'Soufflé',
-        stackTower: 'Tour de Blocs',
-        hotBomb: 'Bombe Chaude',
+        hotBomb: {
+            title: 'Bombe Chaude',
+            description: 'Passez la bombe avant qu\'elle n\'explose! Réflexes rapides requis.',
+        },
+        stackTower: {
+            title: 'Tour Empilée',
+            description: 'Construisez la tour la plus haute sans qu\'elle ne tombe!',
+        },
+        lightningRounds: {
+            title: 'Rondes Éclair',
+            description: 'Questions rapides! Pensez vite, répondez plus vite!',
+        },
+        picYou: {
+            title: 'Ne Te Laisse Pas Photographier',
+            description: 'Évitez de vous faire attraper par la caméra!',
+        },
+        blownAway: {
+            title: 'Soufflé',
+            description: 'Soufflez dans votre micro pour empêcher le ballon d\'éclater!',
+        },
+        brainBuzzer: {
+            title: 'Buzzer Cérébral',
+            description: 'Testez vos connaissances avec des questions de trivia délicates!',
+        },
+        brainVsBrain: {
+            title: 'Cerveau vs Cerveau',
+            description: 'Bataille de trivia face à face!',
+        },
+        memoryRush: {
+            title: 'Course à la Mémoire',
+            description: 'Mémorisez la séquence et répétez-la!',
+        },
+        phraseMaster: {
+            title: 'Maître des Phrases',
+            description: 'Complétez les phrases et les dictons!',
+        },
+        stopGame: {
+            title: 'Jeu du Stop',
+            description: 'Jeu de catégories - battez le chrono!',
+        },
+        colorClash: {
+            title: 'Choc des Couleurs',
+            description: 'Rouge ou Noir? Devinez la couleur de la carte!',
+        },
+        rideTheBus: {
+            title: 'Montez dans le Bus',
+            description: 'Jeu de cartes à boire classique!',
+        },
+        drinkDomino: {
+            title: 'Domino à Boire',
+            description: 'Un domino tombe, tout le monde boit!',
+        },
+        partyBoard: {
+            title: 'Plateau de Fête: Lancez et Trinquez',
+            description: 'Lancez les dés et déplacez-vous sur le plateau!',
+        },
+        hotCupSpin: {
+            title: 'Tour de Coupe Chaude',
+            description: 'Faites tourner la coupe et affrontez les conséquences!',
+        },
+        micMadness: {
+            title: 'Folie du Micro',
+            description: 'Chantez des chansons avec le mot donné!',
+        },
+        lipSync: {
+            title: 'Bataille de Playback',
+            description: 'Faites du playback en portant des écouteurs!',
+        },
+        ifYouLaugh: {
+            title: 'Si Vous Riez',
+            description: 'Essayez de ne pas rire devant des vidéos drôles!',
+        },
+        truthOrBluff: {
+            title: 'Vérité ou Bluff',
+            description: 'Partagez des vérités ou des bluffs astucieux!',
+        },
+        extremeRoulette: {
+            title: 'Roulette de Défis Extrêmes',
+            description: 'Défis sauvages aléatoires!',
+        },
     },
 };

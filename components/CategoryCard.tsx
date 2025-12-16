@@ -11,29 +11,31 @@ interface CategoryCardProps {
   color: string;
   onPress: () => void;
   locked?: boolean;
+  id?: string; // Added for icon matching
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress, locked = false }) => {
+const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress, locked = false, id }) => {
   const renderIcon = () => {
     // If locked, show lock icon
     if (locked) {
       return <Ionicons name="lock-closed" size={32} color="#fff" />;
     }
 
-    switch (title) {
-      case 'Action / Adrenaline':
+    // Use id for matching to support translations
+    switch (id) {
+      case 'action-adrenaline':
         return <ThunderIcon />;
-      case 'Humor / Creativity':
+      case 'humor-creativity':
         return <JoyLaughIcon />;
-      case 'Word / Mental':
+      case 'word-mental':
         return <BulbIcon />;
-      case 'Quick Competition':
+      case 'quick-competition':
         return <FinishFlagsIcon />;
-      case 'Social / Truth':
+      case 'social-truth':
         return <ChatIcon />;
-      case 'Spicy / 18+ / Alcohol':
+      case 'spicy':
         return <FireIcon />;
-      case 'Specials (Weekly / Festive)':
+      case 'specials':
         return <GiftIcon />;
       default:
         return <Text style={styles.icon}>{icon}</Text>;

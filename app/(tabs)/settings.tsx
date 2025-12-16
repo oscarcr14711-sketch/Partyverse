@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Image, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -114,13 +114,6 @@ export default function SettingsScreen() {
                             <Ionicons name="chevron-forward" size={24} color="#999" />
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.settingItem} onPress={() => setShowLanguageSettings(true)}>
-                            <Ionicons name="language" size={24} color="#667eea" />
-                            <Text style={styles.settingText}>{t.language}</Text>
-                            <Text style={styles.settingValue}>{language}</Text>
-                            <Ionicons name="chevron-forward" size={24} color="#999" />
-                        </TouchableOpacity>
-
                         <TouchableOpacity style={styles.settingItem} onPress={() => setShowCardBackSettings(true)}>
                             <Ionicons name="albums" size={24} color="#667eea" />
                             <Text style={styles.settingText}>{t.cardBack}</Text>
@@ -138,11 +131,6 @@ export default function SettingsScreen() {
                             <Ionicons name="information-circle" size={24} color="#667eea" />
                             <Text style={styles.settingText}>{t.about}</Text>
                             <Ionicons name="chevron-forward" size={24} color="#999" />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.settingItem, { borderTopWidth: 1, borderTopColor: '#eee', marginTop: 20, paddingTop: 20 }]}>
-                            <Ionicons name="log-out" size={24} color="#e74c3c" />
-                            <Text style={[styles.settingText, { color: '#e74c3c' }]}>{t.logOut}</Text>
                         </TouchableOpacity>
                     </ScrollView>
                 </SafeAreaView>
@@ -305,7 +293,7 @@ export default function SettingsScreen() {
                 </View>
             </Modal>
 
-            {/* Language Settings Modal */}
+            {/* Language Settings Modal - Disabled for initial release
             <Modal visible={showLanguageSettings} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
@@ -334,6 +322,7 @@ export default function SettingsScreen() {
                     </View>
                 </View>
             </Modal>
+            */}
 
             {/* Card Back Settings Modal */}
             <Modal visible={showCardBackSettings} transparent animationType="slide">

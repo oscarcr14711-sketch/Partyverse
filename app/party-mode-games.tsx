@@ -1,26 +1,31 @@
-import { CategoryCard } from '@/components/CategoryCard';
 import { BackButton } from '@/components/BackButton';
-import { Ionicons } from '@expo/vector-icons';
+import { CategoryCard } from '@/components/CategoryCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '../utils/LanguageContext';
 import { playSound } from '../utils/SoundManager';
 import { useTheme } from '../utils/ThemeContext';
-
-// Only show 4 categories - hide Quick Competition, Social/Truth, and Specials
-const categories = [
-  { title: 'Action / Adrenaline', subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', path: '/action-adrenaline-games', id: 'action-adrenaline' },
-  { title: 'Humor / Creativity', subtitle: 'Laugh, draw, and act!', icon: '😂', color: '#ffc107', path: '/humor-creativity-games', id: 'humor-creativity' },
-  { title: 'Word / Mental', subtitle: 'Quick wits win!', icon: '💡', color: '#1DE9B6', path: '/word-mental-games', id: 'word-mental' },
-  { title: 'Spicy / 18+ / Alcohol', subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0', path: '/spicy-games', id: 'spicy' },
-];
 
 export default function PartyModeGamesScreen() {
   const router = useRouter();
   const { theme, themeId } = useTheme();
+  const { t, language } = useLanguage();
+
+  // Debug: Log current language and translation result
+  console.log('Party Mode - Current language:', language);
+  console.log('Party Mode - Action title translation:', t('categories.actionTitle'));
+
+  // Only show 4 categories - hide Quick Competition, Social/Truth, and Specials
+  const categories = [
+    { title: t('categories.actionTitle'), subtitle: 'Move fast or lose!', icon: '⚡️', color: '#ff4d4d', path: '/action-adrenaline-games', id: 'action-adrenaline' },
+    { title: t('categories.humorTitle'), subtitle: 'Laugh, draw, and act!', icon: '😂', color: '#ffc107', path: '/humor-creativity-games', id: 'humor-creativity' },
+    { title: t('categories.wordMentalTitle'), subtitle: 'Quick wits win!', icon: '💡', color: '#1DE9B6', path: '/word-mental-games', id: 'word-mental' },
+    { title: t('categories.spicyTitle'), subtitle: 'Play wild (adults only)!', icon: '🔥', color: '#9c27b0', path: '/spicy-games', id: 'spicy' },
+  ];
 
   const isChristmasTheme = themeId === 'christmas';
 

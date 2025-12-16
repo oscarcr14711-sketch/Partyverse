@@ -116,6 +116,10 @@ export default function ColorClashPreGame() {
                         Round 1: ×1  •  Round 2: ×2{'\n'}
                         Round 3: ×3  •  Round 4: ×4
                     </RuleSection>
+                    <RuleSection title="🤝 SPLIT DRINKING (Round 2+)">
+                        Split drinking seconds among multiple players!{'\n'}
+                        Example: 10 seconds = 5 people drink 2s each
+                    </RuleSection>
                 </RulesModal>
             </SafeAreaView>
         </LinearGradient>

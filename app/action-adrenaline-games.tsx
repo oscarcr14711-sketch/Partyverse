@@ -1,18 +1,20 @@
 import { Asset } from 'expo-asset';
 import React, { useEffect } from 'react';
-import { GameListScreen, Game } from '../components/GameListScreen';
+import { Game, GameListScreen } from '../components/GameListScreen';
+import { useLanguage } from '../utils/LanguageContext';
 import { useTheme } from '../utils/ThemeContext';
-
-const games: Game[] = [
-  { title: 'Hot Bomb', description: 'Pass the bomb before it explodes!', emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
-  { title: 'Stack Tower', description: 'Stack blocks as high as you can without falling!', emoji: '📦', color: '#f8961e', path: '/stack-tower-pre-game' },
-  { title: 'Lightning Rounds', description: 'Race to complete physical challenges - last one gets a strike!', emoji: '⚡', color: '#f9c74f', path: '/lightning-rounds-pre-game' },
-  { title: 'Don\'t Let It PIC You', description: 'Avoid being caught in surprise photos!', emoji: '📸', color: '#90be6d', path: '/dont-let-it-pic-you-pre-game' },
-  { title: 'Blown Away', description: 'Players blow into the phone mic and whoever blows the bigger balloon without popping it, wins', emoji: '🎈', color: '#43aa8b', path: '/blown-away' },
-];
 
 export default function ActionAdrenalineGamesScreen() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  const games: Game[] = [
+    { title: t('games.hotBomb.title'), description: t('games.hotBomb.description'), emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
+    { title: t('games.stackTower.title'), description: t('games.stackTower.description'), emoji: '📦', color: '#f8961e', path: '/stack-tower-pre-game' },
+    { title: t('games.lightningRounds.title'), description: t('games.lightningRounds.description'), emoji: '⚡', color: '#f9c74f', path: '/lightning-rounds-pre-game' },
+    { title: t('games.picYou.title'), description: t('games.picYou.description'), emoji: '📸', color: '#90be6d', path: '/dont-let-it-pic-you-pre-game' },
+    { title: t('games.blownAway.title'), description: t('games.blownAway.description'), emoji: '🎈', color: '#43aa8b', path: '/blown-away' },
+  ];
 
   // Preload Hot Bomb assets to reduce perceived load time when navigating
   useEffect(() => {
@@ -30,7 +32,7 @@ export default function ActionAdrenalineGamesScreen() {
 
   return (
     <GameListScreen
-      title="Action / Adrenaline"
+      title={t('categories.actionTitle')}
       games={games}
       backgroundImage={backgroundImage}
       backgroundColor="#1a1a2e"

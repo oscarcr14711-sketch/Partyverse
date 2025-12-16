@@ -2,7 +2,9 @@ import { Asset } from 'expo-asset';
 import { Stack, usePathname } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { InteractionManager, View } from 'react-native';
+import { AchievementMonitor } from '../components/AchievementMonitor';
 import AdBanner from '../components/AdBanner';
+import { AchievementProvider } from '../utils/AchievementContext';
 import {
   initializeAppServices,
   logGameEnd,
@@ -130,18 +132,21 @@ export default function RootLayout() {
     <LanguageProvider>
       <ThemeProvider>
         <PlayerStatsProvider>
-          <CardBackProvider>
-            <View style={{ flex: 1 }}>
-              <AdBanner />
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="party-mode-games" />
-                <Stack.Screen name="start" />
-                <Stack.Screen name="mic-madness-card-reveal" />
-              </Stack>
-            </View>
-          </CardBackProvider>
+          <AchievementProvider>
+            <CardBackProvider>
+              <AchievementMonitor />
+              <View style={{ flex: 1 }}>
+                <AdBanner />
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="party-mode-games" />
+                  <Stack.Screen name="start" />
+                  <Stack.Screen name="mic-madness-card-reveal" />
+                </Stack>
+              </View>
+            </CardBackProvider>
+          </AchievementProvider>
         </PlayerStatsProvider>
       </ThemeProvider>
     </LanguageProvider>

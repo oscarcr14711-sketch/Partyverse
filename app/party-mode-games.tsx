@@ -1,10 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
 import { BackButton } from '@/components/BackButton';
 import { CategoryCard } from '@/components/CategoryCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLanguage } from '../utils/LanguageContext';
 import { playSound } from '../utils/SoundManager';
@@ -31,18 +32,22 @@ export default function PartyModeGamesScreen() {
 
   const screenContent = (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <View style={styles.header}>
-        <BackButton />
-        <Text style={styles.headerTitle}>Party Mode</Text>
-        <View style={styles.spacer} />
+      <View style={styles.backButtonContainer}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>What kind of fun are you in the mood for?</Text>
-        <View style={styles.grid}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>{t('gameMenu.partyMode.title')}</Text>
+        </View>
+        <Text style={styles.subtitle}>{t('gameMenu.moodQuestion')}</Text>
+        <View style={styles.list}>
           {categories.map((category) => (
             <CategoryCard
               key={category.title}
               {...category}
+              variant="list"
               locked={false}
               onPress={() => { playSound('ui.buttonClick'); if (category.path) router.push(category.path as any); }}
             />
@@ -129,39 +134,52 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
     paddingBottom: 20,
     paddingTop: 0,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  backButtonContainer: {
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 10,
+    paddingBottom: 5,
   },
-  spacer: {
+  backButton: {
+    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  headerTitle: {
-    color: 'white',
-    fontSize: 22,
-    fontWeight: '700',
-    flex: 1,
-    textAlign: 'center',
+  headerContainer: {
+    paddingBottom: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: '900',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#E0E0E0',
     textAlign: 'center',
     marginBottom: 20,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
+  list: {
+    flexDirection: 'column',
+    gap: 0,
+    width: '100%',
+    paddingHorizontal: 20,
   },
   // Coming Soon Banner
   bannerContainer: {

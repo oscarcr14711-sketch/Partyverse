@@ -1,46 +1,18 @@
+
 import Bomb3D from '@/components/Bomb3D';
-import { RuleSection, RulesModal } from '@/components/RulesModal';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 // Optional: remote audio URLs (set to valid URLs or keep null to disable)
 const FUSE_SOUND_URL: string | null = null; // e.g., 'https://example.com/fuse-sizzle.mp3'
 const EXPLOSION_SOUND_URL: string | null = null; // e.g., 'https://example.com/explosion.mp3'
-
-// Cracked-looking title by rendering each character with slight rotation/offset
-const CrackedTitle: React.FC<{ text: string }> = ({ text }) => {
-  const chars = text.split("");
-  const rotations = [-5, 3, -4, 6, -3, 4, -5, 3, -2, 5];
-
-  return (
-    <View style={styles.crackedTitleRow}>
-      {chars.map((ch, idx) => (
-        <Text
-          key={idx}
-          style={{
-            fontSize: 64,
-            fontWeight: 'bold',
-            color: '#FFB300',
-            textShadowColor: 'rgba(0, 0, 0, 0.8)',
-            textShadowOffset: { width: 3, height: 3 },
-            textShadowRadius: 6,
-            fontFamily: Platform.select({ ios: 'Chalkduster', android: 'serif' }),
-            transform: [{ rotate: `${rotations[idx % rotations.length]}deg` }],
-            marginHorizontal: 2,
-          }}
-        >
-          {ch}
-        </Text>
-      ))}
-    </View>
-  );
-};
 
 export default function HotBombGameScreen() {
   // Detect if Lottie native view is available (Expo Go on iOS may not include it)
@@ -54,49 +26,30 @@ export default function HotBombGameScreen() {
     }
   })();
   const router = useRouter();
-  const [gameStarted, setGameStarted] = useState(false);
+  const params = useLocalSearchParams();
+  const numPlayers = params.numPlayers ? parseInt(params.numPlayers as string) : 3;
+
+  const [gameStarted, setGameStarted] = useState(true); // Start immediately
   const [timeLeft, setTimeLeft] = useState(15);
   const [totalTime] = useState(15);
   const [hasExploded, setHasExploded] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
-  const [numPlayers, setNumPlayers] = useState(3); // Number of players (can be adjusted)
   const [showExplosion, setShowExplosion] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  const [lottieProgress, setLottieProgress] = useState(0);
-  const [showRules, setShowRules] = useState(false);
   const [explosionAnim] = useState<any>(require('../assets/animations/Cartoon explosion.json'));
-  // Memoize avatar elements AFTER numPlayers state is declared
-  const avatarsMemo = useMemo(() => {
-    const images = [
-      require('../assets/images/avatars/avatar1.png'),
-      require('../assets/images/avatars/avatar2.png'),
-      require('../assets/images/avatars/avatar3.png'),
-      require('../assets/images/avatars/avatar4.png'),
-      require('../assets/images/avatars/avatar5.png'),
-      require('../assets/images/avatars/avatar6.png'),
-    ];
-    const count = Math.min(numPlayers, 6);
-    return Array.from({ length: count }, (_, i) => (
-      <View key={i} style={styles.playerAvatar}>
-        <Image
-          source={images[i]}
-          style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
-          resizeMode={i === 5 ? 'cover' : 'contain'}
-        />
-      </View>
-    ));
-  }, [numPlayers]);
 
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const explosionOpacity = React.useRef(new Animated.Value(0)).current;
   const wickBurnAnim = React.useRef(new Animated.Value(0)).current;
-  // New animation refs for breathing and shaking
-  const breathAnim = React.useRef(new Animated.Value(0)).current; // 0..1 -> scale 0.98..1.02
-  const shakeAnim = React.useRef(new Animated.Value(0)).current; // -1..1 -> translateX
-  const lottieRef = React.useRef<LottieView>(null);
-  // Audio refs
+  const breathAnim = React.useRef(new Animated.Value(0)).current;
+  const shakeAnim = React.useRef(new Animated.Value(0)).current;
   const fuseSoundRef = React.useRef<Audio.Sound | null>(null);
   const explosionSoundRef = React.useRef<Audio.Sound | null>(null);
+
+  // Start fuse sound on mount
+  useEffect(() => {
+    handleStartGame();
+  }, []);
 
   useEffect(() => {
     let interval: any;
@@ -104,39 +57,30 @@ export default function HotBombGameScreen() {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           const newTime = prev - 1;
-          // Trigger haptic feedback as time gets lower
           if (newTime <= 5) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
           }
           return newTime;
         });
       }, 1000);
-      // Wick burn progress value (kept for future visual effects if needed)
       Animated.timing(wickBurnAnim, {
         toValue: timeLeft === 0 ? 100 : ((totalTime - timeLeft) / totalTime) * 100,
         duration: 500,
         useNativeDriver: false,
       }).start();
     } else if (timeLeft === 0 && gameStarted) {
-      // Bomb explodes!
       triggerExplosion();
     }
-
     return () => clearInterval(interval);
   }, [gameStarted, timeLeft]);
-
-  // NOTE: Removed Lottie progress sync - now using autoPlay for continuous animation
 
   const triggerExplosion = () => {
     setHasExploded(true);
     setShowExplosion(true);
-
-    // Multiple intense haptic pulses
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 100);
     setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
 
-    // Explosion animation
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 2, duration: 200, useNativeDriver: true }),
       Animated.timing(explosionOpacity, { toValue: 1, duration: 100, useNativeDriver: true }),
@@ -158,9 +102,7 @@ export default function HotBombGameScreen() {
     scaleAnim.setValue(1);
     explosionOpacity.setValue(0);
     wickBurnAnim.setValue(0);
-    setLottieProgress(0);
 
-    // Start fuse sound if URL provided
     if (FUSE_SOUND_URL) {
       (async () => {
         try {
@@ -171,61 +113,25 @@ export default function HotBombGameScreen() {
           }
           const { sound } = await Audio.Sound.createAsync({ uri: FUSE_SOUND_URL }, { shouldPlay: true, isLooping: true, volume: 0.6 });
           fuseSoundRef.current = sound;
-        } catch (e) {
-          // ignore load errors silently
-        }
+        } catch (e) { }
       })();
     }
   };
 
   const handleRestart = () => {
     setGameOver(false);
-    setGameStarted(true);
-    setTimeLeft(totalTime);
-    setHasExploded(false);
-    setShowExplosion(false);
-    setAnimationKey(prev => prev + 1);
-    scaleAnim.setValue(1);
-    explosionOpacity.setValue(0);
-    wickBurnAnim.setValue(0);
-    setLottieProgress(0);
+    handleStartGame();
   };
 
   const handleReturnToSetup = () => {
-    setGameOver(false);
-    setGameStarted(false);
-    setTimeLeft(totalTime);
-    setHasExploded(false);
-    setShowExplosion(false);
-    scaleAnim.setValue(1);
-    explosionOpacity.setValue(0);
-    wickBurnAnim.setValue(0);
-    setLottieProgress(0);
+    router.back();
   };
 
   const handleReset = () => {
-    setGameStarted(false);
-    setTimeLeft(totalTime);
-    setHasExploded(false);
-    setShowExplosion(false);
-    setGameOver(false);
-    scaleAnim.setValue(1);
-    explosionOpacity.setValue(0);
-    wickBurnAnim.setValue(0);
-
-    // Stop/unload fuse sound
-    (async () => {
-      try {
-        if (fuseSoundRef.current) {
-          await fuseSoundRef.current.stopAsync();
-          await fuseSoundRef.current.unloadAsync();
-          fuseSoundRef.current = null;
-        }
-      } catch { }
-    })();
+    handleRestart();
   };
 
-  // Breathing animation (subtle pulse while running)
+
   useEffect(() => {
     if (gameStarted && !hasExploded) {
       const loop = Animated.loop(
@@ -241,7 +147,6 @@ export default function HotBombGameScreen() {
     }
   }, [gameStarted, hasExploded]);
 
-  // Shake animation in the last 3 seconds
   useEffect(() => {
     if (gameStarted && !hasExploded && timeLeft <= 3 && timeLeft > 0) {
       const loop = Animated.loop(
@@ -259,7 +164,6 @@ export default function HotBombGameScreen() {
     }
   }, [timeLeft, gameStarted, hasExploded]);
 
-  // Cleanup sounds on unmount
   useEffect(() => {
     return () => {
       (async () => {
@@ -276,22 +180,11 @@ export default function HotBombGameScreen() {
     };
   }, []);
 
-  // Determine color gradient based on time remaining
-  const getGradientColors = (): [string, string] => {
-    const percentage = timeLeft / totalTime;
-    if (percentage > 0.66) return ['#00FF00', '#00AA00']; // Green
-    if (percentage > 0.33) return ['#FFFF00', '#FF8800']; // Yellow to Orange
-    return ['#FF0000', '#AA0000']; // Red
-  };
-
-  const timerPercentage = (timeLeft / totalTime) * 100;
   const breathScale = breathAnim.interpolate({ inputRange: [0, 1], outputRange: [0.98, 1.02] });
   const shakeX = shakeAnim.interpolate({ inputRange: [-1, 1], outputRange: [-6, 6] });
-  const burnedRatio = (totalTime - timeLeft) / totalTime;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#FFB300' }}>
-      {/* Background gradient - orange/red flames */}
       <LinearGradient
         colors={['#D84315', '#FF6F00', '#FFB300']}
         start={{ x: 0, y: 0 }}
@@ -300,11 +193,10 @@ export default function HotBombGameScreen() {
       />
 
       {gameOver ? (
-        // GAME OVER SCREEN
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
           <View style={styles.gameOverContainer}>
             <Image
-              source={require('../assets/images/Boom.png')}
+              source={require('../assets/images/Circus.png')}
               style={styles.gameOverBoomImage}
               resizeMode="contain"
             />
@@ -319,77 +211,10 @@ export default function HotBombGameScreen() {
             </View>
           </View>
         </SafeAreaView>
-      ) : !gameStarted ? (
-        // PRE-GAME SETUP SCREEN
-        <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
-          <View style={styles.setupContainer}>
-            {/* Back Button */}
-            <TouchableOpacity style={styles.setupBackButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={28} color="#FFE0B2" />
-            </TouchableOpacity>
-
-            {/* Title */}
-            <Image
-              source={require('../assets/images/Hotbombtitle.png')}
-              style={styles.setupTitleImage}
-              resizeMode="contain"
-            />
-
-            {/* Player avatars */}
-            <View style={styles.playerAvatarsContainer}>
-              {avatarsMemo}
-            </View>
-
-            {/* Player counter */}
-            <View style={styles.playerCounterContainer}>
-              <TouchableOpacity
-                style={styles.playerCounterButton}
-                onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
-              >
-                <Text style={styles.playerCounterButtonText}>−</Text>
-              </TouchableOpacity>
-              <Text style={styles.playerCounterText}>{numPlayers} Players</Text>
-              <TouchableOpacity
-                style={styles.playerCounterButton}
-                onPress={() => setNumPlayers(Math.min(6, numPlayers + 1))}
-              >
-                <Text style={styles.playerCounterButtonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Start button and Info button together */}
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.setupStartButton} onPress={handleStartGame}>
-                <Text style={styles.setupStartButtonText}>Start</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
-                <Text style={styles.infoButtonText}>i</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <RulesModal
-            visible={showRules}
-            onClose={() => setShowRules(false)}
-            title="How to Play"
-            accentColor="#FFB300"
-          >
-            <RuleSection title="🎯 Objective">
-              Pass the bomb before it explodes!
-            </RuleSection>
-            <RuleSection title="🎮 How It Works">
-              • The bomb has a random timer{' \n'}• Pass the phone to another player{' \n'}• Whoever is holding it when it explodes loses!{' \n'}• Stay calm under pressure!
-            </RuleSection>
-            <RuleSection title="💣 Tips">
-              Watch the intensity - the bomb shakes as time runs out!
-            </RuleSection>
-          </RulesModal>
-        </SafeAreaView>
       ) : (
-        // GAME SCREEN
         <>
           <ImageBackground
-            source={require('../assets/images/citydestroyed.jpeg')}
+            source={require('../assets/images/citydestroyed.png')}
             style={StyleSheet.absoluteFill}
             resizeMode="cover"
           />
@@ -412,8 +237,8 @@ export default function HotBombGameScreen() {
                 </Animated.View>
               </View>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={handleReset}>
-                  <Text style={styles.buttonText}>🔄 Reset</Text>
+                <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={handleRestart}>
+                  <Text style={styles.buttonText}>🔄 Restart</Text>
                 </TouchableOpacity>
               </View>
             </View>

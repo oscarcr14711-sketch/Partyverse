@@ -8,14 +8,7 @@ import { BackButton } from '../components/BackButton';
 import { PulsingButton } from '../components/PulsingButton';
 import { playSound } from '../utils/SoundManager';
 import { useTheme } from '../utils/ThemeContext';
-
-const games = [
-  { title: 'Color Clash', description: 'Red or Black? Guess the card color and drink if you\'re wrong!', emoji: '♥️♠️', color: '#4169E1', path: '/color-clash-pre-game' },
-  { title: 'Ride The Bus', description: 'A classic drinking card game with escalating challenges!', emoji: '🚌🃏', color: '#2E8B57', path: '/ride-the-bus-pre-game' },
-  { title: 'Drink Domino', description: 'One domino falls, everyone drinks! Chain reactions guaranteed.', emoji: '🔥🍻', color: '#FF4500', path: '/drink-domino' },
-  { title: 'PartyBoard: Roll & Cheers', description: 'Roll the dice and move around the party board!', emoji: '🎲🍻', color: '#DA70D6', path: '/party-board' },
-  { title: 'Hot Cup Spin', description: 'Spin the cup and face the consequences!', emoji: '🥤🔄', color: '#CD5C5C', path: '/hot-cup-spin' },
-];
+import { useLanguage } from '../utils/LanguageContext';
 
 // Color helpers for 3D effect
 const clamp = (v: number) => Math.max(0, Math.min(255, v));
@@ -47,6 +40,15 @@ const darken = (hex: string, amt = 0.2) => {
 export default function SpicyGamesScreen() {
   const router = useRouter();
   const { theme, themeId } = useTheme();
+  const { t } = useLanguage();
+
+  const games = [
+    { title: 'Color Clash', description: t('games.colorClash.description'), emoji: '♥️♠️', logo: require('../assets/images/Colorclash.png'), color: '#4169E1', path: '/pre-game/color-clash' },
+    { title: 'Ride the Bus', description: t('games.rideTheBus.description'), emoji: '🚌🃏', logo: require('../assets/images/rtb.png'), color: '#2E8B57', path: '/pre-game/ride-the-bus' },
+    // { title: 'Drink Domino', description: t('games.drinkDomino.description'), emoji: '🔥🍻', color: '#FF4500', path: '/drink-domino' },
+    // { title: t('games.partyBoard.title'), description: t('games.partyBoard.description'), emoji: '🎲🍻', color: '#DA70D6', path: '/party-board' },
+    // { title: t('games.hotCupSpin.title'), description: t('games.hotCupSpin.description'), emoji: '🥤🔄', color: '#CD5C5C', path: '/hot-cup-spin' },
+  ].slice(0, 2); // Only show first 2 games as requested
 
   // Use Christmas background if theme has it, otherwise black
   const isChristmas = themeId === 'christmas';
@@ -60,7 +62,7 @@ export default function SpicyGamesScreen() {
     router.push(path as any);
   };
 
-  const renderGameButton = (game: typeof games[0]) => {
+  const renderGameButton = (game: { title: string; description: string; emoji: string; logo?: any; color: string; path: string }) => {
     const top = lighten(game.color, 0.30);
     const bottom = darken(game.color, 0.30);
     const ringLight = lighten(game.color, 0.45);
@@ -86,7 +88,11 @@ export default function SpicyGamesScreen() {
               end={{ x: 0.5, y: 1 }}
               style={styles.buttonInnerShadow}
             />
-            <Text style={styles.gameEmoji}>{game.emoji}</Text>
+            {game.logo ? (
+              <Image source={game.logo} style={styles.gameLogo} resizeMode="contain" />
+            ) : (
+              <Text style={styles.gameEmoji}>{game.emoji}</Text>
+            )}
             <View style={styles.gameTextContainer}>
               <Text style={styles.gameTitle}>{game.title}</Text>
               <Text style={styles.gameDescription}>{game.description}</Text>
@@ -173,7 +179,7 @@ const styles = StyleSheet.create({
   },
   gameButtonOuter: {
     borderRadius: 24,
-    padding: 4,
+    padding: 2, // Reduced from 4
     marginBottom: 4,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
@@ -184,9 +190,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    minHeight: 90,
+    paddingVertical: 12,
+    paddingRight: 18,
+    paddingLeft: 0,
+    minHeight: 100,
     overflow: 'hidden',
   },
   buttonInnerShadow: {
@@ -200,6 +207,11 @@ const styles = StyleSheet.create({
   gameEmoji: {
     fontSize: 40,
     marginRight: 16,
+  },
+  gameLogo: {
+    width: 110,
+    height: 90,
+    marginRight: 8,
   },
   gameTextContainer: {
     flex: 1,

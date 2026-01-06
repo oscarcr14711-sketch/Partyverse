@@ -22,10 +22,10 @@ import { ThemeProvider } from '../utils/ThemeContext';
 
 // Centralized asset list for eager preloading (Hot Bomb + commonly used)
 const PRELOAD_ASSETS = [
-  require('../assets/images/Hotbombtitle.png'),
+  require('../assets/images/gameLogos/Hotbomblogo.png'),
   require('../assets/images/Boom.png'),
-  require('../assets/images/bomb1.png'),
-  require('../assets/images/citydestroyed.jpeg'),
+  require('../assets/images/bomb.png'),
+  require('../assets/images/citydestroyed.png'),
   require('../assets/images/avatars/avatar1.png'),
   require('../assets/images/avatars/avatar2.png'),
   require('../assets/images/avatars/avatar3.png'),

@@ -1,24 +1,26 @@
 import React from 'react';
 import { GameListScreen, Game } from '../components/GameListScreen';
 import { useTheme } from '../utils/ThemeContext';
-
-const games: Game[] = [
-  { title: 'Truth or Bluff', description: 'Tell a story - real or fake. Others vote if it\'s true or a bluff!', emoji: '🤥', color: '#ff4f81', path: '/truth-or-bluff' },
-  { title: 'If you Laugh you lose', description: 'Try not to laugh while others do their best to make you crack up!', emoji: '😆', color: '#36c9c6', path: '/if-you-laugh-you-lose' },
-  { title: 'Extreme Challenge Roulette', description: 'Spin the wheel and complete wild challenges!', emoji: '🎡', color: '#f9c846', path: '/PreGameScreen' },
-  { title: 'Lip Sync Chaos', description: 'Lip sync to random songs and let others guess!', emoji: '🎧', color: '#5f6bff', path: '/lip-sync-pre-game' },
-  { title: 'Mic Madness', description: 'Sing, rap, or speak - the mic decides your fate!', emoji: '🎤', color: '#7dff6a', path: '/mic-madness' },
-];
+import { useLanguage } from '../utils/LanguageContext';
 
 export default function HumorCreativityGamesScreen() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  const games: Game[] = [
+    { title: 'Truth or Bluff', description: t('games.truthOrBluff.description'), emoji: '🤥', logo: require('../assets/images/gameLogos/truthlogo.png'), color: '#ff4f81', path: '/pre-game/truth-or-bluff' },
+    { title: 'If You Laugh... You Lose', description: t('games.ifYouLaugh.description'), emoji: '😆', logo: require('../assets/images/gameLogos/ifyoulaughlogo.png'), color: '#36c9c6', path: '/pre-game/if-you-laugh-you-lose' },
+    { title: 'Extreme Roulette', description: t('games.extremeRoulette.description'), emoji: '🎡', logo: require('../assets/images/gameLogos/extremechallengeLogo.png'), color: '#f9c846', path: '/pre-game/extreme-challenge-roulette' },
+    { title: 'Lip Sync Battle', description: t('games.lipSync.description'), emoji: '🎧', logo: require('../assets/images/gameLogos/lipsynclogo.png'), color: '#5f6bff', path: '/pre-game/lip-sync' },
+    { title: 'Mic Madness', description: t('games.micMadness.description'), emoji: '🎤', logo: require('../assets/images/gameLogos/micmadnesslogo.png'), color: '#7dff6a', path: '/pre-game/mic-madness' },
+  ];
 
   // Use theme background if available, otherwise use default
   const backgroundImage = theme.categoryBackgrounds?.humorCreativity || require('../assets/images/HumorBg.png');
 
   return (
     <GameListScreen
-      title="Humor / Creativity"
+      title={t('categories.humorCreativityTitle')}
       games={games}
       backgroundImage={backgroundImage}
       backgroundColor="#2d1b69"

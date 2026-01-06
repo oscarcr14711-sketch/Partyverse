@@ -5,7 +5,7 @@ import { Language, translations } from '../translations';
 type LanguageContextType = {
     language: Language;
     setLanguage: (lang: Language) => Promise<void>;
-    t: (key: string) => string;
+    t: (key: string) => any;
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -41,7 +41,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // Translation function - supports nested keys like 'common.close'
-    const t = (key: string): string => {
+    const t = (key: string): any => {
         const keys = key.split('.');
         let value: any = translations[language];
 
@@ -54,7 +54,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
             }
         }
 
-        return typeof value === 'string' ? value : key;
+        return value;
     };
 
     return (

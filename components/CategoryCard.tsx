@@ -11,10 +11,11 @@ interface CategoryCardProps {
   color: string;
   onPress: () => void;
   locked?: boolean;
-  id?: string; // Added for icon matching
+  id?: string;
+  variant?: 'grid' | 'list';
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress, locked = false, id }) => {
+const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, color, onPress, locked = false, id, variant = 'grid' }) => {
   const renderIcon = () => {
     // If locked, show lock icon
     if (locked) {
@@ -42,17 +43,37 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ title, subtitle, icon, colo
     }
   };
 
+  const isList = variant === 'list';
+
   return (
-    <PulsingButton onPress={onPress} style={[styles.cardWrapper, locked && styles.cardWrapperLocked]}>
-      <View style={[styles.cardInner, { backgroundColor: color }]}>
+    <PulsingButton
+      onPress={onPress}
+      style={[
+        styles.cardWrapper,
+        isList && styles.cardWrapperList,
+        locked && styles.cardWrapperLocked
+      ]}
+    >
+      <View style={[
+        styles.cardInner,
+        isList && styles.cardInnerList,
+        { backgroundColor: color }
+      ]}>
         {locked && <View style={styles.grayOverlay} />}
-        <View style={[styles.iconCircle, locked && styles.iconCircleLocked]}>
+        <View style={[
+          styles.iconCircle,
+          isList && styles.iconCircleList,
+          locked && styles.iconCircleLocked
+        ]}>
           {renderIcon()}
         </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.title, locked && styles.titleLocked]}>{title}</Text>
-          <Text style={[styles.subtitle, locked && styles.subtitleLocked]}>{subtitle}</Text>
+        <View style={[styles.textContainer, isList && styles.textContainerList]}>
+          <Text style={[styles.title, isList && styles.titleList, locked && styles.titleLocked]}>{title}</Text>
+          <Text style={[styles.subtitle, isList && styles.subtitleList, locked && styles.subtitleLocked]}>{subtitle}</Text>
         </View>
+        {isList && !locked && (
+          <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" style={{ marginLeft: 'auto' }} />
+        )}
       </View>
     </PulsingButton>
   );
@@ -153,7 +174,43 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
+  subtitleList: {
+    textAlign: 'left',
+    fontSize: 13,
+    opacity: 0.9,
+  },
   subtitleLocked: {
     opacity: 0.6,
+  },
+  // List Variant Styles
+  cardWrapperList: {
+    width: '100%',
+    aspectRatio: undefined,
+    height: 100, // Fixed height for list items
+    marginBottom: 12,
+    margin: 0,
+  },
+  cardInnerList: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 20,
+    gap: 16,
+    borderRadius: 24,
+  },
+  iconCircleList: {
+    marginBottom: 0,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  textContainerList: {
+    alignItems: 'flex-start',
+    flex: 1,
+  },
+  titleList: {
+    textAlign: 'left',
+    fontSize: 19,
+    marginBottom: 4,
   },
 });

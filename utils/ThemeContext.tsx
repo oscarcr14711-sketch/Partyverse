@@ -26,7 +26,7 @@ export interface Theme {
     } | null;
     // Home screen
     home: {
-        gradient: [string, string];
+        gradient: string[];
     };
     // Overlay animation (snow, confetti, etc.)
     overlayAnimation: any | null;
@@ -47,7 +47,7 @@ export const DEFAULT_THEME: Theme = {
     },
     categoryBackgrounds: null, // Uses default backgrounds
     home: {
-        gradient: ['#5DCEA9', '#B8D96E'],
+        gradient: ['#2196F3', '#F44336'], // Blue to Red
     },
     overlayAnimation: null, // Uses default confetti
 };

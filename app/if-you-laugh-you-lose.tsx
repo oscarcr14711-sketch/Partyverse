@@ -25,7 +25,7 @@ export default function IfYouLaughYouLoseScreen() {
           <BackButton color="#FFE0B2" />
         </View>
       </SafeAreaView>
-      <Image source={require("../assets/images/lol.png")}
+      <Image source={require("../assets/images/gameLogos/ifyoulaughlogo.png")}
         style={styles.titleImage}
         resizeMode="contain"
       />

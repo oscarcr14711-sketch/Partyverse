@@ -9,10 +9,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PulsingButton } from '../../components/PulsingButton';
 import { playSound } from '../../utils/SoundManager';
 import { useTheme } from '../../utils/ThemeContext';
+import { useLanguage } from '../../utils/LanguageContext';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { theme, themeId } = useTheme();
+  const { t } = useLanguage();
 
   const goPlay = () => {
     playSound('ui.buttonClick');
@@ -68,11 +70,11 @@ export default function HomeScreen() {
 
       {/* Header Buttons */}
       <SafeAreaView style={styles.headerContainer} edges={['left', 'right']}>
-        <TouchableOpacity style={styles.iconButton} onPress={goSettings}>
-          <Ionicons name="settings-outline" size={28} color="white" />
-        </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={goProfile}>
           <Ionicons name="person-circle-outline" size={32} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton} onPress={goSettings}>
+          <Ionicons name="settings-outline" size={28} color="white" />
         </TouchableOpacity>
       </SafeAreaView>
 
@@ -95,7 +97,7 @@ export default function HomeScreen() {
               >
                 <View style={styles.row}>
                   <View style={styles.iconSlot}><Ionicons name="play" size={20} color="#ffffff" /></View>
-                  <View style={styles.textSlot}><Text style={styles.playText}>Play Now</Text></View>
+                  <View style={styles.textSlot}><Text style={styles.playText}>{t('home.playNow')}</Text></View>
                   <View style={styles.iconSlot} />
                 </View>
               </LinearGradient>
@@ -117,7 +119,7 @@ export default function HomeScreen() {
               >
                 <View style={styles.row}>
                   <View style={styles.iconSlot}><Ionicons name="flame" size={20} color="#ffffff" /></View>
-                  <View style={styles.textSlot}><Text style={styles.spicyText}>Spicy Mode 18+</Text></View>
+                  <View style={styles.textSlot}><Text style={styles.spicyText}>{t('home.spicyMode')}</Text></View>
                   <View style={styles.iconSlot} />
                 </View>
               </LinearGradient>

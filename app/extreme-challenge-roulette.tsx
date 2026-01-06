@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Image, Text, TouchableOpacity, View } from 'react-native';
@@ -21,7 +22,7 @@ const challenges: string[] = [
 ];
 
 export default function ExtremeChallengeRouletteScreen() {
-	const router = require('expo-router').useRouter();
+	const router = useRouter();
 	const screenWidth = Dimensions.get('window').width;
 	const rouletteSize = screenWidth;
 	const [currentIndex, setCurrentIndex] = useState(0);

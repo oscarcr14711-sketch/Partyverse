@@ -1,8 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ImageBackground, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { BackButton } from '../components/BackButton';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { GameStartScreen } from '../components/GameStartScreen';
 import { RuleSection, RulesModal } from '../components/RulesModal';
 
 const CATEGORIES = [
@@ -29,165 +28,80 @@ export default function PhraseMasterPreGame() {
     };
 
     return (
-        <ImageBackground
-            source={require('../assets/images/phrase.png')}
-            style={styles.background}
-            resizeMode="cover"
+        <GameStartScreen
+            backgroundImage={require('../assets/images/phrase.png')}
+            logoImage={require('../assets/images/gameLogos/guess_phrase_logo.png')}
+            onStart={() => setShowCategories(true)}
+            onInstructions={() => setShowRules(true)}
+            minPlayers={0}
+            maxPlayers={0}
+            playerCount={0}
+            setPlayerCount={() => { }}
+            hidePlayerSelection={true}
+            startButtonText="PLAY"
+            accentColor="#263238"
         >
-            <SafeAreaView style={styles.safeArea}>
-                <View style={styles.header}>
-                    <BackButton />
-                </View>
-
-                <View style={styles.content}>
-                    <View style={styles.spacer} />
-
-                    <View style={styles.buttonContainer}>
+            {/* Category Selection Modal */}
+            {showCategories && (
+                <View style={styles.modalOverlay}>
+                    <View style={styles.categoryModal}>
+                        <Text style={styles.modalTitle}>Choose Category</Text>
+                        <ScrollView style={styles.categoryScroll} showsVerticalScrollIndicator={false}>
+                            {CATEGORIES.map((cat) => (
+                                <TouchableOpacity
+                                    key={cat.id}
+                                    style={styles.categoryButton}
+                                    onPress={() => handleStartGame(cat.id)}
+                                >
+                                    <Text style={styles.categoryLabel}>{cat.label}</Text>
+                                    <Text style={styles.categoryDesc}>{cat.description}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
                         <TouchableOpacity
-                            style={styles.startButton}
-                            onPress={() => setShowCategories(true)}
+                            style={styles.cancelButton}
+                            onPress={() => setShowCategories(false)}
                         >
-                            <Text style={styles.startButtonText}>PLAY</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.infoButton}
-                            onPress={() => setShowRules(true)}
-                        >
-                            <Text style={styles.infoButtonText}>i</Text>
+                            <Text style={styles.cancelButtonText}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
+            )}
 
-                {/* Category Selection Modal */}
-                {showCategories && (
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.categoryModal}>
-                            <Text style={styles.modalTitle}>Choose Category</Text>
-                            <ScrollView style={styles.categoryScroll} showsVerticalScrollIndicator={false}>
-                                {CATEGORIES.map((cat) => (
-                                    <TouchableOpacity
-                                        key={cat.id}
-                                        style={styles.categoryButton}
-                                        onPress={() => handleStartGame(cat.id)}
-                                    >
-                                        <Text style={styles.categoryLabel}>{cat.label}</Text>
-                                        <Text style={styles.categoryDesc}>{cat.description}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={() => setShowCategories(false)}
-                            >
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                )}
-
-                <RulesModal
-                    visible={showRules}
-                    onClose={() => setShowRules(false)}
-                    title="How to Play"
-                    accentColor="#FF6B9D"
-                >
-                    <RuleSection title="Objective">
-                        Guess letters to reveal a hidden common phrase using clues! Solve it before your opponent or time runs out.
-                    </RuleSection>
-                    <RuleSection title="Game Flow">
-                        1. A phrase is hidden with blank spaces{'\n'}
-                        2. Use the clue to help figure it out{'\n'}
-                        3. Tap letters to reveal them{'\n'}
-                        4. 3 wrong guesses = switch to next player{'\n'}
-                        5. 60 seconds per turn - timer resets on switch!
-                    </RuleSection>
-                    <RuleSection title="Scoring">
-                        • Base 10 points for solving{'\n'}
-                        • Time bonus: +1 point per 2 seconds left{'\n'}
-                        • Using clue: -5 point penalty{'\n'}
-                        • Each correct letter: +1 point per occurrence
-                    </RuleSection>
-                    <RuleSection title="Tips">
-                        • Use the clue - it's there to help!{'\n'}
-                        • Start with common letters (E, A, R, T){'\n'}
-                        • Watch the timer - solve quickly for bonus points{'\n'}
-                        • Strategic guessing beats random tapping!
-                    </RuleSection>
-                </RulesModal>
-            </SafeAreaView>
-        </ImageBackground>
+            <RulesModal
+                visible={showRules}
+                onClose={() => setShowRules(false)}
+                title="How to Play"
+                accentColor="#FF6B9D"
+            >
+                <RuleSection title="Objective">
+                    Guess letters to reveal a hidden common phrase using clues! Solve it before your opponent or time runs out.
+                </RuleSection>
+                <RuleSection title="Game Flow">
+                    1. A phrase is hidden with blank spaces{'\n'}
+                    2. Use the clue to help figure it out{'\n'}
+                    3. Tap letters to reveal them{'\n'}
+                    4. 3 wrong guesses = switch to next player{'\n'}
+                    5. 60 seconds per turn - timer resets on switch!
+                </RuleSection>
+                <RuleSection title="Scoring">
+                    • Base 10 points for solving{'\n'}
+                    • Time bonus: +1 point per 2 seconds left{'\n'}
+                    • Using clue: -5 point penalty{'\n'}
+                    • Each correct letter: +1 point per occurrence
+                </RuleSection>
+                <RuleSection title="Tips">
+                    • Use the clue - it's there to help!{'\n'}
+                    • Start with common letters (E, A, R, T){'\n'}
+                    • Watch the timer - solve quickly for bonus points{'\n'}
+                    • Strategic guessing beats random tapping!
+                </RuleSection>
+            </RulesModal>
+        </GameStartScreen>
     );
 }
 
 const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        width: '100%',
-        height: '100%',
-    },
-    safeArea: {
-        flex: 1,
-    },
-    header: {
-        paddingHorizontal: 20,
-        paddingTop: 10,
-    },
-    content: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingBottom: 100,
-    },
-    spacer: {
-        flex: 1,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 15,
-        marginBottom: 40,
-    },
-    startButton: {
-        backgroundColor: '#263238',
-        borderRadius: 30,
-        paddingHorizontal: 80,
-        paddingVertical: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 10,
-        borderBottomWidth: 4,
-        borderBottomColor: '#1a1f23',
-    },
-    startButtonText: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#FFE0B2',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
-    infoButton: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: '#263238',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 8,
-        borderBottomWidth: 3,
-        borderBottomColor: '#1a1f23',
-    },
-    infoButtonText: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        color: '#FFE0B2',
-        fontFamily: Platform.select({ ios: 'Avenir-Heavy', android: 'sans-serif-medium' }),
-    },
     modalOverlay: {
         position: 'absolute',
         top: 0,
@@ -198,6 +112,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        zIndex: 50, // Ensure it's above other content
     },
     categoryModal: {
         backgroundColor: '#1a1a2e',

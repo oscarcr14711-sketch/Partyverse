@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ImageBackground, ImageSourcePropType, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ImageBackground, ImageSourcePropType, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { playSound } from '../utils/SoundManager';
 import { BackButton } from './BackButton';
@@ -11,7 +11,8 @@ import { PulsingButton } from './PulsingButton';
 export interface Game {
     title: string;
     description: string;
-    emoji: string;
+    emoji?: string;
+    logo?: ImageSourcePropType;
     color: string;
     path: string;
 }
@@ -53,12 +54,13 @@ const darken = (hex: string, amt = 0.2) => {
 interface GameItemProps {
     title: string;
     description: string;
-    emoji: string;
+    emoji?: string;
+    logo?: ImageSourcePropType;
     color: string;
     onPress: () => void;
 }
 
-const GameItem = ({ title, description, emoji, color, onPress }: GameItemProps) => {
+const GameItem = ({ title, description, emoji, logo, color, onPress }: GameItemProps) => {
     const top = lighten(color, 0.30);
     const bottom = darken(color, 0.30);
     const ringLight = lighten(color, 0.45);
@@ -84,7 +86,11 @@ const GameItem = ({ title, description, emoji, color, onPress }: GameItemProps) 
                         end={{ x: 0.5, y: 1 }}
                         style={styles.buttonInnerShadow}
                     />
-                    <Text style={styles.gameEmoji}>{emoji}</Text>
+                    {logo ? (
+                        <Image source={logo} style={styles.gameLogo} resizeMode="contain" />
+                    ) : (
+                        <Text style={styles.gameEmoji}>{emoji}</Text>
+                    )}
                     <View style={styles.gameTextContainer}>
                         <Text style={styles.gameTitle}>{title}</Text>
                         <Text style={styles.gameDescription}>{description}</Text>
@@ -106,10 +112,11 @@ export function GameListScreen({ title, games, backgroundImage, backgroundColor 
 
     const content = (
         <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-            <View style={styles.header}>
+            <View style={styles.backButtonContainer}>
                 <BackButton />
+            </View>
+            <View style={styles.header}>
                 <Text style={styles.headerTitle}>{title}</Text>
-                <View style={styles.spacer} />
             </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {games.map((game, index) => (
@@ -118,6 +125,7 @@ export function GameListScreen({ title, games, backgroundImage, backgroundColor 
                         title={game.title}
                         description={game.description}
                         emoji={game.emoji}
+                        logo={game.logo}
                         color={game.color}
                         onPress={() => handleGamePress(game.path)}
                     />
@@ -154,34 +162,39 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
+        paddingBottom: 20,
     },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    backButtonContainer: {
         paddingHorizontal: 20,
         paddingTop: 10,
-        paddingBottom: 10,
+        paddingBottom: 5,
     },
-    spacer: {
-        width: 40,
+    header: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+        paddingTop: 5,
+        paddingBottom: 15,
     },
     headerTitle: {
         color: 'white',
-        fontSize: 22,
-        fontWeight: '700',
-        flex: 1,
+        fontSize: 28,
+        fontWeight: '900',
         textAlign: 'center',
+        letterSpacing: 0.5,
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 8,
     },
     scrollContent: {
-        paddingHorizontal: 10,
+        paddingHorizontal: 20,
         paddingBottom: 20,
         paddingTop: 0,
         gap: 12,
     },
     gameButtonOuter: {
         borderRadius: 24,
-        padding: 4,
+        padding: 2, // Reduced from 4
         marginBottom: 4,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.35,
@@ -192,9 +205,10 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 18,
-        paddingHorizontal: 18,
-        minHeight: 90,
+        paddingVertical: 12,
+        paddingRight: 18,
+        paddingLeft: 0, // Removed left padding for the logo
+        minHeight: 100,
         overflow: 'hidden',
     },
     buttonInnerShadow: {
@@ -208,6 +222,11 @@ const styles = StyleSheet.create({
     gameEmoji: {
         fontSize: 40,
         marginRight: 16,
+    },
+    gameLogo: {
+        width: 110, // Slightly wider to fill space
+        height: 90, // Slightly taller
+        marginRight: 8, // Reduced margin
     },
     gameTextContainer: {
         flex: 1,

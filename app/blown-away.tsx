@@ -1,13 +1,13 @@
+
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RuleSection, RulesModal } from '../components/RulesModal';
 
 const MAX_BALLOON_SIZE = 500; // Size at which balloon pops
 const MIN_BALLOON_SIZE = 100;
@@ -15,10 +15,12 @@ const BLOW_THRESHOLD = -45; // Audio level threshold - higher (less negative) = 
 
 export default function BlownAwayScreen() {
   const router = useRouter();
-  const [showSetup, setShowSetup] = useState(true);
-  const [showRules, setShowRules] = useState(false);
+  const params = useLocalSearchParams();
+  const numPlayers = params.numPlayers ? parseInt(params.numPlayers as string) : 3;
+
+  const [showSetup, setShowSetup] = useState(false); // Removed setup, start immediately (or in waiting state)
   const [showResults, setShowResults] = useState(false);
-  const [numPlayers, setNumPlayers] = useState(3);
+  // numPlayers is now constant from params
   const [gameStarted, setGameStarted] = useState(false);
   const [balloonSize, setBalloonSize] = useState(MIN_BALLOON_SIZE);
   const [hasPopped, setHasPopped] = useState(false);
@@ -107,7 +109,7 @@ export default function BlownAwayScreen() {
       setIsListening(true);
     } catch (err) {
       console.error('Failed to start recording', err);
-      alert('Failed to start recording. Please try again.');
+      // alert('Failed to start recording. Please try again.'); // Suppress alert for better UX loops
     }
   };
 
@@ -298,105 +300,6 @@ export default function BlownAwayScreen() {
     return '#E74C3C'; // Red (danger)
   };
 
-  if (showSetup) {
-    return (
-      <LinearGradient
-        colors={['#5DADE2', '#5DADE2']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      >
-        <SafeAreaView style={{ flex: 1 }}>
-          <View style={styles.setupContainer}>
-            {/* Back Button */}
-            <TouchableOpacity style={styles.setupBackButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={28} color="#fff" />
-            </TouchableOpacity>
-
-            <View style={styles.setupTopSection}>
-              <Image
-                source={require('../assets/images/Blownavatar.png')}
-                style={styles.setupTitleImage}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={styles.setupMiddleSection}>
-              <View style={styles.playerAvatarsContainer}>
-                {Array.from({ length: Math.min(numPlayers, 6) }, (_, i) => {
-                  const avatarImages = [
-                    require('../assets/images/avatars/avatar1.png'),
-                    require('../assets/images/avatars/avatar2.png'),
-                    require('../assets/images/avatars/avatar3.png'),
-                    require('../assets/images/avatars/avatar4.png'),
-                    require('../assets/images/avatars/avatar5.png'),
-                    require('../assets/images/avatars/avatar6.png'),
-                  ];
-                  return (
-                    <View key={i} style={styles.playerAvatar}>
-                      <Image
-                        source={avatarImages[i]}
-                        style={[styles.playerAvatarImage, i === 5 && styles.playerAvatarImageAdjusted]}
-                        resizeMode={i === 5 ? 'cover' : 'contain'}
-                      />
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-            <View style={styles.setupBottomSection}>
-              <View style={styles.playerCounterContainer}>
-                <TouchableOpacity
-                  style={styles.playerCounterButton}
-                  onPress={() => setNumPlayers(Math.max(2, numPlayers - 1))}
-                >
-                  <Text style={styles.playerCounterButtonText}>−</Text>
-                </TouchableOpacity>
-                <Text style={styles.playerCounterText}>{numPlayers} Players</Text>
-                <TouchableOpacity
-                  style={styles.playerCounterButton}
-                  onPress={() => setNumPlayers(Math.min(6, numPlayers + 1))}
-                >
-                  <Text style={styles.playerCounterButtonText}>+</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  style={styles.setupStartButton}
-                  onPress={() => {
-                    setCurrentPlayer(1);
-                    setPlayerScores({});
-                    setShowSetup(false);
-                  }}
-                >
-                  <Text style={styles.setupStartButtonText}>Start</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.infoButton} onPress={() => setShowRules(true)}>
-                  <Text style={styles.infoButtonText}>i</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          <RulesModal
-            visible={showRules}
-            onClose={() => setShowRules(false)}
-            title="How to Play"
-            accentColor="#5DADE2"
-          >
-            <RuleSection title="🎯 Objective">
-              Blow up balloons as much as you can without popping!
-            </RuleSection>
-            <RuleSection title="🎈 How It Works">
-              • Blow into the microphone{'\n'}• Bigger balloon = more points{'\n'}• Press "Stop Blowing" to lock in points{'\n'}• If it pops, you lose those points!
-            </RuleSection>
-            <RuleSection title="🏆 Tips">
-              Risk vs reward - know when to stop!
-            </RuleSection>
-          </RulesModal>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
 
   if (showResults) {
     const avatarImages = [
@@ -410,7 +313,7 @@ export default function BlownAwayScreen() {
 
     return (
       <ImageBackground
-        source={require('../assets/images/Circus.jpg')}
+        source={require('../assets/images/Circus.png')}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
@@ -458,7 +361,7 @@ export default function BlownAwayScreen() {
 
   return (
     <ImageBackground
-      source={require('../assets/images/Circus.jpg')}
+      source={require('../assets/images/Circus.png')}
       style={styles.backgroundImage}
       resizeMode="cover"
     >

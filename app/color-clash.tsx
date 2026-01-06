@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCardBack } from '../utils/CardBackContext';
 
 const cardFrontImage = require('../assets/images/Colorclash.png');
-const pokerTableImage = require('../assets/images/poker_table_bg.jpg');
+const pokerTableImage = require('../assets/images/Actionbg.png');
 
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 type Card = { suit: Suit; rank: string; color: 'red' | 'black'; };

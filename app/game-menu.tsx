@@ -8,41 +8,7 @@ import { PulsingButton } from '../components/PulsingButton';
 import { playSound } from '../utils/SoundManager';
 import { useTheme } from '../utils/ThemeContext';
 
-const gameModes = [
-  {
-    id: '1',
-    title: 'Party Mode',
-    subtitle: 'Offline games for 2+ people',
-    route: '/party-mode-games',
-    gradient: ['#f94144', '#f3722c', '#f8961e'],
-    emoji: '🎉',
-  },
-  {
-    id: '2',
-    title: 'Online Mode',
-    subtitle: 'Play with friends online',
-    route: null,
-    disabled: true,
-    gradient: ['#90be6d', '#43aa8b', '#4d908e'],
-    emoji: '🌐',
-  },
-  {
-    id: '3',
-    title: 'Practice Mode',
-    subtitle: 'Practice your skills',
-    route: '/practice-mode-games',
-    gradient: ['#577590', '#277da1', '#4895ef'],
-    emoji: '🏋️',
-  },
-  {
-    id: '4',
-    title: 'Spicy',
-    subtitle: 'For the bold ones',
-    route: '/spicy-games',
-    gradient: ['#f72585', '#b5179e', '#7209b7'],
-    emoji: '🌶️',
-  },
-];
+import { useLanguage } from '../utils/LanguageContext';
 
 type GradientColors = readonly [string, string, ...string[]];
 interface GameModeItemProps {
@@ -93,6 +59,43 @@ interface GameModeData extends Omit<GameModeItemProps, 'onPress'> {
 export default function MainScreen() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  const gameModes = [
+    {
+      id: '1',
+      title: t('gameMenu.partyMode.title'),
+      subtitle: t('gameMenu.partyMode.subtitle'),
+      route: '/party-mode-games',
+      gradient: ['#f94144', '#f3722c', '#f8961e'],
+      emoji: '🎉',
+    },
+    {
+      id: '2',
+      title: t('gameMenu.onlineMode.title'),
+      subtitle: t('gameMenu.onlineMode.subtitle'),
+      route: null,
+      disabled: true,
+      gradient: ['#90be6d', '#43aa8b', '#4d908e'],
+      emoji: '🌐',
+    },
+    {
+      id: '3',
+      title: t('gameMenu.practiceMode.title'),
+      subtitle: t('gameMenu.practiceMode.subtitle'),
+      route: '/practice-mode-games',
+      gradient: ['#577590', '#277da1', '#4895ef'],
+      emoji: '🏋️',
+    },
+    {
+      id: '4',
+      title: t('gameMenu.spicyMode.title'),
+      subtitle: t('gameMenu.spicyMode.subtitle'),
+      route: '/spicy-games',
+      gradient: ['#f72585', '#b5179e', '#7209b7'],
+      emoji: '🌶️',
+    },
+  ];
 
   const renderGameMode = ({ item }: { item: GameModeData }) => {
     const navigate = () => { if (item.route) router.push(item.route as any); };
@@ -117,9 +120,9 @@ export default function MainScreen() {
         </TouchableOpacity>
       </View>
       <View style={styles.headerContainer}>
-        <Text style={styles.title}>Let the Games</Text>
-        <Text style={[styles.title, styles.titleBegin]}>Begin! 🎮</Text>
-        <Text style={styles.subtitle}>Choose your adventure</Text>
+        <Text style={styles.title}>{t('gameMenu.titlePart1')}</Text>
+        <Text style={[styles.title, styles.titleBegin]}>{t('gameMenu.titlePart2')} 🎮</Text>
+        <Text style={styles.subtitle}>{t('gameMenu.subtitle')}</Text>
       </View>
 
       <FlatList<GameModeData>
@@ -134,7 +137,7 @@ export default function MainScreen() {
 
   if (hasChristmasBackground) {
     return (
-      <ImageBackground source={theme.categoryBackgrounds.gamesMenu} style={styles.background} resizeMode="cover">
+      <ImageBackground source={hasChristmasBackground} style={styles.background} resizeMode="cover">
         {content}
       </ImageBackground>
     );

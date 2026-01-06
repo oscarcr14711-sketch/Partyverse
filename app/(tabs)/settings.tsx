@@ -9,7 +9,7 @@ import { CARD_BACKS, getCardBackById } from '../../data/card-backs';
 import { useCardBack } from '../../utils/CardBackContext';
 import { soundManager } from '../../utils/SoundManager';
 import { THEMES, useTheme } from '../../utils/ThemeContext';
-import { useLanguage } from '../../utils/i18n';
+import { useLanguage } from '../../utils/LanguageContext';
 
 export default function SettingsScreen() {
     const router = useRouter();
@@ -85,20 +85,20 @@ export default function SettingsScreen() {
                         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                             <Ionicons name="arrow-back" size={24} color="white" />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>Settings</Text>
+                        <Text style={styles.headerTitle}>{t('settings.title')}</Text>
                         <View style={{ width: 40 }} />
                     </View>
                     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
                         <TouchableOpacity style={styles.settingItem} onPress={() => setShowSoundSettings(true)}>
                             <Ionicons name="volume-high" size={24} color="#667eea" />
-                            <Text style={styles.settingText}>{t.soundMusic}</Text>
+                            <Text style={styles.settingText}>{t('settings.soundMusic')}</Text>
                             <Ionicons name="chevron-forward" size={24} color="#999" />
                         </TouchableOpacity>
 
                         <View style={styles.settingItem}>
                             <Ionicons name="notifications" size={24} color="#667eea" />
-                            <Text style={styles.settingText}>{t.notifications}</Text>
+                            <Text style={styles.settingText}>{t('settings.notifications')}</Text>
                             <Switch
                                 value={notificationsEnabled}
                                 onValueChange={setNotificationsEnabled}
@@ -109,27 +109,36 @@ export default function SettingsScreen() {
 
                         <TouchableOpacity style={styles.settingItem} onPress={() => setShowThemeSettings(true)}>
                             <Ionicons name="color-palette" size={24} color="#667eea" />
-                            <Text style={styles.settingText}>{t.theme}</Text>
+                            <Text style={styles.settingText}>{t('settings.theme')}</Text>
                             <Text style={styles.settingValue}>{THEMES[themeId]?.name || 'Default'}</Text>
+                            <Ionicons name="chevron-forward" size={24} color="#999" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.settingItem} onPress={() => setShowLanguageSettings(true)}>
+                            <Ionicons name="language" size={24} color="#667eea" />
+                            <Text style={styles.settingText}>{t('settings.language')}</Text>
+                            <Text style={styles.settingValue}>
+                                {language === 'en' ? 'English' : language === 'es' ? 'Español' : 'Français'}
+                            </Text>
                             <Ionicons name="chevron-forward" size={24} color="#999" />
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.settingItem} onPress={() => setShowCardBackSettings(true)}>
                             <Ionicons name="albums" size={24} color="#667eea" />
-                            <Text style={styles.settingText}>{t.cardBack}</Text>
+                            <Text style={styles.settingText}>{t('settings.cardBackDesign')}</Text>
                             <Text style={styles.settingValue}>{getCardBackById(selectedCardBackId).name}</Text>
                             <Ionicons name="chevron-forward" size={24} color="#999" />
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.settingItem} onPress={() => setShowPrivacy(true)}>
                             <Ionicons name="shield-checkmark" size={24} color="#667eea" />
-                            <Text style={styles.settingText}>{t.privacy}</Text>
+                            <Text style={styles.settingText}>{t('settings.privacy')}</Text>
                             <Ionicons name="chevron-forward" size={24} color="#999" />
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.settingItem} onPress={() => setShowAbout(true)}>
                             <Ionicons name="information-circle" size={24} color="#667eea" />
-                            <Text style={styles.settingText}>{t.about}</Text>
+                            <Text style={styles.settingText}>{t('settings.about')}</Text>
                             <Ionicons name="chevron-forward" size={24} color="#999" />
                         </TouchableOpacity>
                     </ScrollView>
@@ -140,12 +149,12 @@ export default function SettingsScreen() {
             <Modal visible={showSoundSettings} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { maxHeight: '80%' }]}>
-                        <Text style={styles.modalTitle}>🔊 Sound & Music</Text>
+                        <Text style={styles.modalTitle}>🔊 {t('settings.soundMusic')}</Text>
                         <ScrollView showsVerticalScrollIndicator={false}>
                             {/* Master Volume */}
                             <View style={styles.settingItem}>
                                 <Ionicons name="volume-high" size={22} color="#667eea" />
-                                <Text style={styles.settingText}>Master Volume</Text>
+                                <Text style={styles.settingText}>{t('settings.masterVolume')}</Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <TouchableOpacity
                                         onPress={() => handleMasterVolumeChange(Math.max(0, masterVolume - 25))}
@@ -166,7 +175,7 @@ export default function SettingsScreen() {
                             {/* Sound Effects Toggle & Volume */}
                             <View style={styles.settingItem}>
                                 <Ionicons name="volume-medium" size={22} color="#f39c12" />
-                                <Text style={styles.settingText}>Sound Effects</Text>
+                                <Text style={styles.settingText}>{t('settings.soundEffects')}</Text>
                                 <Switch
                                     value={soundEnabled}
                                     onValueChange={handleSoundToggle}
@@ -176,7 +185,7 @@ export default function SettingsScreen() {
                             </View>
                             {soundEnabled && (
                                 <View style={[styles.settingItem, { paddingLeft: 37 }]}>
-                                    <Text style={styles.settingText}>Effects Volume</Text>
+                                    <Text style={styles.settingText}>{t('settings.effectsVolume')}</Text>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                         <TouchableOpacity
                                             onPress={() => handleEffectsVolumeChange(Math.max(0, soundEffectsVolume - 25))}
@@ -198,7 +207,7 @@ export default function SettingsScreen() {
                             {/* Background Music Toggle & Volume */}
                             <View style={styles.settingItem}>
                                 <Ionicons name="musical-notes" size={22} color="#e74c3c" />
-                                <Text style={styles.settingText}>Background Music</Text>
+                                <Text style={styles.settingText}>{t('settings.backgroundMusic')}</Text>
                                 <Switch
                                     value={musicEnabled}
                                     onValueChange={handleMusicToggle}
@@ -208,7 +217,7 @@ export default function SettingsScreen() {
                             </View>
                             {musicEnabled && (
                                 <View style={[styles.settingItem, { paddingLeft: 37 }]}>
-                                    <Text style={styles.settingText}>Music Volume</Text>
+                                    <Text style={styles.settingText}>{t('settings.musicVolume')}</Text>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                         <TouchableOpacity
                                             onPress={() => handleMusicVolumeChange(Math.max(0, musicVolume - 25))}
@@ -230,7 +239,7 @@ export default function SettingsScreen() {
                             {/* Haptic Feedback Toggle */}
                             <View style={[styles.settingItem, { marginTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 15 }]}>
                                 <Ionicons name="phone-portrait-outline" size={22} color="#9b59b6" />
-                                <Text style={styles.settingText}>Haptic Feedback</Text>
+                                <Text style={styles.settingText}>{t('settings.hapticFeedback')}</Text>
                                 <Switch
                                     value={hapticsEnabled}
                                     onValueChange={handleHapticsToggle}
@@ -239,14 +248,14 @@ export default function SettingsScreen() {
                                 />
                             </View>
                             <Text style={styles.settingHint}>
-                                Vibration feedback when pressing buttons
+                                {t('settings.hapticHint')}
                             </Text>
                         </ScrollView>
                         <TouchableOpacity
                             style={styles.closeButton}
                             onPress={() => setShowSoundSettings(false)}
                         >
-                            <Text style={styles.closeButtonText}>Done</Text>
+                            <Text style={styles.closeButtonText}>{t('common.done')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -256,7 +265,7 @@ export default function SettingsScreen() {
             <Modal visible={showThemeSettings} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Choose Theme</Text>
+                        <Text style={styles.modalTitle}>{t('settings.chooseTheme')}</Text>
                         <Text style={{ color: '#666', textAlign: 'center', marginBottom: 15, fontSize: 14 }}>
                             Select your favorite theme!
                         </Text>
@@ -287,28 +296,33 @@ export default function SettingsScreen() {
                             style={styles.closeButton}
                             onPress={() => setShowThemeSettings(false)}
                         >
-                            <Text style={styles.closeButtonText}>Cancel</Text>
+                            <Text style={styles.closeButtonText}>{t('common.cancel')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
 
-            {/* Language Settings Modal - Disabled for initial release
+            {/* Language Settings Modal */}
             <Modal visible={showLanguageSettings} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Choose Language</Text>
+                        <Text style={styles.modalTitle}>{t('settings.chooseLanguage')}</Text>
                         <ScrollView style={{ maxHeight: 300 }}>
-                            {['English', 'Español', 'Français', 'Deutsch', 'Italiano', 'Português'].map((lang) => (
+                            {['en', 'es', 'fr'].map((lang) => (
                                 <TouchableOpacity
                                     key={lang}
                                     style={[styles.optionItem, language === lang && styles.optionSelected]}
                                     onPress={() => {
                                         setLanguage(lang as any);
                                         setShowLanguageSettings(false);
+                                        if (hapticsEnabled) {
+                                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                        }
                                     }}
                                 >
-                                    <Text style={styles.optionText}>{lang}</Text>
+                                    <Text style={styles.optionText}>
+                                        {lang === 'en' ? 'English' : lang === 'es' ? 'Español' : 'Français'}
+                                    </Text>
                                     {language === lang && <Ionicons name="checkmark" size={24} color="#667eea" />}
                                 </TouchableOpacity>
                             ))}
@@ -317,18 +331,17 @@ export default function SettingsScreen() {
                             style={styles.closeButton}
                             onPress={() => setShowLanguageSettings(false)}
                         >
-                            <Text style={styles.closeButtonText}>Cancel</Text>
+                            <Text style={styles.closeButtonText}>{t('common.cancel')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
-            */}
 
             {/* Card Back Settings Modal */}
             <Modal visible={showCardBackSettings} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { maxHeight: '85%' }]}>
-                        <Text style={styles.modalTitle}>🃏 Card Back Design</Text>
+                        <Text style={styles.modalTitle}>🃏 {t('settings.cardBackDesign')}</Text>
                         <Text style={{ color: '#666', textAlign: 'center', marginBottom: 15, fontSize: 14 }}>
                             Choose your card back for all card games
                         </Text>
@@ -388,7 +401,7 @@ export default function SettingsScreen() {
                             style={styles.closeButton}
                             onPress={() => setShowCardBackSettings(false)}
                         >
-                            <Text style={styles.closeButtonText}>Done</Text>
+                            <Text style={styles.closeButtonText}>{t('common.done')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -398,49 +411,36 @@ export default function SettingsScreen() {
             <Modal visible={showPrivacy} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { maxHeight: '80%' }]}>
-                        <Text style={styles.modalTitle}>🔒 Privacy Policy</Text>
+                        <Text style={styles.modalTitle}>🔒 {t('privacy.title')}</Text>
                         <ScrollView showsVerticalScrollIndicator={false}>
                             <Text style={styles.privacyText}>
-                                <Text style={styles.privacyHeading}>Your Privacy Matters{"\n"}</Text>
-                                At Partyverse, we believe in keeping your party moments private. Here's how we protect you.{"\n\n"}
+                                <Text style={styles.privacyHeading}>{t('privacy.yourPrivacyMatters')}{"\n"}</Text>
+                                {t('privacy.intro')}{"\n\n"}
 
-                                <Text style={styles.privacyHeading}>📊 Data Collection{"\n"}</Text>
-                                We collect minimal data to enhance your gaming experience:{"\n"}
-                                • Game scores and statistics (stored locally){"\n"}
-                                • Avatar and profile preferences{"\n"}
-                                • App settings and configurations{"\n"}
-                                All this data stays on YOUR device.{"\n\n"}
+                                <Text style={styles.privacyHeading}>📊 {t('privacy.dataCollection')}{"\n"}</Text>
+                                {t('privacy.dataCollectionText')}{"\n\n"}
 
-                                <Text style={styles.privacyHeading}>📷 Camera Usage{"\n"}</Text>
-                                Some games like "Don't Let It Pic You" use your camera. Photos are:{"\n"}
-                                • Only taken during gameplay{"\n"}
-                                • Never uploaded or shared{"\n"}
-                                • Not stored after the game ends{"\n\n"}
+                                <Text style={styles.privacyHeading}>📷 {t('privacy.cameraUsage')}{"\n"}</Text>
+                                {t('privacy.cameraText')}{"\n\n"}
 
-                                <Text style={styles.privacyHeading}>🎤 Microphone Usage{"\n"}</Text>
-                                Games like "Blown Away" use your microphone to detect blowing. We:{"\n"}
-                                • Never record audio{"\n"}
-                                • Only detect sound intensity{"\n"}
-                                • Don't store any audio data{"\n\n"}
+                                <Text style={styles.privacyHeading}>🎤 {t('privacy.microphoneUsage')}{"\n"}</Text>
+                                {t('privacy.microphoneText')}{"\n\n"}
 
-                                <Text style={styles.privacyHeading}>🔄 Data Sharing{"\n"}</Text>
-                                We do NOT share your personal data with third parties. Period.{"\n\n"}
+                                <Text style={styles.privacyHeading}>🔄 {t('privacy.dataSharing')}{"\n"}</Text>
+                                {t('privacy.dataSharingText')}{"\n\n"}
 
-                                <Text style={styles.privacyHeading}>🗑️ Your Rights{"\n"}</Text>
-                                You can delete all your data anytime by:{"\n"}
-                                • Clearing app data in device settings{"\n"}
-                                • Uninstalling the app{"\n\n"}
+                                <Text style={styles.privacyHeading}>🗑️ {t('privacy.yourRights')}{"\n"}</Text>
+                                {t('privacy.yourRightsText')}{"\n\n"}
 
-                                <Text style={styles.privacyHeading}>📧 Contact Us{"\n"}</Text>
-                                Questions about privacy? Email us at:{"\n"}
-                                support@partyverse.app
+                                <Text style={styles.privacyHeading}>📧 {t('privacy.contactUs')}{"\n"}</Text>
+                                {t('privacy.contactText')}
                             </Text>
                         </ScrollView>
                         <TouchableOpacity
                             style={styles.closeButton}
                             onPress={() => setShowPrivacy(false)}
                         >
-                            <Text style={styles.closeButtonText}>Got It!</Text>
+                            <Text style={styles.closeButtonText}>{t('common.gotIt')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -450,13 +450,13 @@ export default function SettingsScreen() {
             <Modal visible={showAbout} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { maxHeight: '85%' }]}>
-                        <Text style={styles.modalTitle}>ℹ️ About Partyverse</Text>
+                        <Text style={styles.modalTitle}>ℹ️ {t('about.title')}</Text>
                         <ScrollView showsVerticalScrollIndicator={false}>
                             <View style={styles.aboutContent}>
                                 <Text style={styles.aboutEmoji}>🎉</Text>
-                                <Text style={styles.aboutVersion}>Version 1.0.0</Text>
+                                <Text style={styles.aboutVersion}>{t('about.version')}</Text>
                                 <Text style={styles.aboutDescription}>
-                                    The ultimate party game collection! Bring friends together with exciting games, challenges, and endless fun.
+                                    {t('about.description')}
                                 </Text>
 
                                 <View style={styles.aboutLinks}>
@@ -470,7 +470,7 @@ export default function SettingsScreen() {
                                         }}
                                     >
                                         <Ionicons name="share-social" size={24} color="#fff" />
-                                        <Text style={styles.aboutLinkButtonText}>Share App</Text>
+                                        <Text style={styles.aboutLinkButtonText}>{t('about.shareApp')}</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity
@@ -487,7 +487,7 @@ export default function SettingsScreen() {
                                         }}
                                     >
                                         <Ionicons name="star" size={24} color="#fff" />
-                                        <Text style={styles.aboutLinkButtonText}>Rate Us ⭐</Text>
+                                        <Text style={styles.aboutLinkButtonText}>{t('about.rateUs')}</Text>
                                     </TouchableOpacity>
                                 </View>
 
@@ -499,7 +499,7 @@ export default function SettingsScreen() {
                                         }}
                                     >
                                         <Ionicons name="mail" size={24} color="#fff" />
-                                        <Text style={styles.aboutLinkButtonText}>Contact Support</Text>
+                                        <Text style={styles.aboutLinkButtonText}>{t('about.contactSupport')}</Text>
                                     </TouchableOpacity>
 
                                     <TouchableOpacity
@@ -511,26 +511,25 @@ export default function SettingsScreen() {
                                         }}
                                     >
                                         <Ionicons name="logo-instagram" size={24} color="#fff" />
-                                        <Text style={styles.aboutLinkButtonText}>Follow Us</Text>
+                                        <Text style={styles.aboutLinkButtonText}>{t('about.followUs')}</Text>
                                     </TouchableOpacity>
                                 </View>
 
                                 <View style={styles.creditsSection}>
-                                    <Text style={styles.creditsTitle}>Made with ❤️ for party lovers</Text>
+                                    <Text style={styles.creditsTitle}>{t('about.madeWithLove')}</Text>
                                     <Text style={styles.creditsText}>
-                                        Designed to bring people together{'\n'}
-                                        and create unforgettable moments
+                                        {t('about.tagline')}
                                     </Text>
                                 </View>
 
-                                <Text style={styles.aboutCopyright}>© 2024 Partyverse. All rights reserved.</Text>
+                                <Text style={styles.aboutCopyright}>{t('about.copyright')}</Text>
                             </View>
                         </ScrollView>
                         <TouchableOpacity
                             style={styles.closeButton}
                             onPress={() => setShowAbout(false)}
                         >
-                            <Text style={styles.closeButtonText}>Close</Text>
+                            <Text style={styles.closeButtonText}>{t('common.close')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

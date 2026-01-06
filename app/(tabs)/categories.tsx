@@ -3,23 +3,29 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useLanguage } from '../../utils/LanguageContext';
 
 // Only show 4 categories in 2x2 grid
 // Row 1: Action (left), Humor (right)
 // Row 2: Word/Mental (left), Spicy (right)
-const categories = [
-    { id: '1', title: 'Action Rush', icon: '⚡️', color: '#F44336', path: '/action-adrenaline-games' },
-    { id: '2', title: 'Humor Fun', icon: '😂', color: '#FF9800', path: '/humor-creativity-games' },
-    { id: '3', title: 'Word / Mental', icon: '💡', color: '#FFC107', path: '/word-mental-games' },
-    { id: '6', title: 'Spicy / 18+', icon: '🔥', color: '#9C27B0', path: '/spicy-games' },
-];
-
 export default function Categories() {
     const router = useRouter();
+    const { t } = useLanguage();
+
+    // Only show 4 categories in 2x2 grid
+    // Row 1: Action (left), Humor (right)
+    // Row 2: Word/Mental (left), Spicy (right)
+    const categories = [
+        { id: '1', title: t('categories.actionTitle'), icon: '⚡️', color: '#F44336', path: '/action-adrenaline-games' },
+        { id: '2', title: t('categories.humorTitle'), icon: '😂', color: '#FF9800', path: '/humor-creativity-games' },
+        { id: '3', title: t('categories.wordMentalTitle'), icon: '💡', color: '#FFC107', path: '/word-mental-games' },
+        { id: '6', title: t('categories.spicyTitle'), icon: '🔥', color: '#9C27B0', path: '/spicy-games' },
+    ];
+
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <Text style={styles.header}>Choose a Category</Text>
+                <Text style={styles.header}>{t('home.categories')}</Text>
 
                 {/* 2x2 Grid */}
                 <View style={styles.grid}>
@@ -29,7 +35,7 @@ export default function Categories() {
                             style={styles.buttonOuter}
                             activeOpacity={0.85}
                             onPress={() => {
-                                if (cat.path) router.push(cat.path);
+                                if (cat.path) router.push(cat.path as any);
                             }}
                         >
                             <LinearGradient
@@ -64,11 +70,11 @@ export default function Categories() {
                                 <Text style={styles.bannerEmoji}>✨</Text>
                                 <Text style={styles.bannerEmoji}>🎁</Text>
                             </View>
-                            <Text style={styles.bannerTitle}>NEW GAMES</Text>
-                            <Text style={styles.bannerSubtitle}>Coming Soon!</Text>
+                            <Text style={styles.bannerTitle}>{t('home.newGames')}</Text>
+                            <Text style={styles.bannerSubtitle}>{t('common.comingSoon')}</Text>
                             <View style={styles.bannerDivider} />
                             <Text style={styles.bannerDescription}>
-                                Special games and seasonal events{'\n'}will be available soon!
+                                {t('home.newGamesBanner')}
                             </Text>
                         </View>
                     </LinearGradient>

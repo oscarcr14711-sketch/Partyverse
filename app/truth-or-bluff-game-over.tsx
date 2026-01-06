@@ -20,7 +20,7 @@ export default function TruthOrBluffGameOverScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>GAME OVER</Text>
-      <Image source={require('../assets/images/BluffGameover.png')} style={styles.logo} resizeMode="contain" />
+      <Image source={require('../assets/images/gameLogos/BluffLogo.png')} style={styles.logo} resizeMode="contain" />
       <View style={styles.playersRow}>
         <View style={styles.playerCol}>
           <Image source={require('../assets/images/Truth or bluff images/Truthhappy.png')} style={styles.avatar} resizeMode="contain" />

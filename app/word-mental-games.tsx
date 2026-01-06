@@ -1,24 +1,26 @@
 import React from 'react';
 import { GameListScreen, Game } from '../components/GameListScreen';
 import { useTheme } from '../utils/ThemeContext';
-
-const games: Game[] = [
-  { title: 'Brain Buzzer', description: 'The app gives you a quick trick question. Answer fast — but think twice before you speak!', emoji: '🧩', color: '#ff6b6b', path: '/brain-buzzer-pre-game' },
-  { title: 'Brain vs Brain', description: 'Two players face off. The app shows a question. The first one to shout the right answer gets the point!', emoji: '⚔️', color: '#feca57', path: '/brain-vs-brain-pre-game' },
-  { title: 'Stop Game', description: 'Be the fastest to type, write or say words that start with a specific letter before everyone else.', emoji: '🛑', color: '#48dbfb', path: '/stop-game-intro' },
-  { title: 'Memory Rush', description: 'The app flashes a list of words for 5 seconds. Players must recall as many as possible when time runs out.', emoji: '🧠💨', color: '#ff9f43', path: '/memory-rush-pre-game' },
-  { title: 'Phrase Master', description: 'Guess the hidden phrase letter by letter. Like Wheel of Fortune but with friends!', emoji: '🎯', color: '#00ffff', path: '/phrase-master-pre-game' },
-];
+import { useLanguage } from '../utils/LanguageContext';
 
 export default function WordMentalGamesScreen() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  const games: Game[] = [
+    { title: 'Brain Buzzer', description: t('games.brainBuzzer.description'), emoji: '🧩', logo: require('../assets/images/gameLogos/brain_buzzer_logo.png'), color: '#ff6b6b', path: '/pre-game/brain-buzzer' },
+    { title: 'Brain vs Brain', description: t('games.brainVsBrain.description'), emoji: '⚔️', logo: require('../assets/images/gameLogos/brainvsbrain_logo.png'), color: '#feca57', path: '/pre-game/brain-vs-brain' },
+    { title: 'Stop Game', description: t('games.stopGame.description'), emoji: '🛑', logo: require('../assets/images/gameLogos/stop_game_logo.png'), color: '#48dbfb', path: '/pre-game/stop-game' },
+    { title: 'Memory Rush', description: t('games.memoryRush.description'), emoji: '🧠💨', logo: require('../assets/images/gameLogos/memory_rush_logo.png'), color: '#ff9f43', path: '/pre-game/memory-rush' },
+    { title: 'Phrase Master', description: t('games.phraseMaster.description'), emoji: '🎯', logo: require('../assets/images/gameLogos/guess_phrase_logo.png'), color: '#00ffff', path: '/phrase-master-pre-game' },
+  ];
 
   // Use theme background if available, otherwise use default
   const backgroundImage = theme.categoryBackgrounds?.wordMental || require('../assets/images/wordbg.png');
 
   return (
     <GameListScreen
-      title="Word / Mental"
+      title={t('categories.wordMentalTitle')}
       games={games}
       backgroundImage={backgroundImage}
       backgroundColor="#0f3460"

@@ -9,20 +9,20 @@ export default function ActionAdrenalineGamesScreen() {
   const { t } = useLanguage();
 
   const games: Game[] = [
-    { title: t('games.hotBomb.title'), description: t('games.hotBomb.description'), emoji: '💣', color: '#f94144', path: '/hot-bomb-game' },
-    { title: t('games.stackTower.title'), description: t('games.stackTower.description'), emoji: '📦', color: '#f8961e', path: '/stack-tower-pre-game' },
-    { title: t('games.lightningRounds.title'), description: t('games.lightningRounds.description'), emoji: '⚡', color: '#f9c74f', path: '/lightning-rounds-pre-game' },
-    { title: t('games.picYou.title'), description: t('games.picYou.description'), emoji: '📸', color: '#90be6d', path: '/dont-let-it-pic-you-pre-game' },
-    { title: t('games.blownAway.title'), description: t('games.blownAway.description'), emoji: '🎈', color: '#43aa8b', path: '/blown-away' },
+    { title: 'Hot Bomb', description: t('games.hotBomb.description'), emoji: '💣', logo: require('../assets/images/gameLogos/Hotbomblogo.png'), color: '#f94144', path: '/pre-game/hot-bomb' },
+    { title: 'Stack Tower', description: t('games.stackTower.description'), emoji: '📦', logo: require('../assets/images/gameLogos/stacktowerlogo.png'), color: '#f8961e', path: '/pre-game/stack-tower' },
+    { title: 'Lightning Rounds', description: t('games.lightningRounds.description'), emoji: '⚡', logo: require('../assets/images/gameLogos/lightingroundslogo.png'), color: '#f9c74f', path: '/pre-game/lightning-rounds' },
+    { title: "Don't Let It PIC You", description: t('games.picYou.description'), emoji: '📸', logo: require('../assets/images/gameLogos/dontletitpiclogo.png'), color: '#90be6d', path: '/pre-game/pic-you' },
+    { title: 'Blown Away', description: t('games.blownAway.description'), emoji: '🎈', logo: require('../assets/images/gameLogos/BlownLogo.png'), color: '#43aa8b', path: '/pre-game/blown-away' },
   ];
 
   // Preload Hot Bomb assets to reduce perceived load time when navigating
   useEffect(() => {
     const assets = [
-      require('../assets/images/Hotbombtitle.png'),
+      require('../assets/images/gameLogos/Hotbomblogo.png'),
       require('../assets/images/Boom.png'),
-      require('../assets/images/bomb1.png'),
-      require('../assets/images/citydestroyed.jpeg'),
+      require('../assets/images/bomb.png'),
+      require('../assets/images/citydestroyed.png'),
     ];
     Asset.loadAsync(assets).catch(() => { });
   }, []);

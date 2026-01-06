@@ -68,7 +68,7 @@ export default function LipSyncGameOver() {
                 {/* Band Promotion Section */}
                 <View style={styles.bandSection}>
                     <Image
-                        source={require('../assets/images/Reynalds.jpeg')}
+                        source={require('../assets/images/lipsync.png')}
                         style={styles.bandImage}
                         resizeMode="cover"
                     />

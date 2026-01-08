@@ -298,9 +298,8 @@ export const GAMES_CONFIG: Record<string, GameConfig> = {
         name: 'Ride the Bus',
         backgroundColor: '#263238',
         accentColor: '#FFC107',
-        backgroundImage: require('../assets/images/Actionbg.png'),
-        logoImage: require('../assets/images/rtb.png'),
-        gameImage: require('../assets/images/rtb.png'),
+        logoImage: require('../assets/images/gameLogos/Ridethebuslogo.png'),
+        gameImage: require('../assets/images/Newbus.png'),
         minPlayers: 2,
         maxPlayers: 10, // Not restricted?
         defaultPlayers: 2,

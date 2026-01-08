@@ -2,7 +2,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
@@ -39,17 +38,44 @@ export default function BlownAwayScreen() {
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const popOpacity = useRef(new Animated.Value(0)).current;
   const recordingRef = useRef<Audio.Recording | null>(null);
+  const isCreatingRecording = useRef(false);
 
   // Request microphone permissions and start listening
   const startListening = async () => {
+    // Wait for any ongoing recording creation to complete
+    let retries = 0;
+    while (isCreatingRecording.current && retries < 10) {
+      console.log('Waiting for previous recording creation to complete...');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      retries++;
+    }
+
+    // Prevent concurrent recording creation
+    if (isCreatingRecording.current) {
+      console.log('Already creating a recording after waiting, skipping...');
+      return;
+    }
+
     try {
+      isCreatingRecording.current = true;
+      console.log('Starting recording creation...');
+
       // Stop and unload any existing recording first from both state and ref
       const currentRecording = recordingRef.current || recording;
       if (currentRecording) {
         try {
-          await currentRecording.stopAndUnloadAsync();
+          const status = await currentRecording.getStatusAsync();
+          if (status.canRecord || status.isRecording) {
+            await currentRecording.stopAndUnloadAsync();
+          }
         } catch (e) {
           console.log('Error stopping existing recording:', e);
+          // Force clear even if error
+          try {
+            await currentRecording.stopAndUnloadAsync();
+          } catch (e2) {
+            // Ignore
+          }
         }
       }
 
@@ -58,12 +84,19 @@ export default function BlownAwayScreen() {
       setRecording(null);
       setIsListening(false);
 
+      // Reset audio mode to clear any lingering recording state
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+      });
+
       // Wait longer to ensure complete cleanup
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise(resolve => setTimeout(resolve, 600));
 
       const permission = await Audio.requestPermissionsAsync();
       if (!permission.granted) {
         alert('Microphone permission is required to play this game!');
+        isCreatingRecording.current = false;
         return;
       }
 
@@ -80,11 +113,11 @@ export default function BlownAwayScreen() {
 
             // Only inflate if audio level is above threshold (louder = more negative number becomes less negative)
             if (audioLevel > BLOW_THRESHOLD && !hasPopped) {
-              // Calculate inflation amount based on how loud the blow is
-              const blowStrength = Math.max(0, (audioLevel - BLOW_THRESHOLD) / 10);
+              // Calculate inflation amount based on how loud the blow is - more gradual
+              const blowStrength = Math.max(0, (audioLevel - BLOW_THRESHOLD) / 15);
 
               setBalloonSize((prev) => {
-                const newSize = Math.min(MAX_BALLOON_SIZE, prev + blowStrength * 2);
+                const newSize = Math.min(MAX_BALLOON_SIZE, prev + blowStrength * 3);
                 if (newSize >= MAX_BALLOON_SIZE) {
                   popBalloon();
                   return MAX_BALLOON_SIZE;
@@ -107,13 +140,21 @@ export default function BlownAwayScreen() {
       recordingRef.current = newRecording;
       setRecording(newRecording);
       setIsListening(true);
+      console.log('Recording created successfully');
     } catch (err) {
       console.error('Failed to start recording', err);
-      // alert('Failed to start recording. Please try again.'); // Suppress alert for better UX loops
+      // Clear refs on error
+      recordingRef.current = null;
+      setRecording(null);
+      setIsListening(false);
+    } finally {
+      isCreatingRecording.current = false;
+      console.log('Recording creation flag reset');
     }
   };
 
   const stopListening = async () => {
+    setIsListening(false);
     const currentRecording = recordingRef.current || recording;
     if (currentRecording) {
       try {
@@ -122,15 +163,18 @@ export default function BlownAwayScreen() {
         if (status.canRecord || status.isRecording) {
           await currentRecording.stopAndUnloadAsync();
         }
-        recordingRef.current = null;
-        setRecording(null);
-        setIsListening(false);
       } catch (err) {
         // Silently handle if recording was already unloaded
         console.log('Recording cleanup:', err);
+        // Try force cleanup
+        try {
+          await currentRecording.stopAndUnloadAsync();
+        } catch (e2) {
+          // Ignore
+        }
+      } finally {
         recordingRef.current = null;
         setRecording(null);
-        setIsListening(false);
       }
     }
   };
@@ -153,7 +197,7 @@ export default function BlownAwayScreen() {
       balloonScale.setValue(1);
       popOpacity.setValue(0);
       if (timeLeft > 0) {
-        await new Promise(resolve => setTimeout(resolve, 400));
+        await new Promise(resolve => setTimeout(resolve, 500));
         startListening();
       }
     }, 1000);
@@ -192,7 +236,7 @@ export default function BlownAwayScreen() {
       balloonScale.setValue(1);
       popOpacity.setValue(0);
       if (timeLeft > 0) {
-        await new Promise(resolve => setTimeout(resolve, 400));
+        await new Promise(resolve => setTimeout(resolve, 500));
         startListening();
       }
     }

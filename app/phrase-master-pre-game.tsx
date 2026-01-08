@@ -29,7 +29,9 @@ export default function PhraseMasterPreGame() {
 
     return (
         <GameStartScreen
-            backgroundImage={require('../assets/images/phrase.png')}
+            backgroundColor="#8B0000"
+            gameImage={require('../assets/images/Newguessphrase.png')}
+            gameImageResizeMode="cover"
             logoImage={require('../assets/images/gameLogos/guess_phrase_logo.png')}
             onStart={() => setShowCategories(true)}
             onInstructions={() => setShowRules(true)}

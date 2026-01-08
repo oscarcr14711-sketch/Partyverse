@@ -57,8 +57,8 @@ export default function StopGamePreGame() {
         >
             <GameStartScreen
                 backgroundColor="transparent"
+
                 backgroundImage={require('../assets/images/wordbg.png')}
-                logoImage={require('../assets/images/gameLogos/stop_game_logo.png')}
                 minPlayers={2}
                 maxPlayers={10}
                 playerCount={numPlayers}
@@ -66,6 +66,8 @@ export default function StopGamePreGame() {
                 onStart={handleStart}
                 onInstructions={() => setShowRules(true)}
                 hideStartButton={true}
+                hidePlayerSelection={true}
+                hideButtons={true}
                 playerCountLabel={gameMode === 'team' ? 'Teams' : 'Players'}
                 accentColor="#0abde3"
             >

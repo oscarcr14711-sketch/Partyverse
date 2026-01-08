@@ -347,9 +347,9 @@ export const en = {
             rules: {
                 title: 'How to Play',
                 sections: [
-                    { title: '🎯 Objective', content: 'Use your voice to complete silly challenges!' },
-                    { title: '🎤 How It Works', content: "• You'll get voice challenges\n• Speak into the mic\n• Volume & timing matter\n• Get creative with your voice!" },
-                    { title: '🏆 Tips', content: 'Be loud, be silly, have fun!' },
+                    { title: '🎯 Objective', content: 'Race to grab the mic first and sing the word!' },
+                    { title: '🎤 How It Works', content: "• A word appears on screen\n• Compete to grab the mic first\n• Sing or say the word into the mic\n• First to sing it wins the round!" },
+                    { title: '🏆 Tips', content: 'Be fast, be loud, and be the first to sing!' },
                 ],
             },
         },

@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { usePlayerStats } from '../utils/PlayerStatsContext';
 
@@ -172,7 +172,7 @@ export default function LightningRoundsGameOver() {
                 <Animated.View style={[styles.standingsSection, { opacity: fadeAnim }]}>
                     <Text style={styles.standingsTitle}>FINAL STANDINGS</Text>
 
-                    <View style={styles.standingsList}>
+                    <ScrollView style={styles.standingsScrollView} showsVerticalScrollIndicator={true} contentContainerStyle={styles.standingsScrollContent}>
                         {sortedPlayers.map((player, index) => (
                             <View key={player.id} style={[styles.standingRow, player.id === winner?.id && styles.standingRowWinner]}>
                                 <Text style={styles.standingRank}>
@@ -196,7 +196,7 @@ export default function LightningRoundsGameOver() {
                                 </View>
                             </View>
                         ))}
-                    </View>
+                    </ScrollView>
                 </Animated.View>
 
                 {/* Buttons */}
@@ -314,8 +314,13 @@ const styles = StyleSheet.create({
         letterSpacing: 3,
         marginBottom: 15,
     },
-    standingsList: {
+    standingsScrollView: {
+        flex: 1,
+        maxHeight: 200,
+    },
+    standingsScrollContent: {
         gap: 10,
+        paddingBottom: 10,
     },
     standingRow: {
         flexDirection: 'row',

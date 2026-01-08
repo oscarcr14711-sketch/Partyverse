@@ -258,6 +258,18 @@ export default function LipSyncGame() {
 
     const soundRef = useRef<Audio.Sound | null>(null);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [songQueue, setSongQueue] = useState<number[]>([]);
+    const songQueueRef = useRef<number[]>([]);
+
+    // Shuffle function for song queue
+    const shuffleSongQueue = () => {
+        const indices = [...Array(MUSIC_FILES.length).keys()];
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        return indices;
+    };
 
     const MAX_ROUNDS = 10;
 
@@ -365,12 +377,25 @@ export default function LipSyncGame() {
 
             console.log('Audio mode set successfully');
 
-            const randomIndex = Math.floor(Math.random() * MUSIC_FILES.length);
-            const selectedMusic = MUSIC_FILES[randomIndex];
-            setCurrentSong(SONG_NAMES[randomIndex]);
+            // Use the queue system to avoid repeats
+            let currentQueue = songQueueRef.current;
+            if (currentQueue.length === 0) {
+                // Shuffle and create a new queue
+                currentQueue = shuffleSongQueue();
+                songQueueRef.current = currentQueue;
+                setSongQueue(currentQueue);
+                console.log('Created new shuffled song queue:', currentQueue);
+            }
 
-            console.log('Selected music index:', randomIndex);
-            console.log('Loading audio file...');
+            // Get the next song from the queue
+            const nextSongIndex = currentQueue[0];
+            songQueueRef.current = currentQueue.slice(1);
+            setSongQueue(songQueueRef.current);
+
+            const selectedMusic = MUSIC_FILES[nextSongIndex];
+            setCurrentSong(SONG_NAMES[nextSongIndex]);
+
+            console.log('Selected song index:', nextSongIndex, 'Remaining in queue:', songQueueRef.current.length);
 
             const { sound } = await Audio.Sound.createAsync(
                 selectedMusic,

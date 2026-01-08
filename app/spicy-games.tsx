@@ -6,9 +6,9 @@ import { Image, ImageBackground, ScrollView, StyleSheet, Text, View } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackButton } from '../components/BackButton';
 import { PulsingButton } from '../components/PulsingButton';
+import { useLanguage } from '../utils/LanguageContext';
 import { playSound } from '../utils/SoundManager';
 import { useTheme } from '../utils/ThemeContext';
-import { useLanguage } from '../utils/LanguageContext';
 
 // Color helpers for 3D effect
 const clamp = (v: number) => Math.max(0, Math.min(255, v));
@@ -43,8 +43,8 @@ export default function SpicyGamesScreen() {
   const { t } = useLanguage();
 
   const games = [
-    { title: 'Color Clash', description: t('games.colorClash.description'), emoji: '♥️♠️', logo: require('../assets/images/Colorclash.png'), color: '#4169E1', path: '/pre-game/color-clash' },
-    { title: 'Ride the Bus', description: t('games.rideTheBus.description'), emoji: '🚌🃏', logo: require('../assets/images/rtb.png'), color: '#2E8B57', path: '/pre-game/ride-the-bus' },
+    { title: 'Color Clash', description: t('games.colorClash.description'), emoji: '♥️♠️', logo: require('../assets/images/gameLogos/Colorclashlogo.png'), color: '#4169E1', path: '/pre-game/color-clash' },
+    { title: 'Ride the Bus', description: t('games.rideTheBus.description'), emoji: '🚌🃏', logo: require('../assets/images/gameLogos/Ridethebuslogo.png'), color: '#2E8B57', path: '/pre-game/ride-the-bus' },
     // { title: 'Drink Domino', description: t('games.drinkDomino.description'), emoji: '🔥🍻', color: '#FF4500', path: '/drink-domino' },
     // { title: t('games.partyBoard.title'), description: t('games.partyBoard.description'), emoji: '🎲🍻', color: '#DA70D6', path: '/party-board' },
     // { title: t('games.hotCupSpin.title'), description: t('games.hotCupSpin.description'), emoji: '🥤🔄', color: '#CD5C5C', path: '/hot-cup-spin' },

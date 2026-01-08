@@ -1,7 +1,7 @@
 import React from 'react';
-import { GameListScreen, Game } from '../components/GameListScreen';
-import { useTheme } from '../utils/ThemeContext';
+import { Game, GameListScreen } from '../components/GameListScreen';
 import { useLanguage } from '../utils/LanguageContext';
+import { useTheme } from '../utils/ThemeContext';
 
 export default function HumorCreativityGamesScreen() {
   const { theme } = useTheme();
@@ -10,7 +10,7 @@ export default function HumorCreativityGamesScreen() {
   const games: Game[] = [
     { title: 'Truth or Bluff', description: t('games.truthOrBluff.description'), emoji: '🤥', logo: require('../assets/images/gameLogos/truthlogo.png'), color: '#ff4f81', path: '/pre-game/truth-or-bluff' },
     { title: 'If You Laugh... You Lose', description: t('games.ifYouLaugh.description'), emoji: '😆', logo: require('../assets/images/gameLogos/ifyoulaughlogo.png'), color: '#36c9c6', path: '/pre-game/if-you-laugh-you-lose' },
-    { title: 'Extreme Roulette', description: t('games.extremeRoulette.description'), emoji: '🎡', logo: require('../assets/images/gameLogos/extremechallengeLogo.png'), color: '#f9c846', path: '/pre-game/extreme-challenge-roulette' },
+    { title: 'Extreme Roulette', description: t('games.extremeRoulette.description'), emoji: '🎡', logo: require('../assets/images/gameLogos/extremechallengeLogo.png'), color: '#f9c846', path: '/extreme-challenge-roulette-pre-game' },
     { title: 'Lip Sync Battle', description: t('games.lipSync.description'), emoji: '🎧', logo: require('../assets/images/gameLogos/lipsynclogo.png'), color: '#5f6bff', path: '/pre-game/lip-sync' },
     { title: 'Mic Madness', description: t('games.micMadness.description'), emoji: '🎤', logo: require('../assets/images/gameLogos/micmadnesslogo.png'), color: '#7dff6a', path: '/pre-game/mic-madness' },
   ];

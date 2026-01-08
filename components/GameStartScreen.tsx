@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { useLanguage } from '../utils/LanguageContext';
 import { Image, ImageBackground, ImageSourcePropType, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '../utils/LanguageContext';
 import { PulsingButton } from './PulsingButton';
 
 interface GameStartScreenProps {
@@ -12,6 +11,7 @@ interface GameStartScreenProps {
     logoImage?: ImageSourcePropType;
     // Allows passing a composite component for the main image area if needed, or a simple source
     gameImage?: React.ReactNode | ImageSourcePropType;
+    gameImageResizeMode?: 'cover' | 'contain' | 'stretch' | 'repeat' | 'center'; // How to resize the game image
     title?: string | React.ReactNode; // Fallback if no logo
     minPlayers: number;
     maxPlayers: number;
@@ -25,6 +25,11 @@ interface GameStartScreenProps {
     playerCountLabel?: string;
     hideButtons?: boolean;
     hideStartButton?: boolean;
+    gameImageSize?: { width: number; height: number };
+    gameImageMarginTop?: number;
+    gameImageMarginLeft?: number;
+    logoMarginTop?: number;
+    logoMarginLeft?: number;
     children?: React.ReactNode;
 }
 
@@ -42,6 +47,7 @@ export function GameStartScreen({
     backgroundColor = '#3B1A5A',
     logoImage,
     gameImage,
+    gameImageResizeMode = 'cover',
     title,
     minPlayers,
     maxPlayers,
@@ -56,6 +62,11 @@ export function GameStartScreen({
     children,
     hideStartButton = false,
     hideButtons = false,
+    gameImageSize,
+    gameImageMarginTop = 0,
+    gameImageMarginLeft = 0,
+    logoMarginTop,
+    logoMarginLeft,
 }: GameStartScreenProps) {
     const router = useRouter();
     const { t } = useLanguage();
@@ -83,91 +94,112 @@ export function GameStartScreen({
     const Content = (
         <>
             <View style={styles.contentContainer}>
-                {/* Header / Logo - Only show title if no logo (logo is now in content area) */}
-                <View style={styles.headerContainer}>
-                    {logoImage ? (
-                        <Image
-                            source={logoImage}
-                            style={styles.logoImage}
-                            resizeMode="contain"
-                        />
-                    ) : (
-                        React.isValidElement(title) ? (
-                            title
-                        ) : title ? (
-                            <Text style={[styles.titleText, { color: accentColor || '#fff' }]}>{title as string}</Text>
-                        ) : null
+                {/* Content Area with Game Image and Overlaid Logo */}
+                {/* Content Area with Game Image and Overlaid Logo */}
+                <View style={{
+                    flex: 1,
+                    width: '100%',
+                    paddingBottom: (hideButtons && hidePlayerSelection) ? 0 : 160
+                }}>
+                    {(gameImage || logoImage || title) && (
+                        <View style={{ flex: 1, width: '100%', position: 'relative', overflow: 'hidden' }}>
+                            {gameImage && (
+                                React.isValidElement(gameImage) ? (
+                                    gameImage
+                                ) : (
+                                    <Image
+                                        source={gameImage as ImageSourcePropType}
+                                        style={[
+                                            styles.mainImage,
+                                            gameImageSize && { width: gameImageSize.width, height: gameImageSize.height },
+                                            gameImageMarginTop > 0 && { marginTop: gameImageMarginTop },
+                                            gameImageMarginLeft !== 0 && { marginLeft: gameImageMarginLeft },
+                                        ]}
+                                        resizeMode={gameImageResizeMode}
+                                    />
+                                )
+                            )}
+                            {logoImage && (
+                                <Image
+                                    source={logoImage}
+                                    style={[
+                                        styles.overlaidLogoImage,
+                                        logoMarginTop !== undefined && { top: logoMarginTop },
+                                        logoMarginLeft !== undefined && { left: logoMarginLeft }
+                                    ]}
+                                    resizeMode="contain"
+                                />
+                            )}
+                            {/* Fallback title if no logo and no gameImage */}
+                            {!logoImage && !gameImage && (
+                                React.isValidElement(title) ? (
+                                    title
+                                ) : title ? (
+                                    <Text style={[styles.titleText, { color: accentColor || '#fff' }]}>{title as string}</Text>
+                                ) : null
+                            )}
+                        </View>
                     )}
-                </View>
-
-                {/* Content Area for Children (Game specific UI) */}
-                <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', paddingBottom: 160 }}>
-                    <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 40 }}>
-                        {gameImage && (
-                            <Image
-                                source={gameImage as ImageSourcePropType}
-                                style={styles.mainImage}
-                                resizeMode="contain"
-                            />
-                        )}
-                    </View>
                     {children}
                 </View>
 
                 {/* Bottom Control Container */}
-                <View style={[styles.bottomControlContainer]}>
-                    {/* Player Counter */}
-                    {!hidePlayerSelection && (
-                        <View style={styles.newPlayerCounterContainer}>
-                            <TouchableOpacity
-                                style={[styles.newPlayerCounterButton, { backgroundColor: accentColor }]}
-                                onPress={() => setPlayerCount(Math.max(minPlayers, playerCount - 1))}
-                            >
-                                <Text style={styles.newPlayerCounterButtonText}>−</Text>
-                            </TouchableOpacity>
-
-                            <View style={styles.playerCountDisplay}>
-                                <Text style={styles.playerCounterText}>{playerCount}</Text>
-                                <Text style={styles.playerCounterLabel}>{finalPlayerCountLabel}</Text>
-                            </View>
-
-                            <TouchableOpacity
-                                style={[styles.newPlayerCounterButton, { backgroundColor: accentColor }]}
-                                onPress={() => setPlayerCount(Math.min(maxPlayers, playerCount + 1))}
-                            >
-                                <Text style={styles.newPlayerCounterButtonText}>+</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-
-                    {/* Buttons */}
-                    {!hideButtons && (
-                        <View style={styles.buttonContainer}>
-                            {/* Back Button on Left */}
-                            <TouchableOpacity
-                                style={[styles.bottomBackButton, { backgroundColor: accentColor, borderBottomColor: darkenColor(accentColor) }]}
-                                onPress={() => router.back()}
-                            >
-                                <Ionicons name="arrow-back" size={28} color="#fff" />
-                            </TouchableOpacity>
-
-                            {!hideStartButton && (
-                                <PulsingButton
-                                    style={[styles.setupStartButton, { backgroundColor: accentColor, borderBottomColor: darkenColor(accentColor) }]}
-                                    onPress={onStart}
+                {/* Bottom Control Container - Only show if there's content */}
+                {(!hidePlayerSelection || !hideButtons) && (
+                    <View style={[styles.bottomControlContainer]}>
+                        {/* Player Counter */}
+                        {!hidePlayerSelection && (
+                            <View style={styles.newPlayerCounterContainer}>
+                                <TouchableOpacity
+                                    style={[styles.newPlayerCounterButton, { backgroundColor: accentColor }]}
+                                    onPress={() => setPlayerCount(Math.max(minPlayers, playerCount - 1))}
                                 >
-                                    <Text style={styles.setupStartButtonText}>{finalStartButtonText}</Text>
-                                </PulsingButton>
-                            )}
-                            <TouchableOpacity
-                                style={[styles.infoButton, { backgroundColor: accentColor, borderBottomColor: darkenColor(accentColor) }]}
-                                onPress={onInstructions}
-                            >
-                                <Text style={styles.infoButtonText}>i</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </View>
+                                    <Text style={styles.newPlayerCounterButtonText}>−</Text>
+                                </TouchableOpacity>
+
+                                <View style={styles.playerCountDisplay}>
+                                    <Text style={styles.playerCounterText}>{playerCount}</Text>
+                                    <Text style={styles.playerCounterLabel}>{finalPlayerCountLabel}</Text>
+                                </View>
+
+                                <TouchableOpacity
+                                    style={[styles.newPlayerCounterButton, { backgroundColor: accentColor }]}
+                                    onPress={() => setPlayerCount(Math.min(maxPlayers, playerCount + 1))}
+                                >
+                                    <Text style={styles.newPlayerCounterButtonText}>+</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
+                        {/* Buttons */}
+                        {!hideButtons && (
+                            <View style={styles.buttonContainer}>
+                                {/* Back Button on Left */}
+                                <TouchableOpacity
+                                    style={[styles.bottomBackButton, { backgroundColor: accentColor, borderBottomColor: darkenColor(accentColor) }]}
+                                    onPress={() => router.back()}
+                                >
+                                    <Ionicons name="arrow-back" size={28} color="#fff" />
+                                </TouchableOpacity>
+
+                                {!hideStartButton && (
+                                    <PulsingButton
+                                        style={[styles.setupStartButton, { backgroundColor: accentColor, borderBottomColor: darkenColor(accentColor) }]}
+                                        onPress={onStart}
+                                    >
+                                        <Text style={styles.setupStartButtonText}>{finalStartButtonText}</Text>
+                                    </PulsingButton>
+                                )}
+                                <TouchableOpacity
+                                    style={[styles.infoButton, { backgroundColor: accentColor, borderBottomColor: darkenColor(accentColor) }]}
+                                    onPress={onInstructions}
+                                >
+                                    <Text style={styles.infoButtonText}>i</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                )}
             </View>
         </>
     );
@@ -226,8 +258,6 @@ const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingTop: 40,
         justifyContent: 'center',
     },
     bottomBackButton: {
@@ -255,6 +285,14 @@ const styles = StyleSheet.create({
         height: 180,
         marginBottom: 20,
     },
+    overlaidLogoImage: {
+        position: 'absolute',
+        top: 30,
+        alignSelf: 'center',
+        width: 450,
+        height: 200,
+        zIndex: 10,
+    },
     titleText: {
         fontSize: 40,
         fontWeight: 'bold',
@@ -270,7 +308,6 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         height: '100%',
-        marginBottom: 20,
     },
     playerAvatarsContainer: {
         flexDirection: 'row',

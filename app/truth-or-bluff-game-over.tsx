@@ -17,25 +17,40 @@ export default function TruthOrBluffGameOverScreen() {
       recordGamePlayed('Truth or Bluff', 'completed', '🎭');
     }
   }, []);
+
+  // Determine winner
+  const p1Score = Number(player1Score);
+  const p2Score = Number(player2Score);
+  const player1Won = p1Score > p2Score;
+  const player2Won = p2Score > p1Score;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>GAME OVER</Text>
       <Image source={require('../assets/images/gameLogos/BluffLogo.png')} style={styles.logo} resizeMode="contain" />
       <View style={styles.playersRow}>
         <View style={styles.playerCol}>
-          <Image source={require('../assets/images/Truth or bluff images/Truthhappy.png')} style={styles.avatar} resizeMode="contain" />
+          <Image
+            source={player1Won ? require('../assets/images/Truth or bluff images/Truthhappy.png') : require('../assets/images/Truth or bluff images/Truthsad.png')}
+            style={styles.avatar}
+            resizeMode="contain"
+          />
           <Text style={styles.playerLabel}>PLAYER 1</Text>
           <Text style={styles.playerScore}>{player1Score}</Text>
           <Text style={styles.playerCorrect}>CORRECT</Text>
         </View>
         <View style={styles.playerCol}>
-          <Image source={require('../assets/images/Truth or bluff images/Truthsad.png')} style={styles.avatar} resizeMode="contain" />
+          <Image
+            source={player2Won ? require('../assets/images/Truth or bluff images/Truthhappy.png') : require('../assets/images/Truth or bluff images/Truthsad.png')}
+            style={styles.avatar}
+            resizeMode="contain"
+          />
           <Text style={styles.playerLabel}>PLAYER 2</Text>
           <Text style={styles.playerScore}>{player2Score}</Text>
           <Text style={styles.playerCorrect}>CORRECT</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/truth-or-bluff')}>
+      <TouchableOpacity style={styles.button} onPress={() => router.push('/pre-game/truth-or-bluff')}>
         <Text style={styles.buttonText}>CONTINUE</Text>
       </TouchableOpacity>
     </View>

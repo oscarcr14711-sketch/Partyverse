@@ -28,14 +28,7 @@ const categories = [
         color: '#FFC107',
         path: '/word-mental-games'
     },
-    {
-        id: '4',
-        title: 'Quick Competition',
-        subtitle: 'Fast duels, instant fun.',
-        icon: '🏁',
-        color: '#4CAF50',
-        path: '/quick-competition-games'
-    },
+
 ];
 
 const PracticeModeGamesScreen = () => {

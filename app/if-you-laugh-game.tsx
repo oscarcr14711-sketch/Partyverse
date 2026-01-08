@@ -40,6 +40,74 @@ const FUNNY_SCENARIOS = [
     "My brain: 'Be responsible.' Also my brain: 'Let's do something stupid.'",
 ];
 
+// Face-off challenges for Round 2
+const FACE_OFF_CHALLENGES = [
+    "🤪 Make the weirdest face possible!",
+    "🦆 Do your best duck impression!",
+    "🤖 Act like a malfunctioning robot!",
+    "👴 Impersonate a grumpy old person!",
+    "🐒 Be a confused monkey!",
+    "😱 React to seeing a spider... in slow motion!",
+    "🎤 Sing 'Happy Birthday' like an opera singer!",
+    "🧟 Walk and talk like a zombie!",
+    "🦖 Pretend you're a tiny T-Rex trying to clap!",
+    "🐔 Do the chicken dance while keeping a straight face!",
+    "🤓 Explain TikTok to an alien!",
+    "👻 Be a ghost trying to scare someone but failing!",
+    "🦸 Strike your best superhero pose and hold it!",
+    "🐱 Act like a cat seeing a cucumber!",
+    "🎭 Do your worst impression of your friend!",
+    "🤡 Tell the worst joke you know with a serious face!",
+    "🦁 Roar like a lion... but whisper it!",
+    "🐍 Slither around like a snake!",
+    "🎪 Juggle invisible balls!",
+    "🧙 Cast a spell to make your opponent laugh!",
+    "🦅 Flap your arms and pretend to fly!",
+    "🐢 Move in slow motion for 10 seconds!",
+    "🎸 Air guitar solo with maximum drama!",
+    "🦘 Hop around like a kangaroo!",
+    "🤹 Pretend you're stuck in an invisible box!",
+    "🎩 Do a magic trick reveal... but there's nothing there!",
+    "🦜 Repeat everything your opponent says like a parrot!",
+    "🐝 Buzz around like a confused bee!",
+    "🎬 Act out a dramatic movie scene!",
+    "🦇 Hang upside down (or pretend to)!",
+    "🦙 Spit like a llama (without actually spitting)!",
+    "🎺 Play an invisible trumpet with passion!",
+    "🦩 Stand on one leg like a flamingo for 10 seconds!",
+    "🥷 Do a ninja move in super slow motion!",
+    "🦕 Be a dinosaur discovering fire!",
+    "🎻 Play the world's saddest violin!",
+    "🦈 Swim like a shark with the Jaws theme!",
+    "🧛 Be a vampire afraid of garlic!",
+    "🦎 Stick your tongue out like a lizard!",
+    "🎹 Play dramatic piano while standing!",
+    "🦚 Show off your imaginary feathers!",
+    "🧜 Swim like a mermaid on land!",
+    "🎪 Be a circus ringmaster announcing the show!",
+    "🦥 Move like a sloth trying to hurry!",
+    "🎨 Paint an invisible masterpiece!",
+    "🦫 Build an invisible dam!",
+    "🎯 Throw invisible darts with sound effects!",
+    "🦭 Clap like a seal!",
+    "🎲 Roll invisible dice dramatically!",
+    "🦦 Float on your back like an otter!",
+    "🎰 Pull an invisible slot machine lever!",
+    "🦨 Spray like a skunk (pretend)!",
+    "🎪 Walk a tightrope!",
+    "🦔 Roll into a ball like a hedgehog!",
+    "🎭 Switch between happy and sad instantly!",
+    "🦒 Stretch your neck like a giraffe!",
+    "🎪 Be a clown making balloon animals!",
+    "🦛 Yawn like a hippo!",
+    "🎬 Direct an invisible movie scene!",
+    "🦏 Charge like a rhino in slow motion!",
+    "🎤 Beatbox for 5 seconds!",
+    "🦓 Gallop like a zebra!",
+    "🎸 Rock out on air drums!",
+    "🦍 Beat your chest like a gorilla!",
+];
+
 // Laugh Trap content for Round 3
 const LAUGH_TRAPS = [
     { type: 'sound', content: '💨 FART SOUND!', emoji: '💨', soundId: 'fart' },
@@ -188,6 +256,9 @@ export default function IfYouLaughGame() {
     const [scores, setScores] = useState<Record<number, number>>({});
     const [matchups, setMatchups] = useState<Array<[number, number]>>([]);
     const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0);
+    const [currentChallenge, setCurrentChallenge] = useState('');
+    const [shuffledChallenges] = useState(() => shuffleArray(FACE_OFF_CHALLENGES));
+    const [round2SubRound, setRound2SubRound] = useState(1); // Track which of the 3 sub-rounds we're in
 
     useEffect(() => {
         const players = Array.from({ length: playerCount }, (_, i) => i);
@@ -298,6 +369,7 @@ export default function IfYouLaughGame() {
             setGamePhase('ROUND_1_GAMEPLAY');
             setCurrentScenarioIndex(0);
         } else if (currentRound === 2) {
+            setRound2SubRound(1); // Reset sub-round counter
             setGamePhase('ROUND_2_SETUP');
             setupNextBattle();
         } else if (currentRound === 3) {
@@ -334,6 +406,7 @@ export default function IfYouLaughGame() {
             if (newMatchups.length > 0) {
                 setBattlePlayer1(newMatchups[0][0]);
                 setBattlePlayer2(newMatchups[0][1]);
+                setCurrentChallenge(shuffledChallenges[0 % shuffledChallenges.length]);
                 setTimeRemaining(60);
             } else {
                 handleRoundComplete();
@@ -342,6 +415,7 @@ export default function IfYouLaughGame() {
             if (currentMatchupIndex < matchups.length) {
                 setBattlePlayer1(matchups[currentMatchupIndex][0]);
                 setBattlePlayer2(matchups[currentMatchupIndex][1]);
+                setCurrentChallenge(shuffledChallenges[currentMatchupIndex % shuffledChallenges.length]);
                 setTimeRemaining(60);
             } else {
                 handleRoundComplete();
@@ -384,16 +458,29 @@ export default function IfYouLaughGame() {
         setCurrentMatchupIndex(nextIndex);
 
         if (nextIndex < matchups.length) {
+            // Continue with next matchup in current sub-round
             setTimeout(() => {
                 setBattlePlayer1(matchups[nextIndex][0]);
                 setBattlePlayer2(matchups[nextIndex][1]);
+                setCurrentChallenge(shuffledChallenges[(nextIndex + (round2SubRound - 1) * matchups.length) % shuffledChallenges.length]);
                 setTimeRemaining(60);
             }, 1000);
+        } else if (round2SubRound < 3) {
+            // Completed current sub-round, start next sub-round
+            setTimeout(() => {
+                setRound2SubRound(prev => prev + 1);
+                setCurrentMatchupIndex(0);
+                setBattlePlayer1(matchups[0][0]);
+                setBattlePlayer2(matchups[0][1]);
+                setCurrentChallenge(shuffledChallenges[(round2SubRound * matchups.length) % shuffledChallenges.length]);
+                setTimeRemaining(60);
+                setGamePhase('ROUND_2_SETUP');
+            }, 1500);
         } else {
+            // Completed all 3 sub-rounds
             handleRoundComplete();
         }
     };
-
     const startTrap = () => {
         setTrapPhase('VIEW_TRAP');
         setTimeRemaining(5);
@@ -437,8 +524,8 @@ export default function IfYouLaughGame() {
                 pathname: '/if-you-laugh-game-over',
                 params: { winner: 'No one', players: JSON.stringify(playerNames) }
             } as any);
-        } else if (currentRound < 3) {
-            setCurrentRound((prev) => (prev + 1) as 1 | 2 | 3);
+        } else if (currentRound < 2) {
+            setCurrentRound((prev) => (prev + 1) as 1 | 2);
             setGamePhase('ROUND_INTRO');
             setMatchups([]);
             setCurrentMatchupIndex(0);
@@ -494,8 +581,8 @@ export default function IfYouLaughGame() {
 
     // Round Intro Screen
     if (gamePhase === 'ROUND_INTRO') {
-        const roundTitles = ['', '😂 FUNNY SCENARIOS', '🥊 FACE-OFF', '🎭 LAUGH TRAP'];
-        const roundDesc = ['', 'Try not to laugh at these jokes!', 'Make each other crack up!', "Survive the trap - don't laugh!"];
+        const roundTitles = ['', '😂 FUNNY SCENARIOS', '🥊 FACE-OFF'];
+        const roundDesc = ['', 'Try not to laugh at these jokes!', 'Make each other crack up!'];
 
         return (
             <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
@@ -547,7 +634,7 @@ export default function IfYouLaughGame() {
         return (
             <ImageBackground source={require('../assets/images/laughbg.png')} style={styles.container} resizeMode="cover">
                 <View style={styles.overlay}>
-                    <Text style={styles.phaseTitle}>🥊 FACE-OFF!</Text>
+                    <Text style={styles.phaseTitle}>🥊 FACE-OFF! (Round {round2SubRound}/3)</Text>
                     <View style={styles.vsContainer}>
                         <Text style={styles.playerName}>{playerNames[battlePlayer1!]}</Text>
                         <Text style={styles.vsText}>VS</Text>
@@ -577,6 +664,10 @@ export default function IfYouLaughGame() {
                         <Text style={styles.playerName}>{playerNames[battlePlayer1!]}</Text>
                         <Text style={styles.vsText}>🆚</Text>
                         <Text style={styles.playerName}>{playerNames[battlePlayer2!]}</Text>
+                    </View>
+
+                    <View style={styles.challengeCard}>
+                        <Text style={styles.challengeText}>{currentChallenge}</Text>
                     </View>
 
                     <View style={styles.battleButtons}>
@@ -769,6 +860,10 @@ const styles = StyleSheet.create({
     playerName: { fontSize: 26, fontWeight: 'bold', color: '#FFE0B2', marginVertical: 8 },
     bigPlayerName: { fontSize: 36, fontWeight: 'bold', color: '#fff', marginVertical: 15 },
     vsText: { fontSize: 40, fontWeight: 'bold', color: '#fff' },
+
+    // Challenge card
+    challengeCard: { backgroundColor: '#fff', borderRadius: 20, padding: 25, marginVertical: 20, width: '90%', elevation: 10 },
+    challengeText: { fontSize: 20, color: '#18304A', textAlign: 'center', fontWeight: '700', lineHeight: 28 },
 
     // Timer
     bigTimer: { fontSize: 72, fontWeight: 'bold', color: '#F39C12', marginBottom: 15 },

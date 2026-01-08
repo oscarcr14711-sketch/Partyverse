@@ -113,6 +113,12 @@ export default function DynamicPreGameScreen() {
             accentColor={gameConfig.accentColor}
             logoImage={gameConfig.logoImage}
             gameImage={gameConfig.gameImage}
+            gameImageResizeMode={gameConfig.gameImageResizeMode}
+            gameImageSize={gameConfig.gameImageSize}
+            gameImageMarginTop={gameConfig.gameImageMarginTop}
+            gameImageMarginLeft={gameConfig.gameImageMarginLeft}
+            logoMarginTop={gameConfig.logoMarginTop}
+            logoMarginLeft={gameConfig.logoMarginLeft}
             // title={translatedTitle} // Removed per user request to use logos instead of text title
             minPlayers={gameConfig.minPlayers}
             maxPlayers={gameConfig.maxPlayers}

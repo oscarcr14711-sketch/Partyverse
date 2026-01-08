@@ -68,7 +68,7 @@ export default function LipSyncGameOver() {
                 {/* Band Promotion Section */}
                 <View style={styles.bandSection}>
                     <Image
-                        source={require('../assets/images/lipsync.png')}
+                        source={require('../assets/images/Reynalds.jpeg')}
                         style={styles.bandImage}
                         resizeMode="cover"
                     />
@@ -84,7 +84,7 @@ export default function LipSyncGameOver() {
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
                         style={styles.playAgainButton}
-                        onPress={() => router.push('/lip-sync-pre-game')}
+                        onPress={() => router.push('/pre-game/lip-sync')}
                     >
                         <Text style={styles.playAgainText}>PLAY AGAIN</Text>
                     </TouchableOpacity>

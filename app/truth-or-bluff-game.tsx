@@ -3,7 +3,7 @@ import { BackButton } from '@/components/BackButton';
 import { playSound } from '@/utils/SoundManager';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 function shuffleArray(array: any[]) {
@@ -76,16 +76,14 @@ export default function TruthOrBluffGameScreen() {
 
   const nextTurn = () => {
     if (currentRound >= TOTAL_ROUNDS && currentPlayer === numPlayers - 1) {
-      // Game Over
-      // Using router.push instead of navigation.navigate for expo-router consistency
-      // Assuming truth-or-bluff-game-over exists or creating a generic result screen?
-      // The original code navigated to 'truth-or-bluff-game-over'. Let's check if that exists or if we should use a generic one.
-      // For now, I'll assume it exists or I might need to handle it.
-      // Wait, looking at file list, I don't see truth-or-bluff-game-over.tsx.
-      // It might be a pending refactor.
-      // I'll leave the navigation/alert for now or just go back.
-      // Actually, let's just go back to menu for now as placeholder for Game Over.
-      router.back();
+      // Game Over - Navigate to game over screen with scores
+      router.push({
+        pathname: '/truth-or-bluff-game-over',
+        params: {
+          player1Score: scores[0].toString(),
+          player2Score: scores[1].toString(),
+        },
+      });
       return;
     }
     let nextPlayer = currentPlayer + 1;

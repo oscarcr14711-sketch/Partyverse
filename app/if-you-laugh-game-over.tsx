@@ -70,7 +70,7 @@ export default function IfYouLaughGameOver() {
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
                         style={styles.playAgainButton}
-                        onPress={() => router.push('/if-you-laugh-you-lose')}
+                        onPress={() => router.push('/pre-game/if-you-laugh-you-lose')}
                     >
                         <Text style={styles.playAgainText}>PLAY AGAIN</Text>
                     </TouchableOpacity>

@@ -196,7 +196,7 @@ export default function HotBombGameScreen() {
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
           <View style={styles.gameOverContainer}>
             <Image
-              source={require('../assets/images/Circus.png')}
+              source={require('../assets/images/Boom.png')}
               style={styles.gameOverBoomImage}
               resizeMode="contain"
             />

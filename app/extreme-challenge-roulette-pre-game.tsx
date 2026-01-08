@@ -12,24 +12,11 @@ export default function PreGameScreen() {
   const [selectedPack, setSelectedPack] = useState<'pack1' | 'pack2'>('pack1');
   const [ownsPack2, setOwnsPack2] = useState(false); // Will be true if purchased from store
 
-  // Composite image component for the game visual
-  const GameImage = (
-    <View style={{ alignItems: 'center', marginBottom: 0 }}>
-      {/* Removed EXTREME CHALLENGE and ROULETTE text, just images */}
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}>
-        <Image source={require('../assets/images/2roulette.png')} style={{ width: 360, height: 360, marginRight: 12 }} resizeMode="contain" />
-        <Image source={require('../assets/images/charac.png')} style={{ width: 250, height: 250, marginLeft: -110 }} resizeMode="contain" />
-      </View>
-    </View>
-  );
-
   return (
     <GameStartScreen
-      backgroundColor="#3B1A5A"
+      backgroundColor="#8B5CF6"
       accentColor="#E74C3C"
       logoImage={require('../assets/images/gameLogos/extremechallengeLogo.png')}
-      gameImage={GameImage}
       minPlayers={2}
       maxPlayers={6}
       playerCount={numPlayers}
@@ -53,6 +40,30 @@ export default function PreGameScreen() {
           Be brave! Some challenges are extreme!
         </RuleSection>
       </RulesModal>
+
+      {/* Side-by-side images container */}
+      <View style={{
+        position: 'absolute',
+        top: 280,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        zIndex: 10,
+      }}>
+        <Image
+          source={require('../assets/images/2roulette.png')}
+          style={{ width: 220, height: 220 }}
+          resizeMode="contain"
+        />
+        <Image
+          source={require('../assets/images/charac.png')}
+          style={{ width: 220, height: 220, marginLeft: -70 }}
+          resizeMode="contain"
+        />
+      </View>
 
       {/* Pack Selection Modal */}
       <Modal visible={showPackSelector} transparent animationType="fade">

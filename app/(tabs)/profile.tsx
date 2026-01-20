@@ -9,6 +9,7 @@ import { CARD_BACKS, getCardBackById } from '../../data/card-backs';
 import { useAchievements } from '../../utils/AchievementContext';
 import { useCardBack } from '../../utils/CardBackContext';
 import { useLanguage } from '../../utils/LanguageContext';
+import { getPlayerRankInfo } from '../../utils/PlayerRankUtils';
 import { usePlayerStats } from '../../utils/PlayerStatsContext';
 import { soundManager } from '../../utils/SoundManager';
 import { THEMES, useTheme } from '../../utils/ThemeContext';
@@ -44,7 +45,6 @@ const getRelativeTime = (dateString: string): string => {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [userName, setUserName] = useState('Party King');
   const [selectedAvatar, setSelectedAvatar] = useState(0);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -70,6 +70,10 @@ export default function ProfileScreen() {
   const { stats, getFormattedPlayTime } = usePlayerStats();
   const { language, setLanguage, t } = useLanguage();
   const { achievements, getUnlockedCount } = useAchievements();
+
+  // Calculate dynamic rank info
+  const rankInfo = getPlayerRankInfo(getUnlockedCount(), stats.gamesPlayed);
+  const userName = rankInfo.rankName; // For compatibility with any other code using userName
 
   // Volume change handlers that update SoundManager
   const handleMasterVolumeChange = (value: number) => {
@@ -137,7 +141,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
               <Text style={styles.userName}>{userName}</Text>
               <View style={styles.levelBadge}>
-                <Text style={styles.levelText}>⭐ Level 12</Text>
+                <Text style={styles.levelText}>⭐ Level {rankInfo.level}</Text>
               </View>
             </View>
 

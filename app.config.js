@@ -24,7 +24,7 @@ export default {
     ios: {
       googleServicesFile: googleServiceInfoPlist,
       supportsTablet: true,
-      bundleIdentifier: 'com.oscarcr.partyverse',
+      bundleIdentifier: 'com.oscarcr7.partyverse',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription: 'Partyverse uses the camera for the "Don\'t Let It PIC You" game to take fun photos during gameplay.',

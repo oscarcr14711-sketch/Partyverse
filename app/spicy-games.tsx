@@ -50,9 +50,8 @@ export default function SpicyGamesScreen() {
     // { title: t('games.hotCupSpin.title'), description: t('games.hotCupSpin.description'), emoji: '🥤🔄', color: '#CD5C5C', path: '/hot-cup-spin' },
   ].slice(0, 2); // Only show first 2 games as requested
 
-  // Use Christmas background if theme has it, otherwise black
-  const isChristmas = themeId === 'christmas';
-  const christmasBackground = theme.categoryBackgrounds?.spicy;
+  // Use theme background if available
+  const themeBackground = theme.categoryBackgrounds?.spicy;
 
   // Always use spicy.png as the logo/title
   const spicyLogo = require('../assets/images/spicy.png');
@@ -126,11 +125,11 @@ export default function SpicyGamesScreen() {
     </SafeAreaView>
   );
 
-  // If Christmas theme with background, wrap in ImageBackground
-  if (isChristmas && christmasBackground) {
+  // If theme has a background, wrap in ImageBackground
+  if (themeBackground) {
     return (
       <ImageBackground
-        source={christmasBackground}
+        source={themeBackground}
         style={styles.container}
         resizeMode="cover"
       >

@@ -78,10 +78,37 @@ export const CHRISTMAS_THEME: Theme = {
     overlayAnimation: require('../assets/animations/Snow Off white.json'), // Snow animation
 };
 
+// Valentine's Day theme
+export const VALENTINE_THEME: Theme = {
+    id: 'valentine',
+    name: 'Valentine\'s Day',
+    tabBar: {
+        background: '#4a1a2c', // Deep romantic burgundy
+        activeColor: '#ff6b9d', // Hot pink
+        inactiveColor: '#ffb3d9', // Light pink
+    },
+    buttons: {
+        primary: ['#ff6b9d', '#c9184a'], // Pink to rose gradient
+        secondary: ['#ff758f', '#ff4d6d'], // Warm pink gradient
+    },
+    categoryBackgrounds: {
+        wordMental: require('../assets/images/Background/hcandy.jpeg'),
+        actionAdrenaline: require('../assets/images/Background/picnic.png'),
+        humorCreativity: require('../assets/images/Background/paris.png'),
+        spicy: require('../assets/images/Background/cupid.png'),
+        gamesMenu: require('../assets/images/Background/dinner.png'),
+    },
+    home: {
+        gradient: ['#ff6b9d', '#c9184a'], // Pink to rose
+    },
+    overlayAnimation: require('../assets/animations/Heart Lottie Animation.json'), // Heart animation
+};
+
 // All available themes
 export const THEMES: { [key: string]: Theme } = {
     default: DEFAULT_THEME,
     christmas: CHRISTMAS_THEME,
+    valentine: VALENTINE_THEME,
 };
 
 // Theme context type
@@ -98,7 +125,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 // Provider component
 export function ThemeProvider({ children }: { children: ReactNode }) {
     const [themeId, setThemeId] = useState<string>('default');
-    const [ownedThemes, setOwnedThemes] = useState<string[]>(['default', 'christmas']); // Default and Christmas are always available in MVP
+    const [ownedThemes, setOwnedThemes] = useState<string[]>(['default', 'christmas', 'valentine']); // Default, Christmas, and Valentine are always available
     const [isLoading, setIsLoading] = useState(true);
 
     // Load saved theme on startup

@@ -1,6 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
-import { BackButton } from '@/components/BackButton';
 import { CategoryCard } from '@/components/CategoryCard';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
@@ -82,39 +81,39 @@ export default function PartyModeGamesScreen() {
     </SafeAreaView>
   );
 
-  // Christmas theme: red to green gradient background with snow overlay
-  if (isChristmasTheme) {
+  // Use theme gradient and overlay if available
+  if (theme.home?.gradient && theme.overlayAnimation) {
     return (
       <LinearGradient
-        colors={['#c0392b', '#27ae60']}
+        colors={theme.home.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={styles.background}
       >
-        {screenContent}
-        {/* Snow animation covers entire screen */}
-        {theme.overlayAnimation && (
-          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'column' }} pointerEvents="none">
-            <LottieView
-              source={theme.overlayAnimation}
-              autoPlay
-              loop
-              style={{ flex: 1, width: '100%' }}
-            />
-            <LottieView
-              source={theme.overlayAnimation}
-              autoPlay
-              loop
-              style={{ flex: 1, width: '100%' }}
-            />
-            <LottieView
-              source={theme.overlayAnimation}
-              autoPlay
-              loop
-              style={{ flex: 1, width: '100%' }}
-            />
-          </View>
-        )}
+        {/* Overlay animation behind content */}
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, flexDirection: 'column' }} pointerEvents="none">
+          <LottieView
+            source={theme.overlayAnimation}
+            autoPlay
+            loop
+            style={{ flex: 1, width: '100%' }}
+          />
+          <LottieView
+            source={theme.overlayAnimation}
+            autoPlay
+            loop
+            style={{ flex: 1, width: '100%' }}
+          />
+          <LottieView
+            source={theme.overlayAnimation}
+            autoPlay
+            loop
+            style={{ flex: 1, width: '100%' }}
+          />
+        </View>
+        <View style={{ flex: 1, zIndex: 1 }}>
+          {screenContent}
+        </View>
       </LinearGradient>
     );
   }

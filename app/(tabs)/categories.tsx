@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import LottieView from 'lottie-react-native';
 import React from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useLanguage } from '../../utils/LanguageContext';
+import { useTheme } from '../../utils/ThemeContext';
 
 // Only show 4 categories in 2x2 grid
 // Row 1: Action (left), Humor (right)
@@ -11,6 +13,10 @@ import { useLanguage } from '../../utils/LanguageContext';
 export default function Categories() {
     const router = useRouter();
     const { t } = useLanguage();
+    const { theme } = useTheme();
+
+    // Get the appropriate overlay animation
+    const overlayAnimation = theme.overlayAnimation || require('../../assets/animations/Confetti - Full Screen.json');
 
     // Only show 4 categories in 2x2 grid
     // Row 1: Action (left), Humor (right)
@@ -23,8 +29,35 @@ export default function Categories() {
     ];
 
     return (
-        <View style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+            colors={theme.home.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.container}
+        >
+            {/* Overlay Animation */}
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1, flexDirection: 'column' }} pointerEvents="none">
+                <LottieView
+                    source={overlayAnimation}
+                    autoPlay
+                    loop
+                    style={{ flex: 1, width: '100%' }}
+                />
+                <LottieView
+                    source={overlayAnimation}
+                    autoPlay
+                    loop
+                    style={{ flex: 1, width: '100%' }}
+                />
+                <LottieView
+                    source={overlayAnimation}
+                    autoPlay
+                    loop
+                    style={{ flex: 1, width: '100%' }}
+                />
+            </View>
+
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} style={{ zIndex: 2 }}>
                 <Text style={styles.header}>{t('home.categories')}</Text>
 
                 {/* 2x2 Grid */}
@@ -80,7 +113,7 @@ export default function Categories() {
                     </LinearGradient>
                 </View>
             </ScrollView>
-        </View>
+        </LinearGradient>
     );
 }
 
@@ -96,7 +129,6 @@ function adjustColor(hex: string, amount: number): string {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#230E4B',
     },
     scrollContent: {
         paddingTop: 60,

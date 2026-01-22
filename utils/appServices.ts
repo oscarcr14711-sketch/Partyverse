@@ -7,6 +7,7 @@ import mobileAds, {
 } from 'react-native-google-mobile-ads';
 import Purchases from 'react-native-purchases';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 const GOOGLE_TEST_APP_IDS = {
   android: 'ca-app-pub-3940256099942544~3347511713',
@@ -43,19 +44,21 @@ const interstitialState: {
 
 const INTERSTITIAL_MIN_INTERVAL_MS = 45_000;
 
+const extraAdUnits = Constants.expoConfig?.extra?.adUnitIds;
+
 export const AdUnitIds = {
   banner:
     Platform.OS === 'ios'
-      ? process.env.ADMOB_IOS_BANNER_ID ?? GOOGLE_TEST_AD_UNITS.ios.banner
-      : process.env.ADMOB_ANDROID_BANNER_ID ?? GOOGLE_TEST_AD_UNITS.android.banner,
+      ? extraAdUnits?.ios?.banner ?? GOOGLE_TEST_AD_UNITS.ios.banner
+      : extraAdUnits?.android?.banner ?? GOOGLE_TEST_AD_UNITS.android.banner,
   interstitial:
     Platform.OS === 'ios'
-      ? process.env.ADMOB_IOS_INTERSTITIAL_ID ?? GOOGLE_TEST_AD_UNITS.ios.interstitial
-      : process.env.ADMOB_ANDROID_INTERSTITIAL_ID ?? GOOGLE_TEST_AD_UNITS.android.interstitial,
+      ? extraAdUnits?.ios?.interstitial ?? GOOGLE_TEST_AD_UNITS.ios.interstitial
+      : extraAdUnits?.android?.interstitial ?? GOOGLE_TEST_AD_UNITS.android.interstitial,
   rewarded:
     Platform.OS === 'ios'
-      ? process.env.ADMOB_IOS_REWARDED_ID ?? GOOGLE_TEST_AD_UNITS.ios.rewarded
-      : process.env.ADMOB_ANDROID_REWARDED_ID ?? GOOGLE_TEST_AD_UNITS.android.rewarded,
+      ? extraAdUnits?.ios?.rewarded ?? GOOGLE_TEST_AD_UNITS.ios.rewarded
+      : extraAdUnits?.android?.rewarded ?? GOOGLE_TEST_AD_UNITS.android.rewarded,
 };
 
 export async function initializeAppServices() {

@@ -15,7 +15,7 @@ export default {
     name: 'partyverse',
     slug: 'partyverse',
     owner: 'oscarcr7',
-    version: '1.0.1',
+    version: '1.0.2',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'partyverse',
@@ -87,6 +87,18 @@ export default {
       reactCompiler: true,
     },
     extra: {
+      adUnitIds: {
+        android: {
+          banner: process.env.ADMOB_ANDROID_BANNER_ID,
+          interstitial: process.env.ADMOB_ANDROID_INTERSTITIAL_ID,
+          rewarded: process.env.ADMOB_ANDROID_REWARDED_ID,
+        },
+        ios: {
+          banner: process.env.ADMOB_IOS_BANNER_ID,
+          interstitial: process.env.ADMOB_IOS_INTERSTITIAL_ID,
+          rewarded: process.env.ADMOB_IOS_REWARDED_ID,
+        },
+      },
       router: {},
       "eas": {
         "projectId": "e56652de-c86a-4e57-91d9-aa3903358376"

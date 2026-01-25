@@ -78,7 +78,6 @@ async function initializeAnalytics() {
 async function initializeAds() {
   try {
     const requestConfig: RequestConfiguration = {
-      maxAdContentRating: MaxAdContentRating.T,
       tagForChildDirectedTreatment: false,
       tagForUnderAgeOfConsent: false,
       testDeviceIdentifiers: [],
